@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TermoIA · Suite de Ecuaciones de Estado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#eef1f5;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;--accent:#1976d2;
+--hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;
+font-size:15px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 30px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center;width:80%}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.wrap{width:100%;max-width:1320px;padding:14px 18px 0;display:flex;flex-direction:column}
+.tabbar{display:flex;background:#fff;border:1px solid var(--border);border-radius:10px 10px 0 0;overflow:hidden;flex-wrap:wrap}
+.tab-btn{flex:1;min-width:200px;padding:13px 10px;background:#f0f4f8;border:none;border-right:1px solid var(--border);
+cursor:pointer;font-size:.92rem;font-weight:600;color:var(--muted);transition:background .12s,color .12s}
+.tab-btn:last-child{border-right:none}
+.tab-btn:hover{background:#e7eef6;color:var(--accent)}
+.tab-btn.active{background:#fff;color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.stage{width:100%;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden}
+.appframe{width:100%;border:none;display:block;height:1000px;background:#f5f7fa}
+.hint{font-size:0.75rem;color:var(--muted);text-align:center;margin-top:8px}
+</style>
+<style>/* === Accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+<span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 8 11 13 14 20 6"/><polyline points="17 6 20 6 20 9"/></svg>
+Termo<span style="color:#f97316"> &middot; IA &middot; </span>Din&aacute;mica
+<span style="background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></span>
+</span>
+<div class="topbar-center"><div class="topbar-text">
+<h1>Suite de Ecuaciones de Estado</h1>
+<p>Pv=RT · Z · vdW · RK · SRK · PR · comparador &middot; Isotermas + región de saturación (IAPWS) &middot; Nelson-Obert · estados correspondientes</p>
+</div></div>
+<span style="visibility:hidden;font-size:1.05rem">Termo IA Dinamica</span>
+</div>
+<div class="wrap">
+<div class="tabbar"><button class="tab-btn active" id="tb0" onclick="switchApp(0)">① Calculadora de estado</button><button class="tab-btn" id="tb1" onclick="switchApp(1)">② Z–P del agua</button><button class="tab-btn" id="tb2" onclick="switchApp(2)">③ Carta de compresibilidad</button></div>
+<div class="stage">
+<iframe id="fr0" class="appframe" style="display:block" onload="fit(0)" srcdoc="<!DOCTYPE html>
+<html lang=&quot;es&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;/><meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;/>
+<title>TermoIA · Ecuaciones de Estado</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;
+  --accent:#1976d2;--accent2:#1565c0;--accent-dark:#1565c0;--accent-light:#e3f0fd;
+  --mono:'IBM Plex Mono',Consolas,monospace;
+  --good:#2e7d32;--warn:#f57c00;--bad:#c62828;--gold:#b08800;
+  --hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.main-wrapper{width:100%;max-width:1280px;padding:0 20px;display:flex;flex-direction:column}
+.subtitle-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+  border-radius:8px 8px 0 0;flex-wrap:wrap}
+.subtitle-bar .ct{font-size:.93rem;font-weight:600}
+.subtitle-bar .right{margin-left:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.sub-box{display:flex;align-items:center;gap:7px;background:#eceff1;border:1px solid var(--border);border-radius:8px;padding:4px 10px}
+.sub-box label{font-size:0.75rem;color:var(--muted);font-weight:600}
+.sub-box select,.sub-box input{padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:.82rem;background:#fff}
+.crit-readout{font-family:var(--mono);font-size:0.75rem;color:var(--muted);background:#f2f5f9;border:1px solid var(--border);
+  border-radius:6px;padding:4px 9px;white-space:nowrap}
+.unit-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.unit-btn{padding:5px 14px;background:#fff;border:none;cursor:pointer;font-size:.8rem;color:var(--muted)}
+.unit-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.tabbar{display:flex;background:#fff;border:1px solid var(--border);border-top:none;flex-wrap:wrap}
+.tab-btn{flex:1;min-width:160px;padding:11px 8px;background:#f0f4f8;border:none;border-right:1px solid var(--border);
+  cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted)}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:#fff;color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.tab-pane{display:none;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:16px}
+.tab-pane.active{display:block}
+.concepto{background:var(--accent-light);border:1px solid #bcd8f6;border-radius:12px;padding:13px 16px;font-size:.9rem;
+  margin-bottom:14px;color:#26354f;line-height:1.55}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.98rem;color:var(--accent-dark);font-weight:700}
+.concepto summary h3::before{content:&quot;\25B8 &quot;;color:var(--accent-dark)}
+.concepto[open] summary h3::before{content:&quot;\25BE &quot;}
+.concepto[open] summary{margin-bottom:8px}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto b{color:var(--accent-dark)}
+.concepto .eqline{font-family:var(--mono);background:#fff;border:1px solid #bcd8f6;border-radius:5px;padding:6px 10px;
+  margin:7px 0;display:block;color:#26354f;overflow-x:auto}
+.layout{display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px}
+.panel h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:10px;
+  border-bottom:1px solid var(--border);padding-bottom:6px}
+.prow{display:flex;justify-content:space-between;padding:4px 0;font-size:.87rem;border-bottom:1px dashed #eef2f7;gap:10px}
+.prow:last-child{border-bottom:none}
+.prow .k{color:var(--muted)}
+.prow .v{font-family:var(--mono);font-weight:600;text-align:right}
+.prow .v.big{font-size:1.05rem;color:var(--accent)}
+.prow .v.red{color:var(--bad)} .prow .v.green{color:var(--good)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.77rem;color:var(--muted);margin-bottom:3px}
+.field input,.field select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;
+  font-family:var(--mono);font-size:.88rem;color:var(--text);background:#fff}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field .u{color:var(--muted);font-weight:400}
+.btn{display:inline-block;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;
+  font-weight:600;font-size:.9rem}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.steps{font-size:.82rem;line-height:1.65;font-family:var(--mono);background:#f7f9fc;border:1px solid var(--border);
+  border-radius:6px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;color:#26354f}
+.msg{margin-top:8px;padding:8px 12px;border-radius:6px;font-size:.85rem;display:none}
+.msg.ok{display:block;background:#e8f5e9;color:var(--good);border:1px solid #c8e6c9}
+.msg.bad{display:block;background:#ffebee;color:var(--bad);border:1px solid #ffcdd2}
+.msg.warn{display:block;background:#fff3e0;color:#e65100;border:1px solid #ffe0b2}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.note{font-size:0.75rem;color:var(--muted);margin-top:8px;line-height:1.5}
+.radio-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rbtn{flex:1;min-width:70px;background:#f7f9fc;border:1px solid var(--border);border-radius:6px;color:var(--muted);
+  font-size:.82rem;font-weight:600;padding:7px 6px;cursor:pointer;text-align:center}
+.rbtn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);box-shadow:inset 0 0 0 1px var(--accent)}
+.badge{display:inline-block;font-family:var(--mono);font-size:.8rem;font-weight:600;padding:5px 14px;border-radius:14px;margin-top:6px}
+.b-green{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7}
+.b-amber{background:#fff8e1;color:#e65100;border:1px solid #ffcc80}
+.b-red{background:#ffebee;color:#b71c1c;border:1px solid #ef9a9a}
+table.cmp{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:4px}
+table.cmp th{background:var(--accent2);color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;
+  padding:8px 10px;text-align:right;font-weight:600}
+table.cmp th:first-child{text-align:left}
+table.cmp td{padding:7px 10px;border-bottom:1px solid #eef2f7;font-family:var(--mono);text-align:right}
+table.cmp td:first-child{text-align:left;font-family:'IBM Plex Sans',sans-serif;color:var(--muted);font-weight:500}
+table.cmp tr:nth-child(even) td{background:#f8fafc}
+table.cmp .best td{background:#e8f5e9!important}
+.chartbox svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:.76rem}
+.legend .li{display:flex;align-items:center;gap:5px}
+.legend .sw{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.empty{color:#90a4ae;font-size:.86rem;text-align:center;padding:30px 10px}
+.eqtag{font-family:var(--mono);font-size:.82rem;color:#26354f;background:#f2f5f9;border:1px solid var(--border);
+  border-radius:5px;padding:4px 9px;display:block;margin-bottom:8px;overflow-x:auto}
+</style>
+<style>html,body{min-height:0!important}body{padding:6px 0 16px!important}.topbar{display:none!important}</style></head>
+<body>
+<div class=&quot;topbar&quot;>
+  <span style=&quot;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2&quot;>
+    <svg width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#b0bec5&quot; stroke-width=&quot;2.1&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;3 17 8 11 13 14 20 6&quot;/><polyline points=&quot;17 6 20 6 20 9&quot;/></svg>
+    Termo<span style=&quot;color:#f97316&quot;> · IA · </span>Dinámica
+    <span style=&quot;background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center&quot;>
+      <svg width=&quot;19&quot; height=&quot;19&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#f97316&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z&quot;/><line x1=&quot;12&quot; y1=&quot;9&quot; x2=&quot;12&quot; y2=&quot;13&quot;/></svg></span>
+  </span>
+  <div class=&quot;topbar-center&quot;><div class=&quot;topbar-text&quot;>
+    <h1>Ecuaciones de Estado</h1>
+    <p>Gas ideal · Factor de compresibilidad · van der Waals · Redlich-Kwong · SRK · Peng-Robinson · Virial</p>
+  </div></div>
+  <span style=&quot;visibility:hidden;font-size:1.05rem&quot;>Termo · IA · Dinámica</span>
+</div>
+
+<div class=&quot;main-wrapper&quot;>
+<div class=&quot;subtitle-bar&quot;>
+  <span>🧪</span>
+  <span class=&quot;ct&quot;>Comportamiento P–v–T de sustancias puras</span>
+  <div class=&quot;right&quot;>
+    <div class=&quot;sub-box&quot;>
+      <label>Sustancia</label>
+      <select id=&quot;subSel&quot; onchange=&quot;onSubChange()&quot;>
+        <option value=&quot;Air&quot;>Aire</option>
+        <option value=&quot;N2&quot; selected>Nitrógeno · N₂</option>
+        <option value=&quot;O2&quot;>Oxígeno · O₂</option>
+        <option value=&quot;CO2&quot;>Dióxido de carbono · CO₂</option>
+        <option value=&quot;CO&quot;>Monóxido de carbono · CO</option>
+        <option value=&quot;H2O&quot;>Agua · H₂O</option>
+        <option value=&quot;CH4&quot;>Metano · CH₄</option>
+        <option value=&quot;H2&quot;>Hidrógeno · H₂</option>
+        <option value=&quot;R134a&quot;>Refrigerante · R-134a</option>
+        <option value=&quot;NH3&quot;>Amoniaco · NH₃</option>
+        <option value=&quot;custom&quot;>Personalizado…</option>
+      </select>
+    </div>
+    <span class=&quot;crit-readout&quot; id=&quot;critOut&quot;></span>
+    <div class=&quot;unit-toggle&quot;>
+      <button id=&quot;btn-si&quot; class=&quot;unit-btn active&quot; onclick=&quot;setUnits('SI')&quot;>SI</button>
+      <button id=&quot;btn-ing&quot; class=&quot;unit-btn&quot; onclick=&quot;setUnits('ING')&quot;>Inglés</button>
+    </div>
+  </div>
+</div>
+
+<!-- custom critical props -->
+<div id=&quot;customBar&quot; class=&quot;subtitle-bar&quot; style=&quot;display:none;border-top:none&quot;>
+  <span class=&quot;note&quot; style=&quot;margin:0&quot;>Propiedades críticas (SI):</span>
+  <div class=&quot;sub-box&quot;><label>M [kg/kmol]</label><input id=&quot;cM&quot; type=&quot;number&quot; value=&quot;28.01&quot; style=&quot;width:80px&quot;></div>
+  <div class=&quot;sub-box&quot;><label>T<sub>c</sub> [K]</label><input id=&quot;cTc&quot; type=&quot;number&quot; value=&quot;126.2&quot; style=&quot;width:80px&quot;></div>
+  <div class=&quot;sub-box&quot;><label>P<sub>c</sub> [kPa]</label><input id=&quot;cPc&quot; type=&quot;number&quot; value=&quot;3390&quot; style=&quot;width:90px&quot;></div>
+  <div class=&quot;sub-box&quot;><label>ω</label><input id=&quot;cW&quot; type=&quot;number&quot; value=&quot;0.039&quot; step=&quot;0.001&quot; style=&quot;width:70px&quot;></div>
+  <button class=&quot;btn ghost&quot; style=&quot;padding:5px 12px&quot; onclick=&quot;onSubChange()&quot;>Aplicar</button>
+</div>
+
+<div class=&quot;tabbar&quot;>
+  <button class=&quot;tab-btn active&quot; id=&quot;tb-m1&quot; onclick=&quot;switchTab('m1')&quot;>① Gas ideal</button>
+  <button class=&quot;tab-btn&quot; id=&quot;tb-m2&quot; onclick=&quot;switchTab('m2')&quot;>② Compresibilidad Z</button>
+  <button class=&quot;tab-btn&quot; id=&quot;tb-m3&quot; onclick=&quot;switchTab('m3')&quot;>③ Ecuaciones reales</button>
+  <button class=&quot;tab-btn&quot; id=&quot;tb-m4&quot; onclick=&quot;switchTab('m4')&quot;>④ Comparador</button>
+</div>
+
+<!-- ═══════════════ M1 GAS IDEAL ═══════════════ -->
+<div class=&quot;tab-pane active&quot; id=&quot;pane-m1&quot;>
+  <details class=&quot;concepto&quot; open>
+    <summary><h3>Concepto — Modelo de gas ideal e interpretación microscópica</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+    <div>La <b>ecuación de estado del gas ideal</b> vincula presión, volumen y temperatura cuando las moléculas están tan separadas que su volumen propio y sus fuerzas intermoleculares son despreciables (límite de baja densidad).
+    <span class=&quot;eqline&quot;>Pv = RT &amp;nbsp;|&amp;nbsp; PV = mRT &amp;nbsp;|&amp;nbsp; P = ρRT &amp;nbsp;|&amp;nbsp; PV = N R<sub>u</sub> T &amp;nbsp;,&amp;nbsp; R = R<sub>u</sub>/M , &amp;nbsp; R<sub>u</sub> = 8.314 kJ/kmol·K</span>
+    <b>Interpretación microscópica</b>: al disminuir la presión (o aumentar el volumen específico), la distancia media entre moléculas crece, las interacciones se anulan y el factor de compresibilidad <b>Z = Pv/RT → 1</b>. Por ello todo gas real tiende al comportamiento ideal cuando P → 0 o T ≫ T<sub>c</sub>.</div>
+  </details>
+  <div class=&quot;layout&quot;>
+    <div class=&quot;panel&quot;>
+      <h3>Datos</h3>
+      <div class=&quot;radio-row&quot;>
+        <div class=&quot;rbtn active&quot; id=&quot;m1-P&quot; onclick=&quot;m1Solve('P')&quot;>Calcular P</div>
+        <div class=&quot;rbtn&quot; id=&quot;m1-v&quot; onclick=&quot;m1Solve('v')&quot;>Calcular v</div>
+        <div class=&quot;rbtn&quot; id=&quot;m1-T&quot; onclick=&quot;m1Solve('T')&quot;>Calcular T</div>
+      </div>
+      <div id=&quot;m1-inputs&quot; class=&quot;grid2&quot;></div>
+      <div class=&quot;field&quot;><label>Masa m [kg] <span class=&quot;u&quot;>(opcional → calcula V, n)</span></label><input id=&quot;m1_m&quot; type=&quot;number&quot; placeholder=&quot;ej. 1&quot;></div>
+      <button class=&quot;btn&quot; onclick=&quot;runM1()&quot;>Calcular</button>
+      <div class=&quot;msg&quot; id=&quot;m1msg&quot;></div>
+    </div>
+    <div class=&quot;panel&quot;>
+      <h3>Resultados</h3>
+      <div id=&quot;m1out&quot;><div class=&quot;empty&quot;>Introduzca dos variables y presione <b>Calcular</b>.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M2 COMPRESIBILIDAD ═══════════════ -->
+<div class=&quot;tab-pane&quot; id=&quot;pane-m2&quot;>
+  <details class=&quot;concepto&quot; open>
+    <summary><h3>Concepto — Factor de compresibilidad y estados correspondientes</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+    <div>El <b>factor de compresibilidad</b> mide la desviación del gas real respecto al ideal. El <b>principio de los estados correspondientes</b> establece que Z es aproximadamente la misma función para todas las sustancias en términos de sus <b>propiedades reducidas</b>.
+    <span class=&quot;eqline&quot;>Z = Pv/RT &amp;nbsp;|&amp;nbsp; T<sub>R</sub> = T/T<sub>c</sub> &amp;nbsp;|&amp;nbsp; P<sub>R</sub> = P/P<sub>c</sub> &amp;nbsp;|&amp;nbsp; v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)</span>
+    Aquí Z se obtiene por cálculo a partir de la forma reducida de Redlich-Kwong (cúbica en Z), método consistente con la <b>carta generalizada de Nelson-Obert</b> y que permite trazarla.</div>
+  </details>
+  <div class=&quot;layout&quot;>
+    <div>
+      <div class=&quot;panel&quot;>
+        <h3>Estado</h3>
+        <div class=&quot;grid2&quot;>
+          <div class=&quot;field&quot;><label>Temperatura T [<span data-u=&quot;T&quot;>K</span>]</label><input id=&quot;m2_T&quot; type=&quot;number&quot; data-q=&quot;T&quot; value=&quot;175&quot;></div>
+          <div class=&quot;field&quot;><label>Presión P [<span data-u=&quot;P&quot;>kPa</span>]</label><input id=&quot;m2_P&quot; type=&quot;number&quot; data-q=&quot;P&quot; value=&quot;10000&quot;></div>
+        </div>
+        <button class=&quot;btn&quot; onclick=&quot;runM2()&quot;>Calcular Z</button>
+        <div class=&quot;msg&quot; id=&quot;m2msg&quot;></div>
+        <div id=&quot;m2out&quot; style=&quot;margin-top:12px&quot;></div>
+      </div>
+    </div>
+    <div class=&quot;panel&quot;>
+      <h3>Carta de compresibilidad Z–P<sub>R</sub></h3>
+      <div class=&quot;chartbox&quot; id=&quot;m2chart&quot;></div>
+      <div class=&quot;legend&quot; id=&quot;m2legend&quot;></div>
+      <div class=&quot;note&quot;>Isotermas T<sub>R</sub> generadas por la cúbica reducida de RK. El punto ● marca el estado calculado.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M3 ECUACIONES REALES ═══════════════ -->
+<div class=&quot;tab-pane&quot; id=&quot;pane-m3&quot;>
+  <details class=&quot;concepto&quot; open>
+    <summary><h3>Concepto — Ecuaciones de estado reales (cúbicas y virial)</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+    <div>Las ecuaciones cúbicas corrigen el modelo ideal incorporando el <b>covolumen b</b> (tamaño molecular) y el término <b>a</b> (atracción intermolecular). Sus constantes se obtienen de las propiedades críticas.
+    <span class=&quot;eqline&quot;>van der Waals: (P + a/v²)(v − b) = RT ,&amp;nbsp; a = 27R²T<sub>c</sub>²/64P<sub>c</sub> ,&amp;nbsp; b = RT<sub>c</sub>/8P<sub>c</sub></span>
+    <span class=&quot;eqline&quot;>Redlich-Kwong: P = RT/(v−b) − a /[v(v+b)√T] ,&amp;nbsp; a = 0.4275 R²T<sub>c</sub><sup>2.5</sup>/P<sub>c</sub> ,&amp;nbsp; b = 0.0867 RT<sub>c</sub>/P<sub>c</sub></span>
+    <b>Selección por presión</b>: gas ideal y virial truncada → presiones bajas-moderadas; cúbicas (vdW, RK, SRK, PR) → amplio rango incluso a alta presión. Existen ~600 ecuaciones de estado.</div>
+  </details>
+  <div class=&quot;layout&quot;>
+    <div class=&quot;panel&quot;>
+      <h3>Modelo y datos</h3>
+      <div class=&quot;field&quot;><label>Ecuación de estado</label>
+        <select id=&quot;m3_eos&quot; onchange=&quot;renderM3eq()&quot;>
+          <option value=&quot;vdw&quot;>van der Waals (1873)</option>
+          <option value=&quot;rk&quot; selected>Redlich-Kwong (1949)</option>
+          <option value=&quot;srk&quot;>Soave-Redlich-Kwong (1972)</option>
+          <option value=&quot;pr&quot;>Peng-Robinson (1976)</option>
+          <option value=&quot;vir&quot;>Virial — 2º coef. (Pitzer)</option>
+        </select>
+      </div>
+      <span class=&quot;eqtag&quot; id=&quot;m3eq&quot;></span>
+      <div class=&quot;radio-row&quot;>
+        <div class=&quot;rbtn active&quot; id=&quot;m3-P&quot; onclick=&quot;m3Mode('P')&quot;>P dado (T, v)</div>
+        <div class=&quot;rbtn&quot; id=&quot;m3-v&quot; onclick=&quot;m3Mode('v')&quot;>v dado (T, P)</div>
+      </div>
+      <div class=&quot;grid2&quot; id=&quot;m3-inputs&quot;></div>
+      <button class=&quot;btn&quot; onclick=&quot;runM3()&quot;>Calcular</button>
+      <div class=&quot;msg&quot; id=&quot;m3msg&quot;></div>
+    </div>
+    <div class=&quot;panel&quot;>
+      <h3>Resultados</h3>
+      <div id=&quot;m3out&quot;><div class=&quot;empty&quot;>Elija ecuación, modo y datos.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M4 COMPARADOR ═══════════════ -->
+<div class=&quot;tab-pane&quot; id=&quot;pane-m4&quot;>
+  <details class=&quot;concepto&quot; open>
+    <summary><h3>Concepto — Comparador de métodos / banco de pruebas</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+    <div>Para un mismo estado (T, v) se estima la presión con <b>todos</b> los modelos y se contrasta el error frente a un valor de referencia, para decidir <b>qué ecuación conviene</b>. El caso precargado reproduce el ejemplo de N₂ del material del curso (T = 175 K, v = 0.00375 m³/kg, P<sub>ref</sub> ≈ 10 MPa).</div>
+  </details>
+  <div class=&quot;layout&quot;>
+    <div class=&quot;panel&quot;>
+      <h3>Estado de prueba</h3>
+      <div class=&quot;grid2&quot;>
+        <div class=&quot;field&quot;><label>Temperatura T [<span data-u=&quot;T&quot;>K</span>]</label><input id=&quot;m4_T&quot; type=&quot;number&quot; data-q=&quot;T&quot; value=&quot;175&quot;></div>
+        <div class=&quot;field&quot;><label>Volumen específico v [<span data-u=&quot;v&quot;>m³/kg</span>]</label><input id=&quot;m4_v&quot; type=&quot;number&quot; data-q=&quot;v&quot; value=&quot;0.00375&quot;></div>
+      </div>
+      <div class=&quot;field&quot;><label>Presión de referencia P<sub>ref</sub> [<span data-u=&quot;P&quot;>kPa</span>] <span class=&quot;u&quot;>(opcional)</span></label><input id=&quot;m4_Pref&quot; type=&quot;number&quot; data-q=&quot;P&quot; value=&quot;10000&quot;></div>
+      <button class=&quot;btn&quot; onclick=&quot;runM4()&quot;>Calcular todos</button>
+      <button class=&quot;btn ghost&quot; onclick=&quot;loadN2()&quot;>Cargar ejemplo N₂</button>
+      <div class=&quot;msg&quot; id=&quot;m4msg&quot;></div>
+    </div>
+    <div class=&quot;panel&quot;>
+      <h3>Comparación</h3>
+      <div id=&quot;m4out&quot;><div class=&quot;empty&quot;>Presione <b>Calcular todos</b>.</div></div>
+      <div class=&quot;chartbox&quot; id=&quot;m4chart&quot; style=&quot;margin-top:12px&quot;></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   ECUACIONES DE ESTADO — TermoIA·Dinámica
+   Unidades internas (SI):  P[kPa]  T[K]  v[m³/kg]  R[kJ/kg·K]=kPa·m³/kg·K
+   (porque 1 kJ/kg·K = 1 kPa·m³/kg·K  ⇒  P[kPa] = R·T/v )
+   ════════════════════════════════════════════════════════════════════════ */
+const Ru = 8.314;   // kJ/kmol·K
+
+/* ── Base de datos de sustancias (SI): M[kg/kmol], Tc[K], Pc[kPa], ω ── */
+const SUBS = {
+  Air :{n:'Aire',          M:28.97, Tc:132.5, Pc:3770 , w:0.035},
+  N2  :{n:'Nitrógeno N₂',  M:28.01, Tc:126.2, Pc:3390 , w:0.039},
+  O2  :{n:'Oxígeno O₂',    M:32.00, Tc:154.6, Pc:5040 , w:0.022},
+  CO2 :{n:'CO₂',           M:44.01, Tc:304.2, Pc:7390 , w:0.224},
+  CO  :{n:'CO',            M:28.01, Tc:132.9, Pc:3500 , w:0.066},
+  H2O :{n:'Agua H₂O',      M:18.02, Tc:647.1, Pc:22060, w:0.344},
+  CH4 :{n:'Metano CH₄',    M:16.04, Tc:190.6, Pc:4600 , w:0.011},
+  H2  :{n:'Hidrógeno H₂',  M:2.016, Tc:33.2 , Pc:1300 , w:-0.216},
+  R134a:{n:'R-134a',       M:102.03,Tc:374.2, Pc:4059 , w:0.327},
+  NH3 :{n:'Amoniaco NH₃',  M:17.03, Tc:405.5, Pc:11280, w:0.250}
+};
+function getSub(){
+  const k=document.getElementById('subSel').value;
+  let s;
+  if(k==='custom'){
+    const M=+document.getElementById('cM').value, Tc=+document.getElementById('cTc').value,
+          Pc=+document.getElementById('cPc').value, w=+document.getElementById('cW').value;
+    s={n:'Personalizado', M, Tc, Pc, w};
+  } else s=Object.assign({},SUBS[k]);
+  s.R = Ru/s.M;            // kJ/kg·K
+  return s;
+}
+
+/* ── Unidades (factor SI→display) ── */
+let SYS='SI';
+const UF={ SI :{P:1,T:1,v:1,rho:1,vm:1},
+           ING:{P:0.1450377,T:1.8,v:16.0185,rho:0.0624280,vm:16.0185} };
+const UL={ SI :{P:'kPa',T:'K',v:'m³/kg',rho:'kg/m³',vm:'m³/kmol'},
+           ING:{P:'psia',T:'°R',v:'ft³/lbm',rho:'lbm/ft³',vm:'ft³/lbmol'} };
+const toSI =(q,val)=>val/UF[SYS][q];
+const toD  =(q,si )=>si *UF[SYS][q];
+const UNL  =q=>UL[SYS][q];
+
+/* ── Utilidades ── */
+function fmt(x,sig){ sig=sig||5; if(!isFinite(x))return '—';
+  if(x===0)return '0';
+  const a=Math.abs(x);
+  if(a>=1e5||a<1e-3) return x.toExponential(Math.max(2,sig-2)).replace('e','×10^');
+  return (+x.toPrecision(sig)).toString();
+}
+function row(k,v,cls){ return `<div class=&quot;prow&quot;><span class=&quot;k&quot;>${k}</span><span class=&quot;v ${cls||''}&quot;>${v}</span></div>`; }
+function setMsg(id,t,c){ const e=document.getElementById(id); if(!t){e.className='msg';e.textContent='';return;} e.className='msg '+c; e.innerHTML=t; }
+
+/* Raíces reales de z³ + a z² + b z + c = 0  (Cardano) */
+function cubicRoots(a,b,c){
+  const p=b-a*a/3, q=2*a*a*a/27 - a*b/3 + c;
+  const D=q*q/4 + p*p*p/27; let r=[];
+  if(D>1e-13){ const u=Math.cbrt(-q/2+Math.sqrt(D)), w=Math.cbrt(-q/2-Math.sqrt(D)); r=[u+w-a/3]; }
+  else { const rad=Math.sqrt(Math.max(0,-p*p*p/27)); const ph=Math.acos(Math.max(-1,Math.min(1,(-q/2)/(rad||1e-30)))); const m=2*Math.cbrt(rad);
+    r=[m*Math.cos(ph/3)-a/3, m*Math.cos((ph+2*Math.PI)/3)-a/3, m*Math.cos((ph+4*Math.PI)/3)-a/3]; }
+  return r.filter(x=>isFinite(x));
+}
+
+/* ── Constantes y funciones por EOS ── */
+function eosConst(eos,s,T){
+  const {R,Tc,Pc,w}=s, Tr=T/Tc; let o={};
+  if(eos==='vdw'){ o.a=27*R*R*Tc*Tc/(64*Pc); o.b=R*Tc/(8*Pc); }
+  else if(eos==='rk'){ o.a=0.42748*R*R*Math.pow(Tc,2.5)/Pc; o.b=0.08664*R*Tc/Pc; }
+  else if(eos==='srk'){ o.a=0.42748*R*R*Tc*Tc/Pc; o.b=0.08664*R*Tc/Pc; o.m=0.480+1.574*w-0.176*w*w; o.al=Math.pow(1+o.m*(1-Math.sqrt(Tr)),2); }
+  else if(eos==='pr'){ o.a=0.45724*R*R*Tc*Tc/Pc; o.b=0.07780*R*Tc/Pc; o.m=0.37464+1.54226*w-0.26992*w*w; o.al=Math.pow(1+o.m*(1-Math.sqrt(Tr)),2); }
+  else if(eos==='vir'){ const B0=0.083-0.422/Math.pow(Tr,1.6), B1=0.139-0.172/Math.pow(Tr,4.2); o.Bhat=B0+w*B1; o.B=o.Bhat*R*Tc/Pc; }
+  return o;
+}
+function pFromTv(eos,s,T,v){
+  const R=s.R, c=eosConst(eos,s,T);
+  if(eos==='vdw') return R*T/(v-c.b)-c.a/(v*v);
+  if(eos==='rk')  return R*T/(v-c.b)-c.a/(v*(v+c.b)*Math.sqrt(T));
+  if(eos==='srk') return R*T/(v-c.b)-c.a*c.al/(v*(v+c.b));
+  if(eos==='pr')  return R*T/(v-c.b)-c.a*c.al/(v*(v+c.b)+c.b*(v-c.b));
+  if(eos==='vir'){ const Z=1+c.B/v; return Z*R*T/v; }
+}
+/* v dado (T,P): devuelve {roots:[v...], Z:[...]} */
+function vFromTP(eos,s,T,P){
+  const R=s.R, c=eosConst(eos,s,T); let zs=[];
+  if(eos==='vir'){ const k=c.B*P/(R*T); const Z=(1+Math.sqrt(1+4*k))/2; zs=[Z]; }
+  else{
+    const Bp=c.b*P/(R*T);
+    if(eos==='vdw'){ const Ap=c.a*P/(R*R*T*T); zs=cubicRoots(-(1+Bp), Ap, -Ap*Bp); }
+    else if(eos==='rk'){ const Ap=c.a*P/(R*R*Math.pow(T,2.5)); zs=cubicRoots(-1,(Ap-Bp-Bp*Bp),-Ap*Bp); }
+    else if(eos==='srk'){ const Ap=c.a*c.al*P/(R*R*T*T); zs=cubicRoots(-1,(Ap-Bp-Bp*Bp),-Ap*Bp); }
+    else if(eos==='pr'){ const Ap=c.a*c.al*P/(R*R*T*T); zs=cubicRoots(-(1-Bp),(Ap-3*Bp*Bp-2*Bp),-(Ap*Bp-Bp*Bp-Bp*Bp*Bp)); }
+  }
+  zs=zs.filter(z=>z>0);
+  const vs=zs.map(z=>z*R*T/P).sort((x,y)=>x-y);
+  return {roots:vs, Z:vs.map(v=>P*v/(R*T))};
+}
+/* Z generalizado por RK reducida */
+function zChart(Tr,Pr){
+  const A=0.42748*Pr/Math.pow(Tr,2.5), B=0.08664*Pr/Tr;
+  const r=cubicRoots(-1,(A-B-B*B),-A*B).filter(z=>z>0);
+  return r.length? Math.max(...r):NaN;
+}
+
+/* ════════════════ NAVEGACIÓN / GLOBAL ════════════════ */
+function switchTab(id){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  document.getElementById('tb-'+id).classList.add('active');
+}
+function onSubChange(){
+  const k=document.getElementById('subSel').value;
+  document.getElementById('customBar').style.display = (k==='custom')?'flex':'none';
+  const s=getSub();
+  document.getElementById('critOut').innerHTML =
+    `M=${fmt(s.M,4)} · R=${fmt(s.R,4)} kJ/kg·K · T<sub>c</sub>=${fmt(s.Tc,4)} K · P<sub>c</sub>=${fmt(s.Pc,4)} kPa · ω=${fmt(s.w,3)}`;
+}
+function setUnits(sys){
+  if(sys===SYS)return;
+  const old=SYS;
+  document.querySelectorAll('[data-q]').forEach(inp=>{
+    const q=inp.dataset.q, val=parseFloat(inp.value);
+    if(isFinite(val)){ const si=val/UF[old][q]; inp.value = +(si*UF[sys][q]).toPrecision(6); }
+  });
+  SYS=sys;
+  document.querySelectorAll('[data-u]').forEach(sp=>sp.textContent=UNL(sp.dataset.u));
+  document.getElementById('btn-si').classList.toggle('active',sys==='SI');
+  document.getElementById('btn-ing').classList.toggle('active',sys==='ING');
+  renderM1inputs(); renderM3inputs();              // reconstruye con etiquetas/valores convertidos
+  // recalcula salidas ya presentes para mantener consistencia de unidades
+  if(document.querySelector('#m1out .prow')) runM1();
+  if(document.querySelector('#m2out .prow')) runM2();
+  if(document.querySelector('#m3out .prow')) runM3();
+  if(document.querySelector('#m4out table'))  runM4();
+}
+
+/* ════════════════ M1 — GAS IDEAL ════════════════ */
+let M1solve='P';
+function m1Solve(q){ M1solve=q; ['P','v','T'].forEach(x=>document.getElementById('m1-'+x).classList.toggle('active',x===q)); renderM1inputs(); }
+function renderM1inputs(){
+  const need={P:['T','v'],v:['T','P'],T:['P','v']}[M1solve];
+  const lab={T:'Temperatura T',P:'Presión P',v:'Volumen específico v'};
+  const def={T:'300',P:'101.325',v:'0.5'};
+  document.getElementById('m1-inputs').innerHTML = need.map(q=>
+    `<div class=&quot;field&quot;><label>${lab[q]} [<span data-u=&quot;${q}&quot;>${UNL(q)}</span>]</label>
+      <input id=&quot;m1_${q}&quot; type=&quot;number&quot; data-q=&quot;${q}&quot; value=&quot;${document.getElementById('m1_'+q)?document.getElementById('m1_'+q).value:def[q]}&quot;></div>`).join('');
+}
+function runM1(){
+  setMsg('m1msg','');
+  const s=getSub(), R=s.R;
+  const get=q=>toSI(q,parseFloat(document.getElementById('m1_'+q).value));
+  let T,P,v, steps='';
+  try{
+    if(M1solve==='P'){ T=get('T'); v=get('v'); if(!(T>0&amp;&amp;v>0))throw 0; P=R*T/v;
+      steps=`P = R·T / v\n  = ${fmt(R,4)}·${fmt(T,4)} / ${fmt(v,4)}\n  = ${fmt(P,5)} kPa`; }
+    else if(M1solve==='v'){ T=get('T'); P=get('P'); if(!(T>0&amp;&amp;P>0))throw 0; v=R*T/P;
+      steps=`v = R·T / P\n  = ${fmt(R,4)}·${fmt(T,4)} / ${fmt(P,5)}\n  = ${fmt(v,5)} m³/kg`; }
+    else { P=get('P'); v=get('v'); if(!(P>0&amp;&amp;v>0))throw 0; T=P*v/R;
+      steps=`T = P·v / R\n  = ${fmt(P,5)}·${fmt(v,5)} / ${fmt(R,4)}\n  = ${fmt(T,5)} K`; }
+  }catch(e){ setMsg('m1msg','Introduzca valores numéricos positivos en ambos campos.','bad'); return; }
+  const rho=1/v, vm=v*s.M;
+  const m=parseFloat(document.getElementById('m1_m').value);
+  let extra='';
+  if(isFinite(m)&amp;&amp;m>0){
+    const Vtot=m*toD('v',v);              // volumen total en unidades de despliegue
+    extra = row('Volumen total V = m·v',`${fmt(Vtot,5)} ${SYS==='SI'?'m³':'ft³'}`,'')
+          + row('Moles n = m/M',`${fmt(m/s.M,4)} kmol`,'');
+  }
+  document.getElementById('m1out').innerHTML =
+    row('Sustancia',s.n,'')+
+    row('Presión P',`${fmt(toD('P',P),5)} ${UNL('P')}`, M1solve==='P'?'big':'')+
+    row('Temperatura T',`${fmt(toD('T',T),5)} ${UNL('T')}`, M1solve==='T'?'big':'')+
+    row('Volumen específico v',`${fmt(toD('v',v),5)} ${UNL('v')}`, M1solve==='v'?'big':'')+
+    row('Densidad ρ = 1/v',`${fmt(toD('rho',rho),5)} ${UNL('rho')}`,'')+
+    row('Volumen molar v̄ = v·M',`${fmt(toD('vm',vm),5)} ${UNL('vm')}`,'')+
+    extra+
+    `<div class=&quot;steps&quot;>${steps}</div>`;
+}
+
+/* ════════════════ M2 — COMPRESIBILIDAD ════════════════ */
+function runM2(){
+  setMsg('m2msg','');
+  const s=getSub(), R=s.R;
+  const T=toSI('T',parseFloat(document.getElementById('m2_T').value));
+  const P=toSI('P',parseFloat(document.getElementById('m2_P').value));
+  if(!(T>0&amp;&amp;P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
+  const Tr=T/s.Tc, Pr=P/s.Pc, Z=zChart(Tr,Pr);
+  const v=Z*R*T/P, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
+  let cls,txt;
+  if(Math.abs(Z-1)<=0.05){cls='b-green';txt='Gas ideal aceptable (Z ≈ 1)';}
+  else if(Math.abs(Z-1)<=0.15){cls='b-amber';txt='Desviación moderada — corrección recomendada';}
+  else{cls='b-red';txt='Gas real — use una ecuación de estado';}
+  document.getElementById('m2out').innerHTML =
+    row('Sustancia',s.n,'')+
+    row('T<sub>R</sub> = T/T<sub>c</sub>',fmt(Tr,4),'')+
+    row('P<sub>R</sub> = P/P<sub>c</sub>',fmt(Pr,4),'')+
+    row('Factor Z',fmt(Z,4),'big')+
+    row('v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
+    row('v ideal = RT/P',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'')+
+    row(&quot;v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)&quot;,fmt(vR,4),'')+
+    `<div style=&quot;text-align:center&quot;><span class=&quot;badge ${cls}&quot;>${txt}</span></div>`;
+  drawM2({Tr,Pr,Z});
+}
+function drawM2(pt){
+  const W=380,H=300,mL=46,mR=12,mT=12,mB=34, x0=mL,x1=W-mR,y0=H-mB,y1=mT;
+  const PRmax=7, Zmin=0.2,Zmax=1.1;
+  const sx=Pr=>x0+(Pr/PRmax)*(x1-x0);
+  const sy=Z =>y0+((Z-Zmin)/(Zmax-Zmin))*(y1-y0);
+  const iso=[{Tr:1.0,c:'#c62828'},{Tr:1.2,c:'#ef6c00'},{Tr:1.5,c:'#2e7d32'},{Tr:2.0,c:'#1976d2'},{Tr:3.0,c:'#6a1b9a'}];
+  let g=`<svg viewBox=&quot;0 0 ${W} ${H}&quot;>`;
+  // axes grid
+  for(let z=0.2;z<=1.1001;z+=0.1){ const y=sy(z); g+=`<line x1=&quot;${x0}&quot; y1=&quot;${y}&quot; x2=&quot;${x1}&quot; y2=&quot;${y}&quot; stroke=&quot;#eef2f7&quot;/>`;
+    g+=`<text x=&quot;${x0-6}&quot; y=&quot;${y+3}&quot; font-size=&quot;9&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;end&quot; font-family=&quot;monospace&quot;>${z.toFixed(1)}</text>`; }
+  for(let p=0;p<=PRmax;p++){ const x=sx(p); g+=`<line x1=&quot;${x}&quot; y1=&quot;${y0}&quot; x2=&quot;${x}&quot; y2=&quot;${y1}&quot; stroke=&quot;#f3f6fa&quot;/>`;
+    g+=`<text x=&quot;${x}&quot; y=&quot;${y0+14}&quot; font-size=&quot;9&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;middle&quot; font-family=&quot;monospace&quot;>${p}</text>`; }
+  g+=`<line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x1}&quot; y2=&quot;${y0}&quot; stroke=&quot;#9aa7bd&quot;/><line x1=&quot;${x0}&quot; y1=&quot;${y0}&quot; x2=&quot;${x0}&quot; y2=&quot;${y1}&quot; stroke=&quot;#9aa7bd&quot;/>`;
+  g+=`<text x=&quot;${(x0+x1)/2}&quot; y=&quot;${H-2}&quot; font-size=&quot;10&quot; fill=&quot;#26354f&quot; text-anchor=&quot;middle&quot;>Presión reducida P_R</text>`;
+  g+=`<text x=&quot;12&quot; y=&quot;${(y0+y1)/2}&quot; font-size=&quot;10&quot; fill=&quot;#26354f&quot; text-anchor=&quot;middle&quot; transform=&quot;rotate(-90 12 ${(y0+y1)/2})&quot;>Z = Pv/RT</text>`;
+  // ideal reference Z=1
+  g+=`<line x1=&quot;${x0}&quot; y1=&quot;${sy(1)}&quot; x2=&quot;${x1}&quot; y2=&quot;${sy(1)}&quot; stroke=&quot;#b0bec5&quot; stroke-dasharray=&quot;4 3&quot;/>`;
+  // isotherms
+  iso.forEach(o=>{ let d=''; for(let p=0.05;p<=PRmax;p+=0.1){ const z=zChart(o.Tr,p); if(isFinite(z)&amp;&amp;z>=Zmin&amp;&amp;z<=Zmax){ d+=(d?'L':'M')+sx(p).toFixed(1)+' '+sy(z).toFixed(1)+' '; } }
+    g+=`<path d=&quot;${d}&quot; fill=&quot;none&quot; stroke=&quot;${o.c}&quot; stroke-width=&quot;1.6&quot;/>`; });
+  if(pt&amp;&amp;isFinite(pt.Z)){ const px=sx(Math.min(pt.Pr,PRmax)), py=sy(Math.max(Zmin,Math.min(Zmax,pt.Z)));
+    g+=`<circle cx=&quot;${px}&quot; cy=&quot;${py}&quot; r=&quot;5&quot; fill=&quot;#111&quot; stroke=&quot;#fff&quot; stroke-width=&quot;1.5&quot;/>`; }
+  g+='</svg>';
+  document.getElementById('m2chart').innerHTML=g;
+  document.getElementById('m2legend').innerHTML=iso.map(o=>`<span class=&quot;li&quot;><span class=&quot;sw&quot; style=&quot;background:${o.c}&quot;></span>T_R=${o.Tr.toFixed(1)}</span>`).join('')+
+    `<span class=&quot;li&quot;><span class=&quot;sw&quot; style=&quot;background:#b0bec5&quot;></span>ideal Z=1</span>`;
+}
+
+/* ════════════════ M3 — EOS REALES ════════════════ */
+let M3mode='P';
+const M3EQ={ vdw:'P = RT/(v−b) − a/v²',
+  rk:'P = RT/(v−b) − a /[v(v+b)√T]',
+  srk:'P = RT/(v−b) − aα(T)/[v(v+b)]',
+  pr:'P = RT/(v−b) − aα(T)/[v(v+b)+b(v−b)]',
+  vir:'Z = 1 + B/v ,  B = (B⁰+ωB¹)·RTc/Pc' };
+function renderM3eq(){ document.getElementById('m3eq').textContent=M3EQ[document.getElementById('m3_eos').value]; }
+function m3Mode(m){ M3mode=m; document.getElementById('m3-P').classList.toggle('active',m==='P'); document.getElementById('m3-v').classList.toggle('active',m==='v'); renderM3inputs(); }
+function renderM3inputs(){
+  const a=`<div class=&quot;field&quot;><label>Temperatura T [<span data-u=&quot;T&quot;>${UNL('T')}</span>]</label><input id=&quot;m3_T&quot; type=&quot;number&quot; data-q=&quot;T&quot; value=&quot;${document.getElementById('m3_T')?document.getElementById('m3_T').value:'175'}&quot;></div>`;
+  const b = (M3mode==='P')
+    ? `<div class=&quot;field&quot;><label>Volumen específico v [<span data-u=&quot;v&quot;>${UNL('v')}</span>]</label><input id=&quot;m3_v&quot; type=&quot;number&quot; data-q=&quot;v&quot; value=&quot;${document.getElementById('m3_v')?document.getElementById('m3_v').value:'0.00375'}&quot;></div>`
+    : `<div class=&quot;field&quot;><label>Presión P [<span data-u=&quot;P&quot;>${UNL('P')}</span>]</label><input id=&quot;m3_P&quot; type=&quot;number&quot; data-q=&quot;P&quot; value=&quot;${document.getElementById('m3_P')?document.getElementById('m3_P').value:'10000'}&quot;></div>`;
+  document.getElementById('m3-inputs').innerHTML=a+b;
+}
+function runM3(){
+  setMsg('m3msg','');
+  const s=getSub(), R=s.R, eos=document.getElementById('m3_eos').value;
+  const T=toSI('T',parseFloat(document.getElementById('m3_T').value));
+  if(!(T>0)){ setMsg('m3msg','T inválida.','bad'); return; }
+  const c=eosConst(eos,s,T);
+  let cst='';
+  if(eos==='vir'){ cst=row('B̂ (2º coef. reducido)',fmt(c.Bhat,4),'')+row('B',`${fmt(c.B,4)} m³/kg`,''); }
+  else{ cst=row('a',`${fmt(c.a,4)}`,'')+row('b',`${fmt(c.b,5)} m³/kg`,''); if(c.al!=null) cst+=row('m(ω)',fmt(c.m,4),'')+row('α(T)',fmt(c.al,4),''); }
+  let body='', warn='';
+  if(M3mode==='P'){
+    const v=toSI('v',parseFloat(document.getElementById('m3_v').value));
+    if(!(v>0)){ setMsg('m3msg','v inválido.','bad'); return; }
+    if(c.b!=null &amp;&amp; v<=c.b){ setMsg('m3msg','v debe ser mayor que el covolumen b.','bad'); return; }
+    const P=pFromTv(eos,s,T,v), Pid=R*T/v, Z=P*v/(R*T);
+    if(eos==='vir' &amp;&amp; Math.abs(c.B/v)>0.2) warn='El virial truncado a 2º coeficiente solo es fiable a presiones bajas-moderadas (|B/v| ≤ 0.2). Aquí está fuera de rango.';
+    body=row('Presión P',`${fmt(toD('P',P),5)} ${UNL('P')}`,'big')+row('Factor Z',fmt(Z,4),'')+
+         row('P (gas ideal)',`${fmt(toD('P',Pid),5)} ${UNL('P')}`,'')+
+         row('Desviación vs ideal',`${fmt((P-Pid)/Pid*100,3)} %`, (Math.abs((P-Pid)/Pid)>0.05?'red':'green'));
+  } else {
+    const P=toSI('P',parseFloat(document.getElementById('m3_P').value));
+    if(!(P>0)){ setMsg('m3msg','P inválida.','bad'); return; }
+    const sol=vFromTP(eos,s,T,P);
+    if(!sol.roots.length){ setMsg('m3msg','Sin raíz real positiva para ese estado.','bad'); return; }
+    const vid=R*T/P;
+    const vg=sol.roots[sol.roots.length-1], Zg=P*vg/(R*T);
+    body=row('v (vapor / gas)',`${fmt(toD('v',vg),5)} ${UNL('v')}`,'big')+row('Z (vapor)',fmt(Zg,4),'');
+    if(sol.roots.length===3){ const vl=sol.roots[0]; body+=row('v (líquido)',`${fmt(toD('v',vl),5)} ${UNL('v')}`,'')+
+        row('Z (líquido)',fmt(P*vl/(R*T),4),'')+`<div class=&quot;note&quot;>Tres raíces reales: región de coexistencia / cercana a saturación. Se reportan las raíces extremas.</div>`; }
+    body+=row('v (gas ideal)',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'');
+  }
+  if(warn) setMsg('m3msg',warn,'warn');
+  document.getElementById('m3out').innerHTML = row('Sustancia',s.n,'')+row('Ecuación',document.getElementById('m3_eos').selectedOptions[0].text,'')+'<hr style=&quot;border:none;border-top:1px solid #eef2f7;margin:6px 0&quot;>'+cst+'<hr style=&quot;border:none;border-top:1px solid #eef2f7;margin:6px 0&quot;>'+body;
+}
+
+/* ════════════════ M4 — COMPARADOR ════════════════ */
+function loadN2(){
+  document.getElementById('subSel').value='N2'; onSubChange();
+  if(SYS!=='SI') setUnits('SI');
+  document.getElementById('m4_T').value=175; document.getElementById('m4_v').value=0.00375; document.getElementById('m4_Pref').value=10000;
+  runM4();
+}
+function runM4(){
+  setMsg('m4msg','');
+  const s=getSub(), R=s.R;
+  const T=toSI('T',parseFloat(document.getElementById('m4_T').value));
+  const v=toSI('v',parseFloat(document.getElementById('m4_v').value));
+  const prefRaw=parseFloat(document.getElementById('m4_Pref').value);
+  const Pref=isFinite(prefRaw)?toSI('P',prefRaw):null;
+  if(!(T>0&amp;&amp;v>0)){ setMsg('m4msg','Introduzca T y v positivos.','bad'); return; }
+  const Tr=T/s.Tc;
+  // métodos
+  const methods=[];
+  methods.push({n:'Gas ideal', P:R*T/v});
+  // Z-carta: Pr a partir de P ideal (1ª estimación), Z reducido
+  const Pid=R*T/v, Zc=zChart(Tr,Pid/s.Pc); methods.push({n:'Z (carta gen.)',P:Zc*R*T/v, extra:`Z=${fmt(Zc,3)}`});
+  methods.push({n:'van der Waals',P:pFromTv('vdw',s,T,v)});
+  methods.push({n:'Redlich-Kwong',P:pFromTv('rk',s,T,v)});
+  methods.push({n:'Soave-RK',P:pFromTv('srk',s,T,v)});
+  methods.push({n:'Peng-Robinson',P:pFromTv('pr',s,T,v)});
+  const cvir=eosConst('vir',s,T); const inRange=Math.abs(cvir.B/v)<=0.2;
+  methods.push({n:'Virial (2º)',P:pFromTv('vir',s,T,v), extra: inRange?'':'fuera de rango'});
+  // errores
+  methods.forEach(m=>{ m.err = (Pref!=null)? (m.P-Pref)/Pref*100 : null; });
+  let best=null; if(Pref!=null){ best=methods.reduce((a,b)=>Math.abs(a.err)<=Math.abs(b.err)?a:b); }
+  // tabla
+  let th=`<tr><th>Método</th><th>P [${UNL('P')}]</th>${Pref!=null?'<th>Error</th>':''}</tr>`;
+  let tr=methods.map(m=>`<tr class=&quot;${(best&amp;&amp;m===best)?'best':''}&quot;><td>${m.n}${m.extra?` <span style=&quot;color:#90a4ae&quot;>(${m.extra})</span>`:''}</td><td>${fmt(toD('P',m.P),5)}</td>${Pref!=null?`<td class=&quot;&quot;>${m.err>=0?'+':''}${fmt(m.err,3)}%</td>`:''}</tr>`).join('');
+  let head=row('Sustancia',s.n,'')+row('Estado',`T=${fmt(toD('T',T),4)} ${UNL('T')} · v=${fmt(toD('v',v),4)} ${UNL('v')} · T_R=${fmt(Tr,3)}`,'')+(Pref!=null?row('Referencia P_ref',`${fmt(toD('P',Pref),5)} ${UNL('P')}`,''):'');
+  document.getElementById('m4out').innerHTML = head+`<table class=&quot;cmp&quot;>${th}${tr}</table>`+
+    (best?`<div class=&quot;note&quot;>Mejor aproximación: <b>${best.n}</b> (error ${best.err>=0?'+':''}${fmt(best.err,2)}%).</div>`:'<div class=&quot;note&quot;>Introduzca P_ref para calcular el error relativo.</div>');
+  drawM4(methods,Pref);
+}
+function drawM4(methods,Pref){
+  const box=document.getElementById('m4chart');
+  if(Pref==null){ box.innerHTML='<div class=&quot;note&quot;>Gráfico de error disponible al indicar P_ref.</div>'; return; }
+  const W=380,H=210,mL=110,mR=40,mT=8,mB=22, x0=mL,x1=W-mR;
+  const errs=methods.map(m=>Math.abs(m.err));
+  const emax=Math.max(10,...errs)*1.1, n=methods.length, bh=(H-mT-mB)/n-6;
+  const sx=e=>x0+(e/emax)*(x1-x0);
+  let g=`<svg viewBox=&quot;0 0 ${W} ${H}&quot;>`;
+  g+=`<line x1=&quot;${x0}&quot; y1=&quot;${mT}&quot; x2=&quot;${x0}&quot; y2=&quot;${H-mB}&quot; stroke=&quot;#9aa7bd&quot;/>`;
+  for(let e=0;e<=emax;e+= (emax>60?20:emax>20?10:5)){ const x=sx(e); g+=`<line x1=&quot;${x}&quot; y1=&quot;${mT}&quot; x2=&quot;${x}&quot; y2=&quot;${H-mB}&quot; stroke=&quot;#eef2f7&quot;/><text x=&quot;${x}&quot; y=&quot;${H-8}&quot; font-size=&quot;8.5&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;middle&quot; font-family=&quot;monospace&quot;>${e}%</text>`; }
+  methods.forEach((m,i)=>{ const y=mT+i*((H-mT-mB)/n)+3; const e=Math.abs(m.err);
+    const col= e<=2?'#2e7d32': e<=10?'#f57c00':'#c62828';
+    g+=`<rect x=&quot;${x0}&quot; y=&quot;${y}&quot; width=&quot;${Math.max(1,sx(e)-x0)}&quot; height=&quot;${bh}&quot; fill=&quot;${col}&quot; rx=&quot;2&quot;/>`;
+    g+=`<text x=&quot;${x0-6}&quot; y=&quot;${y+bh/2+3}&quot; font-size=&quot;9&quot; fill=&quot;#26354f&quot; text-anchor=&quot;end&quot;>${m.n}</text>`;
+    g+=`<text x=&quot;${sx(e)+4}&quot; y=&quot;${y+bh/2+3}&quot; font-size=&quot;8.5&quot; fill=&quot;#5c6b84&quot; font-family=&quot;monospace&quot;>${m.err>=0?'+':''}${m.err.toFixed(1)}%</text>`; });
+  g+='</svg>';
+  box.innerHTML='<div class=&quot;note&quot; style=&quot;margin:0 0 4px&quot;>|Error| relativo por método</div>'+g;
+}
+
+/* ════════════════ INIT ════════════════ */
+onSubChange(); renderM1inputs(); renderM3eq(); renderM3inputs();
+runM2(); loadN2(); switchTab('m1');
+</script>
+</body>
+</html>
+"></iframe>
+<iframe id="fr1" class="appframe" style="display:none" onload="fit(1)" srcdoc="<!DOCTYPE html>
+<html lang=&quot;es&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;/><meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;/>
+<title>TermoIA - Z vs P del vapor de agua</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;--accent:#1976d2;--accent2:#1565c0;
+--mono:'IBM Plex Mono',Consolas,monospace;--hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.wrap{width:100%;max-width:1080px;padding:0 20px;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+border-radius:8px 8px 0 0;flex-wrap:wrap}
+.bar .ct{font-size:.93rem;font-weight:600}
+.bar .right{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 16px}
+.concepto{background:#eef4fb;border:1px solid #cfe0f5;border-radius:10px;padding:11px 14px;font-size:.86rem;color:#26354f;line-height:1.55;margin-bottom:14px}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.92rem;color:#1565c0;font-weight:700}
+.concepto summary h3::before{content:&quot;\25B8 &quot;;color:#1565c0}
+.concepto[open] summary h3::before{content:&quot;\25BE &quot;}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:#5c6b84;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto .cbody{margin-top:8px}
+.concepto b{color:#1565c0}
+.chartbox svg{width:100%;height:auto;display:block}
+.tt{position:fixed;pointer-events:none;background:#1a2233;color:#fff;font-family:var(--mono);font-size:0.75rem;
+padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
+</style>
+<style>html,body{min-height:0!important}body{padding:6px 0 16px!important}.topbar{display:none!important}</style><style>/* === Accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class=&quot;topbar&quot;>
+<span style=&quot;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2&quot;>
+<svg width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#b0bec5&quot; stroke-width=&quot;2.1&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;3 17 8 11 13 14 20 6&quot;/><polyline points=&quot;17 6 20 6 20 9&quot;/></svg>
+Termo<span style=&quot;color:#f97316&quot;> &amp;middot; IA &amp;middot; </span>Din&amp;aacute;mica
+<span style=&quot;background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center&quot;>
+<svg width=&quot;19&quot; height=&quot;19&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#f97316&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z&quot;/><line x1=&quot;12&quot; y1=&quot;9&quot; x2=&quot;12&quot; y2=&quot;13&quot;/></svg></span>
+</span>
+<div class=&quot;topbar-center&quot;><div class=&quot;topbar-text&quot;>
+<h1>Factor de compresibilidad del vapor de agua</h1>
+<p>Z = Pv/RT del H&amp;#8322;O &amp;middot; isotermas de sobrecalentamiento y regi&amp;oacute;n de saturaci&amp;oacute;n &amp;middot; datos IAPWS</p>
+</div></div>
+<span style=&quot;visibility:hidden;font-size:1.05rem&quot;>Termo IA Dinamica</span>
+</div>
+<div class=&quot;wrap&quot;>
+<div class=&quot;bar&quot;>
+<span>&amp;#128167;</span><span class=&quot;ct&quot;>Diagrama Z&amp;ndash;P del agua</span>
+<div class=&quot;right&quot;>
+<label class=&quot;chk&quot;><input type=&quot;checkbox&quot; id=&quot;ckDome&quot; checked onchange=&quot;redraw()&quot;> Regi&amp;oacute;n bif&amp;aacute;sica</label><label class=&quot;chk&quot;><input type=&quot;checkbox&quot; id=&quot;ckIdeal&quot; checked onchange=&quot;redraw()&quot;> Referencia Z = 1</label>
+</div>
+</div>
+<div class=&quot;card&quot;>
+<details class=&quot;concepto&quot; open>
+<summary><h3>Acerca de este diagrama</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+<div class=&quot;cbody&quot;>Cada isoterma subcr&amp;iacute;tica (200, 280, 360 &amp;deg;C) desciende desde Z = 1 y termina exactamente sobre la l&amp;iacute;nea de <b>vapor saturado</b>. La <b>regi&amp;oacute;n bif&amp;aacute;sica</b> (L+V) queda encerrada entre las curvas de l&amp;iacute;quido y vapor saturado, que convergen en el <b>punto cr&amp;iacute;tico</b> (T<sub>c</sub> = 373.95 &amp;deg;C, P<sub>c</sub> = 220.6 bar, Z<sub>c</sub> = 0.229). Las isotermas supercr&amp;iacute;ticas (440, 500 &amp;deg;C) no cruzan la campana. Use la casilla <b>Regi&amp;oacute;n bif&amp;aacute;sica</b> para mostrarla u ocultarla.</div>
+</details>
+<div class=&quot;chartbox&quot; id=&quot;chart&quot;></div>
+</div>
+</div>
+<div class=&quot;tt&quot; id=&quot;tt&quot;></div>
+<script>
+const DATA = {&quot;R&quot;: 461.518, &quot;Tc&quot;: 373.95, &quot;Pc&quot;: 220.64, &quot;Zc&quot;: 0.2294, &quot;dome&quot;: [[40, 0.074, 0.0001, 0.9972], [60, 0.199, 0.0001, 0.9947], [80, 0.474, 0.0003, 0.9906], [100, 1.014, 0.0006, 0.9845], [120, 1.987, 0.0012, 0.9758], [140, 3.615, 0.002, 0.9641], [160, 6.182, 0.0034, 0.9488], [180, 10.028, 0.0054, 0.9295], [200, 15.549, 0.0082, 0.9058], [220, 23.196, 0.0121, 0.8774], [240, 33.469, 0.0174, 0.8438], [260, 46.923, 0.0243, 0.8042], [280, 64.166, 0.0335, 0.7579], [300, 85.879, 0.0456, 0.7032], [310, 101.372, 0.0547, 0.6655], [320, 112.843, 0.0618, 0.6377], [330, 131.926, 0.0744, 0.5913], [340, 146.007, 0.0845, 0.5562], [350, 169.393, 0.1036, 0.4947], [360, 186.66, 0.1211, 0.4439], [368, 205.459, 0.1472, 0.3754], [372, 215.539, 0.1714, 0.3191], [373.95, 220.64, 0.2294, 0.2294]], &quot;iso&quot;: {&quot;200&quot;: [[0.5, 0.9974], [3, 0.985], [6, 0.967], [9, 0.949], [12, 0.93], [15.55, 0.9058]], &quot;280&quot;: [[0.5, 0.9986], [5, 0.986], [10, 0.971], [20, 0.939], [30, 0.906], [40, 0.868], [50, 0.826], [60, 0.778], [64.17, 0.7579]], &quot;360&quot;: [[0.5, 0.9992], [10, 0.983], [25, 0.956], [50, 0.909], [75, 0.856], [100, 0.797], [120, 0.743], [140, 0.68], [160, 0.604], [180, 0.496], [186.66, 0.4439]], &quot;440&quot;: [[0.5, 0.9995], [20, 0.978], [50, 0.945], [90, 0.897], [130, 0.846], [170, 0.789], [210, 0.728], [250, 0.66], [290, 0.586], [330, 0.507], [350, 0.4692]], &quot;500&quot;: [[0.5, 0.9996], [20, 0.984], [50, 0.961], [90, 0.928], [130, 0.893], [170, 0.857], [210, 0.819], [250, 0.78], [290, 0.74], [330, 0.7], [350, 0.68]]}};
+
+const ISO=[
+ {T:200,c:'#7b1fa2',dash:'4 5',sub:true},
+ {T:280,c:'#c62828',dash:'9 6',sub:true},
+ {T:360,c:'#ef6c00',dash:'2 5',sub:true},
+ {T:440,c:'#2e7d32',dash:'10 4 2 4',sub:false},
+ {T:500,c:'#00838f',dash:'',sub:false}
+];
+const VBW=960,VBH=600,L=70,Rm=40,Tm=46,Bm=64,PMAX=350,ZMAX=1.2;
+const PW=VBW-L-Rm,PH=VBH-Tm-Bm;
+const sx=P=>L+(P/PMAX)*PW;
+const sy=Z=>Tm+(1-Z/ZMAX)*PH;
+const ptsToPath=a=>a.map((p,i)=>(i?'L':'M')+sx(p[0]).toFixed(1)+' '+sy(p[1]).toFixed(1)).join(' ');
+
+function buildSVG(showDome){
+ const show200=true;
+ const showIdeal=document.getElementById('ckIdeal').checked;
+ let g='<svg viewBox=&quot;0 0 '+VBW+' '+VBH+'&quot; role=&quot;img&quot; aria-label=&quot;Factor de compresibilidad Z del vapor de agua frente a la presion&quot;>';
+ g+='<rect x=&quot;'+L+'&quot; y=&quot;'+Tm+'&quot; width=&quot;'+PW+'&quot; height=&quot;'+PH+'&quot; fill=&quot;#fff&quot;/>';
+ for(let p=0;p<=PMAX;p+=50){ const x=sx(p); g+='<line x1=&quot;'+x+'&quot; y1=&quot;'+Tm+'&quot; x2=&quot;'+x+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;#e2e8f0&quot;/>';
+  g+='<text x=&quot;'+x+'&quot; y=&quot;'+(Tm+PH+18)+'&quot; font-size=&quot;12&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;middle&quot; font-family=&quot;monospace&quot;>'+p+'</text>'; }
+ for(let z=0;z<=ZMAX+1e-9;z+=0.2){ const y=sy(z); g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+y+'&quot; x2=&quot;'+(L+PW)+'&quot; y2=&quot;'+y+'&quot; stroke=&quot;#e2e8f0&quot;/>';
+  g+='<text x=&quot;'+(L-10)+'&quot; y=&quot;'+(y+4)+'&quot; font-size=&quot;12&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;end&quot; font-family=&quot;monospace&quot;>'+z.toFixed(1)+'</text>'; }
+ g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+Tm+'&quot; x2=&quot;'+L+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;#9aa7bd&quot; stroke-width=&quot;1.2&quot;/>';
+ g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+(Tm+PH)+'&quot; x2=&quot;'+(L+PW)+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;#9aa7bd&quot; stroke-width=&quot;1.2&quot;/>';
+ g+='<text x=&quot;'+(L+PW/2)+'&quot; y=&quot;'+(VBH-20)+'&quot; font-size=&quot;14&quot; fill=&quot;#1a2233&quot; text-anchor=&quot;middle&quot; font-weight=&quot;600&quot;>Presión (bar)</text>';
+ g+='<text x=&quot;22&quot; y=&quot;'+(Tm+PH/2)+'&quot; font-size=&quot;14&quot; fill=&quot;#1a2233&quot; text-anchor=&quot;middle&quot; font-weight=&quot;600&quot; transform=&quot;rotate(-90 22 '+(Tm+PH/2)+')&quot;>Z (adimensional)</text>';
+ if(showIdeal){ const y=sy(1); g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+y+'&quot; x2=&quot;'+(L+PW)+'&quot; y2=&quot;'+y+'&quot; stroke=&quot;#90a4ae&quot; stroke-width=&quot;1.4&quot; stroke-dasharray=&quot;5 4&quot;/>';
+  g+='<text x=&quot;'+(L+PW-6)+'&quot; y=&quot;'+(y-6)+'&quot; font-size=&quot;11&quot; fill=&quot;#78909c&quot; text-anchor=&quot;end&quot; font-style=&quot;italic&quot;>gas ideal (Z = 1)</text>'; }
+ if(showDome){
+  const vap=DATA.dome.map(d=>[d[1],d[3]]), liq=DATA.dome.map(d=>[d[1],d[2]]);
+  const area=ptsToPath(vap)+' '+liq.slice().reverse().map(p=>'L'+sx(p[0]).toFixed(1)+' '+sy(p[1]).toFixed(1)).join(' ')+' Z';
+  g+='<path d=&quot;'+area+'&quot; fill=&quot;#1565c0&quot; fill-opacity=&quot;0.09&quot;/>';
+  g+='<path d=&quot;'+ptsToPath(vap)+'&quot; fill=&quot;none&quot; stroke=&quot;#1565c0&quot; stroke-width=&quot;2.6&quot;/>';
+  g+='<path d=&quot;'+ptsToPath(liq)+'&quot; fill=&quot;none&quot; stroke=&quot;#1565c0&quot; stroke-width=&quot;2.6&quot;/>';
+  const cx=sx(DATA.Pc), cy=sy(DATA.Zc);
+  g+='<circle cx=&quot;'+cx+'&quot; cy=&quot;'+cy+'&quot; r=&quot;5.5&quot; fill=&quot;#b71c1c&quot; stroke=&quot;#fff&quot; stroke-width=&quot;1.6&quot;/>';
+  g+='<text x=&quot;'+(cx+10)+'&quot; y=&quot;'+(cy+4)+'&quot; font-size=&quot;11.5&quot; fill=&quot;#b71c1c&quot; font-weight=&quot;600&quot;>Punto crítico Zc='+DATA.Zc+'</text>';
+  g+='<text x=&quot;'+sx(150)+'&quot; y=&quot;'+(sy(0.905)-6)+'&quot; font-size=&quot;11.5&quot; fill=&quot;#1565c0&quot; font-weight=&quot;600&quot;>vapor saturado (x=1)</text>';
+  g+='<text x=&quot;'+sx(150)+'&quot; y=&quot;'+(sy(0.085)+4)+'&quot; font-size=&quot;11.5&quot; fill=&quot;#1565c0&quot; font-weight=&quot;600&quot;>líquido saturado (x=0)</text>';
+  g+='<text x=&quot;'+sx(120)+'&quot; y=&quot;'+sy(0.42)+'&quot; font-size=&quot;12&quot; fill=&quot;#0d3c75&quot; font-weight=&quot;600&quot; text-anchor=&quot;middle&quot;>bifásico (L+V)</text>';
+ }
+ g+='<text x=&quot;'+sx(250)+'&quot; y=&quot;'+sy(1.08)+'&quot; font-size=&quot;12.5&quot; fill=&quot;#37474f&quot; text-anchor=&quot;middle&quot;>Temperatura (°C)</text>';
+ ISO.forEach(o=>{
+  if(o.T===200 &amp;&amp; !show200) return;
+  const a=DATA.iso[String(o.T)];
+  g+='<path d=&quot;'+ptsToPath(a)+'&quot; fill=&quot;none&quot; stroke=&quot;'+o.c+'&quot; stroke-width=&quot;2.1&quot; '+(o.dash?'stroke-dasharray=&quot;'+o.dash+'&quot;':'')+' stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/>';
+  const end=a[a.length-1];
+  if(showDome &amp;&amp; o.sub){ g+='<circle cx=&quot;'+sx(end[0])+'&quot; cy=&quot;'+sy(end[1])+'&quot; r=&quot;3.4&quot; fill=&quot;'+o.c+'&quot;/>'; }
+  let lx=sx(end[0]), ly=sy(end[1]);
+  if(o.T===200){ g+='<text x=&quot;'+(lx-6)+'&quot; y=&quot;'+(ly-8)+'&quot; font-size=&quot;12.5&quot; fill=&quot;'+o.c+'&quot; font-weight=&quot;700&quot; text-anchor=&quot;end&quot;>200</text>'; }
+  else if(o.T===280){ g+='<text x=&quot;'+(lx-6)+'&quot; y=&quot;'+(ly+16)+'&quot; font-size=&quot;12.5&quot; fill=&quot;'+o.c+'&quot; font-weight=&quot;700&quot; text-anchor=&quot;middle&quot;>280</text>'; }
+  else { g+='<text x=&quot;'+(lx+8)+'&quot; y=&quot;'+(ly+4)+'&quot; font-size=&quot;12.5&quot; fill=&quot;'+o.c+'&quot; font-weight=&quot;700&quot;>'+o.T+'</text>'; }
+ });
+ g+='</svg>';
+ return g;
+}
+function redraw(){document.getElementById('chart').innerHTML=buildSVG(document.getElementById('ckDome').checked);attachHover();}
+function attachHover(){
+ const svg=document.querySelector('#chart svg');if(!svg)return;const tt=document.getElementById('tt');
+ const show200=true;
+ const all=[]; ISO.forEach(o=>{ if(o.T===200&amp;&amp;!show200)return; DATA.iso[String(o.T)].forEach(p=>all.push({P:p[0],Z:p[1],T:o.T})); });
+ svg.addEventListener('mousemove',ev=>{const r=svg.getBoundingClientRect(),kx=VBW/r.width,ky=VBH/r.height;
+  const vx=(ev.clientX-r.left)*kx,vy=(ev.clientY-r.top)*ky;let b=null,bd=1e9;
+  all.forEach(d=>{const dx=sx(d.P)-vx,dy=sy(d.Z)-vy,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;b=d;}});
+  if(b&amp;&amp;bd<400){tt.style.opacity=1;tt.style.left=(ev.clientX+12)+'px';tt.style.top=(ev.clientY-10)+'px';
+   tt.innerHTML=b.T+' °C &amp;middot; P='+b.P+' bar &amp;middot; Z='+b.Z.toFixed(3);}else tt.style.opacity=0;});
+ svg.addEventListener('mouseleave',()=>tt.style.opacity=0);
+}
+redraw();
+
+</script>
+</body>
+</html>
+"></iframe>
+<iframe id="fr2" class="appframe" style="display:none" onload="fit(2)" srcdoc="<!DOCTYPE html>
+<html lang=&quot;es&quot;>
+<head>
+<meta charset=&quot;UTF-8&quot;/><meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1.0&quot;/>
+<title>TermoIA - Carta de compresibilidad generalizada</title>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;><link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;--accent:#1976d2;--accent2:#1565c0;
+--mono:'IBM Plex Mono',Consolas,monospace;--mag:#e0218a;--hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.wrap{width:100%;max-width:1100px;padding:0 20px;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+border-radius:8px 8px 0 0;flex-wrap:wrap}
+.bar .ct{font-size:.93rem;font-weight:600}
+.bar .right{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 16px}
+.concepto{background:#eef4fb;border:1px solid #cfe0f5;border-radius:10px;padding:11px 14px;font-size:.86rem;color:#26354f;line-height:1.55;margin-bottom:14px}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.92rem;color:#1565c0;font-weight:700}
+.concepto summary h3::before{content:&quot;\25B8 &quot;;color:#1565c0}
+.concepto[open] summary h3::before{content:&quot;\25BE &quot;}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:#5c6b84;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto .cbody{margin-top:8px}
+.concepto b{color:#1565c0}
+.chartbox svg{width:100%;height:auto;display:block}
+.tt{position:fixed;pointer-events:none;background:#1a2233;color:#fff;font-family:var(--mono);font-size:0.75rem;
+padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
+</style>
+<style>html,body{min-height:0!important}body{padding:6px 0 16px!important}.topbar{display:none!important}</style><style>/* === Accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class=&quot;topbar&quot;>
+<span style=&quot;display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2&quot;>
+<svg width=&quot;22&quot; height=&quot;22&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#b0bec5&quot; stroke-width=&quot;2.1&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><polyline points=&quot;3 17 8 11 13 14 20 6&quot;/><polyline points=&quot;17 6 20 6 20 9&quot;/></svg>
+Termo<span style=&quot;color:#f97316&quot;> &amp;middot; IA &amp;middot; </span>Din&amp;aacute;mica
+<span style=&quot;background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center&quot;>
+<svg width=&quot;19&quot; height=&quot;19&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#f97316&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;><path d=&quot;M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z&quot;/><line x1=&quot;12&quot; y1=&quot;9&quot; x2=&quot;12&quot; y2=&quot;13&quot;/></svg></span>
+</span>
+<div class=&quot;topbar-center&quot;><div class=&quot;topbar-text&quot;>
+<h1>Carta de compresibilidad generalizada</h1>
+<p>Z = Pv/RT vs presi&amp;oacute;n reducida &amp;middot; principio de estados correspondientes (Nelson-Obert)</p>
+</div></div>
+<span style=&quot;visibility:hidden;font-size:1.05rem&quot;>Termo IA Dinamica</span>
+</div>
+<div class=&quot;wrap&quot;>
+<div class=&quot;bar&quot;>
+<span>&amp;#128202;</span><span class=&quot;ct&quot;>Z(P_R, T_R) &amp;mdash; curvas medias y datos de 10 sustancias</span>
+<div class=&quot;right&quot;>
+<label class=&quot;chk&quot;><input type=&quot;checkbox&quot; id=&quot;ckPts&quot; checked onchange=&quot;redraw()&quot;> Puntos experimentales</label>
+<label class=&quot;chk&quot;><input type=&quot;checkbox&quot; id=&quot;ckAvg&quot; checked onchange=&quot;redraw()&quot;> Curvas medias</label>
+<label class=&quot;chk&quot;><input type=&quot;checkbox&quot; id=&quot;ckGuide&quot; onchange=&quot;redraw()&quot;> Gu&amp;iacute;a de ejemplo (P_R=2.5)</label>
+</div>
+</div>
+<div class=&quot;card&quot;>
+<details class=&quot;concepto&quot; open>
+<summary><h3>Acerca de esta carta</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+<div class=&quot;cbody&quot;>Carta de compresibilidad generalizada (Nelson-Obert). Las <b>curvas medias</b> (magenta) son el promedio de los datos de hidrocarburos (CoolProp); los <b>puntos</b> son Z = Pv/RT con propiedades reales (IAPWS/CoolProp) de 10 sustancias en coordenadas reducidas (T<sub>R</sub>=T/T<sub>c</sub>, P<sub>R</sub>=P/P<sub>c</sub>). Que todas colapsen sobre las mismas curvas confirma el <b>principio de los estados correspondientes</b>. La isoterma cr&amp;iacute;tica <b>T<sub>R</sub>=1.00</b> desciende casi verticalmente hasta un m&amp;iacute;nimo Z&amp;asymp;0.21 cerca de P<sub>R</sub>=1 y luego sube. Clic en la leyenda para aislar sustancias.</div>
+</details>
+<div class=&quot;chartbox&quot; id=&quot;chart&quot;></div>
+</div>
+</div>
+<div class=&quot;tt&quot; id=&quot;tt&quot;></div>
+<script>
+const DATA = {&quot;avg&quot;: {&quot;1.00&quot;: [[0.05, 0.9829], [0.07, 0.9759], [0.09, 0.9688], [0.11, 0.9617], [0.13, 0.9545], [0.15, 0.9472], [0.17, 0.9399], [0.19, 0.9324], [0.21, 0.9249], [0.23, 0.9173], [0.25, 0.9095], [0.27, 0.9017], [0.29, 0.8938], [0.31, 0.8857], [0.33, 0.8776], [0.35, 0.8693], [0.37, 0.8609], [0.39, 0.8523], [0.41, 0.8437], [0.43, 0.8349], [0.45, 0.8259], [0.47, 0.8168], [0.49, 0.8075], [0.51, 0.798], [0.53, 0.7883], [0.55, 0.7785], [0.57, 0.7684], [0.59, 0.7581], [0.61, 0.7475], [0.63, 0.7367], [0.65, 0.7256], [0.67, 0.7142], [0.69, 0.7025], [0.71, 0.6903], [0.73, 0.6778], [0.75, 0.6648], [0.77, 0.6513], [0.79, 0.6372], [0.81, 0.6224], [0.83, 0.6069], [0.85, 0.5904], [0.87, 0.5729], [0.89, 0.5539], [0.91, 0.5332], [0.93, 0.5101], [0.95, 0.4833], [0.97, 0.4506], [0.99, 0.4042], [1.01, 0.2315], [1.03, 0.2146], [1.05, 0.2104], [1.07, 0.2089], [1.09, 0.2087], [1.11, 0.2092], [1.13, 0.2101], [1.15, 0.2114], [1.17, 0.2129], [1.19, 0.2145], [1.21, 0.2163], [1.23, 0.2182], [1.25, 0.2202], [1.27, 0.2222], [1.29, 0.2243], [1.31, 0.2265], [1.33, 0.2287], [1.35, 0.2309], [1.37, 0.2332], [1.39, 0.2355], [1.41, 0.2378], [1.51, 0.2497], [1.61, 0.2618], [1.71, 0.2741], [1.81, 0.2865], [1.91, 0.299], [2.01, 0.3114], [2.11, 0.3238], [2.21, 0.3363], [2.31, 0.3487], [2.41, 0.361], [2.51, 0.3734], [2.61, 0.3857], [2.71, 0.398], [2.81, 0.4102], [2.91, 0.4224], [3.01, 0.4345], [3.26, 0.4648], [3.51, 0.4948], [3.76, 0.5245], [4.01, 0.5541], [4.26, 0.5834], [4.51, 0.6126], [4.76, 0.6415], [5.01, 0.6703], [5.26, 0.6989], [5.51, 0.7273], [5.76, 0.7556], [6.01, 0.7837], [6.26, 0.8117], [6.51, 0.8395], [6.76, 0.8672]], &quot;1.10&quot;: [[0.05, 0.9875], [0.07, 0.9824], [0.09, 0.9773], [0.11, 0.9722], [0.13, 0.967], [0.15, 0.9618], [0.17, 0.9566], [0.19, 0.9513], [0.21, 0.946], [0.23, 0.9407], [0.25, 0.9353], [0.27, 0.9299], [0.29, 0.9245], [0.31, 0.919], [0.33, 0.9135], [0.35, 0.9079], [0.37, 0.9023], [0.39, 0.8967], [0.41, 0.891], [0.43, 0.8853], [0.45, 0.8795], [0.47, 0.8737], [0.49, 0.8678], [0.51, 0.8619], [0.53, 0.8559], [0.55, 0.8499], [0.57, 0.8438], [0.59, 0.8377], [0.61, 0.8315], [0.63, 0.8253], [0.65, 0.819], [0.67, 0.8127], [0.69, 0.8063], [0.71, 0.7998], [0.73, 0.7933], [0.75, 0.7867], [0.77, 0.7801], [0.79, 0.7734], [0.81, 0.7666], [0.83, 0.7597], [0.85, 0.7528], [0.87, 0.7458], [0.89, 0.7388], [0.91, 0.7316], [0.93, 0.7244], [0.95, 0.7171], [0.97, 0.7098], [0.99, 0.7023], [1.01, 0.6948], [1.03, 0.6872], [1.05, 0.6795], [1.07, 0.6717], [1.09, 0.6638], [1.11, 0.6559], [1.13, 0.6478], [1.15, 0.6397], [1.17, 0.6315], [1.19, 0.6232], [1.21, 0.6148], [1.23, 0.6063], [1.25, 0.5977], [1.27, 0.5891], [1.29, 0.5804], [1.31, 0.5716], [1.33, 0.5628], [1.35, 0.5539], [1.37, 0.5451], [1.39, 0.5362], [1.41, 0.5274], [1.51, 0.4846], [1.61, 0.448], [1.71, 0.4217], [1.81, 0.4061], [1.91, 0.3987], [2.01, 0.397], [2.11, 0.399], [2.21, 0.4034], [2.31, 0.4094], [2.41, 0.4165], [2.51, 0.4245], [2.61, 0.433], [2.71, 0.442], [2.81, 0.4513], [2.91, 0.4609], [3.01, 0.4707], [3.26, 0.4958], [3.51, 0.5214], [3.76, 0.5474], [4.01, 0.5735], [4.26, 0.5997], [4.51, 0.6259], [4.76, 0.6521], [5.01, 0.6782], [5.26, 0.7042], [5.51, 0.7301], [5.76, 0.756], [6.01, 0.7818], [6.26, 0.8074], [6.51, 0.833], [6.76, 0.8585]], &quot;1.20&quot;: [[0.05, 0.9907], [0.07, 0.9869], [0.09, 0.9831], [0.11, 0.9794], [0.13, 0.9756], [0.15, 0.9718], [0.17, 0.968], [0.19, 0.9641], [0.21, 0.9603], [0.23, 0.9564], [0.25, 0.9526], [0.27, 0.9487], [0.29, 0.9448], [0.31, 0.9409], [0.33, 0.9369], [0.35, 0.933], [0.37, 0.9291], [0.39, 0.9251], [0.41, 0.9211], [0.43, 0.9171], [0.45, 0.9131], [0.47, 0.9091], [0.49, 0.9051], [0.51, 0.901], [0.53, 0.897], [0.55, 0.8929], [0.57, 0.8888], [0.59, 0.8847], [0.61, 0.8806], [0.63, 0.8765], [0.65, 0.8723], [0.67, 0.8682], [0.69, 0.864], [0.71, 0.8598], [0.73, 0.8556], [0.75, 0.8514], [0.77, 0.8472], [0.79, 0.8429], [0.81, 0.8387], [0.83, 0.8344], [0.85, 0.8301], [0.87, 0.8259], [0.89, 0.8216], [0.91, 0.8172], [0.93, 0.8129], [0.95, 0.8086], [0.97, 0.8042], [0.99, 0.7999], [1.01, 0.7955], [1.03, 0.7911], [1.05, 0.7868], [1.07, 0.7824], [1.09, 0.778], [1.11, 0.7736], [1.13, 0.7691], [1.15, 0.7647], [1.17, 0.7603], [1.19, 0.7559], [1.21, 0.7514], [1.23, 0.747], [1.25, 0.7426], [1.27, 0.7381], [1.29, 0.7337], [1.31, 0.7293], [1.33, 0.7248], [1.35, 0.7204], [1.37, 0.716], [1.39, 0.7116], [1.41, 0.7072], [1.51, 0.6854], [1.61, 0.6641], [1.71, 0.6436], [1.81, 0.6243], [1.91, 0.6066], [2.01, 0.5909], [2.11, 0.5774], [2.21, 0.5663], [2.31, 0.5577], [2.41, 0.5515], [2.51, 0.5474], [2.61, 0.5454], [2.71, 0.5451], [2.81, 0.5463], [2.91, 0.5487], [3.01, 0.5522], [3.26, 0.5644], [3.51, 0.5802], [3.76, 0.5983], [4.01, 0.6179], [4.26, 0.6386], [4.51, 0.6601], [4.76, 0.682], [5.01, 0.7043], [5.26, 0.7268], [5.51, 0.7495], [5.76, 0.7724], [6.01, 0.7953], [6.26, 0.8182], [6.51, 0.8412], [6.76, 0.8642]], &quot;1.30&quot;: [[0.05, 0.993], [0.07, 0.9901], [0.09, 0.9873], [0.11, 0.9845], [0.13, 0.9816], [0.15, 0.9788], [0.17, 0.9759], [0.19, 0.9731], [0.21, 0.9702], [0.23, 0.9674], [0.25, 0.9645], [0.27, 0.9617], [0.29, 0.9588], [0.31, 0.9559], [0.33, 0.9531], [0.35, 0.9502], [0.37, 0.9473], [0.39, 0.9444], [0.41, 0.9416], [0.43, 0.9387], [0.45, 0.9358], [0.47, 0.9329], [0.49, 0.93], [0.51, 0.9271], [0.53, 0.9242], [0.55, 0.9213], [0.57, 0.9184], [0.59, 0.9155], [0.61, 0.9126], [0.63, 0.9097], [0.65, 0.9068], [0.67, 0.9039], [0.69, 0.901], [0.71, 0.8981], [0.73, 0.8952], [0.75, 0.8923], [0.77, 0.8894], [0.79, 0.8865], [0.81, 0.8835], [0.83, 0.8806], [0.85, 0.8777], [0.87, 0.8748], [0.89, 0.8719], [0.91, 0.869], [0.93, 0.8661], [0.95, 0.8632], [0.97, 0.8603], [0.99, 0.8574], [1.01, 0.8545], [1.03, 0.8516], [1.05, 0.8487], [1.07, 0.8458], [1.09, 0.8429], [1.11, 0.84], [1.13, 0.8371], [1.15, 0.8343], [1.17, 0.8314], [1.19, 0.8285], [1.21, 0.8257], [1.23, 0.8228], [1.25, 0.82], [1.27, 0.8171], [1.29, 0.8143], [1.31, 0.8115], [1.33, 0.8087], [1.35, 0.8059], [1.37, 0.8031], [1.39, 0.8003], [1.41, 0.7975], [1.51, 0.7838], [1.61, 0.7705], [1.71, 0.7575], [1.81, 0.7451], [1.91, 0.7332], [2.01, 0.722], [2.11, 0.7115], [2.21, 0.7019], [2.31, 0.6932], [2.41, 0.6855], [2.51, 0.6788], [2.61, 0.6731], [2.71, 0.6684], [2.81, 0.6648], [2.91, 0.6622], [3.01, 0.6606], [3.26, 0.6603], [3.51, 0.6648], [3.76, 0.673], [4.01, 0.6842], [4.26, 0.6975], [4.51, 0.7126], [4.76, 0.729], [5.01, 0.7463], [5.26, 0.7644], [5.51, 0.7831], [5.76, 0.8022], [6.01, 0.8217], [6.26, 0.8415], [6.51, 0.8615], [6.76, 0.8817]], &quot;1.50&quot;: [[0.05, 0.9959], [0.07, 0.9943], [0.09, 0.9926], [0.11, 0.991], [0.13, 0.9894], [0.15, 0.9877], [0.17, 0.9861], [0.19, 0.9845], [0.21, 0.9829], [0.23, 0.9812], [0.25, 0.9796], [0.27, 0.978], [0.29, 0.9764], [0.31, 0.9748], [0.33, 0.9732], [0.35, 0.9716], [0.37, 0.97], [0.39, 0.9684], [0.41, 0.9668], [0.43, 0.9653], [0.45, 0.9637], [0.47, 0.9621], [0.49, 0.9605], [0.51, 0.959], [0.53, 0.9574], [0.55, 0.9558], [0.57, 0.9543], [0.59, 0.9527], [0.61, 0.9512], [0.63, 0.9496], [0.65, 0.9481], [0.67, 0.9465], [0.69, 0.945], [0.71, 0.9435], [0.73, 0.942], [0.75, 0.9404], [0.77, 0.9389], [0.79, 0.9374], [0.81, 0.9359], [0.83, 0.9344], [0.85, 0.9329], [0.87, 0.9314], [0.89, 0.9299], [0.91, 0.9285], [0.93, 0.927], [0.95, 0.9255], [0.97, 0.9241], [0.99, 0.9226], [1.01, 0.9212], [1.03, 0.9197], [1.05, 0.9183], [1.07, 0.9168], [1.09, 0.9154], [1.11, 0.914], [1.13, 0.9126], [1.15, 0.9112], [1.17, 0.9098], [1.19, 0.9084], [1.21, 0.907], [1.23, 0.9056], [1.25, 0.9042], [1.27, 0.9028], [1.29, 0.9015], [1.31, 0.9001], [1.33, 0.8988], [1.35, 0.8974], [1.37, 0.8961], [1.39, 0.8948], [1.41, 0.8935], [1.51, 0.887], [1.61, 0.8807], [1.71, 0.8747], [1.81, 0.8689], [1.91, 0.8633], [2.01, 0.8581], [2.11, 0.8531], [2.21, 0.8483], [2.31, 0.8439], [2.41, 0.8398], [2.51, 0.836], [2.61, 0.8326], [2.71, 0.8295], [2.81, 0.8267], [2.91, 0.8243], [3.01, 0.8223], [3.26, 0.8187], [3.51, 0.8173], [3.76, 0.818], [4.01, 0.8207], [4.26, 0.8253], [4.51, 0.8316], [4.76, 0.8394], [5.01, 0.8485], [5.26, 0.8587], [5.51, 0.87], [5.76, 0.8821], [6.01, 0.895], [6.26, 0.9085], [6.51, 0.9226], [6.76, 0.9371]], &quot;2.00&quot;: [[0.05, 0.9991], [0.07, 0.9987], [0.09, 0.9983], [0.11, 0.998], [0.13, 0.9976], [0.15, 0.9973], [0.17, 0.9969], [0.19, 0.9966], [0.21, 0.9962], [0.23, 0.9959], [0.25, 0.9955], [0.27, 0.9952], [0.29, 0.9949], [0.31, 0.9946], [0.33, 0.9942], [0.35, 0.9939], [0.37, 0.9936], [0.39, 0.9933], [0.41, 0.993], [0.43, 0.9927], [0.45, 0.9924], [0.47, 0.9921], [0.49, 0.9918], [0.51, 0.9915], [0.53, 0.9912], [0.55, 0.9909], [0.57, 0.9906], [0.59, 0.9903], [0.61, 0.99], [0.63, 0.9898], [0.65, 0.9895], [0.67, 0.9892], [0.69, 0.989], [0.71, 0.9887], [0.73, 0.9885], [0.75, 0.9882], [0.77, 0.9879], [0.79, 0.9877], [0.81, 0.9875], [0.83, 0.9872], [0.85, 0.987], [0.87, 0.9867], [0.89, 0.9865], [0.91, 0.9863], [0.93, 0.9861], [0.95, 0.9858], [0.97, 0.9856], [0.99, 0.9854], [1.01, 0.9852], [1.03, 0.985], [1.05, 0.9848], [1.07, 0.9846], [1.09, 0.9844], [1.11, 0.9842], [1.13, 0.984], [1.15, 0.9838], [1.17, 0.9836], [1.19, 0.9834], [1.21, 0.9833], [1.23, 0.9831], [1.25, 0.9829], [1.27, 0.9828], [1.29, 0.9826], [1.31, 0.9824], [1.33, 0.9823], [1.35, 0.9821], [1.37, 0.982], [1.39, 0.9818], [1.41, 0.9817], [1.51, 0.981], [1.61, 0.9804], [1.71, 0.9799], [1.81, 0.9795], [1.91, 0.9792], [2.01, 0.9789], [2.11, 0.9788], [2.21, 0.9787], [2.31, 0.9787], [2.41, 0.9788], [2.51, 0.979], [2.61, 0.9793], [2.71, 0.9796], [2.81, 0.9801], [2.91, 0.9806], [3.01, 0.9812], [3.26, 0.9831], [3.51, 0.9855], [3.76, 0.9885], [4.01, 0.9919], [4.26, 0.9959], [4.51, 1.0003], [4.76, 1.0052], [5.01, 1.0106], [5.26, 1.0164], [5.51, 1.0227], [5.76, 1.0293], [6.01, 1.0363], [6.26, 1.0437], [6.51, 1.0515], [6.76, 1.0595]]}, &quot;pts&quot;: {&quot;Methane&quot;: [[0.1, 0.966], [0.3, 0.892], [0.5, 0.806], [0.8, 0.637], [1.0, 0.286], [1.3, 0.234], [1.7, 0.284], [2.2, 0.348], [3.0, 0.449], [4.0, 0.572], [5.0, 0.692], [7.0, 0.922], [0.1, 0.974], [0.3, 0.921], [0.5, 0.863], [0.8, 0.766], [1.0, 0.692], [1.3, 0.559], [1.7, 0.402], [2.2, 0.4], [3.0, 0.475], [4.0, 0.582], [5.0, 0.69], [7.0, 0.9], [0.1, 0.981], [0.3, 0.941], [0.5, 0.899], [0.8, 0.833], [1.0, 0.787], [1.3, 0.715], [1.7, 0.619], [2.2, 0.538], [3.0, 0.537], [4.0, 0.612], [5.0, 0.703], [7.0, 0.892], [0.1, 0.985], [0.3, 0.955], [0.5, 0.924], [0.8, 0.876], [1.0, 0.844], [1.3, 0.796], [1.7, 0.735], [2.2, 0.671], [3.0, 0.63], [4.0, 0.664], [5.0, 0.732], [7.0, 0.895], [0.1, 0.991], [0.3, 0.972], [0.5, 0.954], [0.8, 0.927], [1.0, 0.91], [1.3, 0.885], [1.7, 0.854], [2.2, 0.821], [3.0, 0.787], [4.0, 0.784], [5.0, 0.815], [7.0, 0.926], [0.1, 0.997], [0.3, 0.992], [0.5, 0.987], [0.8, 0.98], [1.0, 0.976], [1.3, 0.97], [1.7, 0.963], [2.2, 0.957], [3.0, 0.953], [4.0, 0.957], [5.0, 0.972], [7.0, 1.026]], &quot;Ethylene&quot;: [[0.1, 0.966], [0.3, 0.891], [0.5, 0.805], [0.8, 0.634], [1.0, 0.281], [1.3, 0.229], [1.7, 0.278], [2.2, 0.341], [3.0, 0.44], [4.0, 0.561], [5.0, 0.679], [7.0, 0.905], [0.1, 0.975], [0.3, 0.921], [0.5, 0.864], [0.8, 0.768], [1.0, 0.695], [1.3, 0.568], [1.7, 0.412], [2.2, 0.401], [3.0, 0.472], [4.0, 0.576], [5.0, 0.682], [7.0, 0.889], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.837], [1.0, 0.792], [1.3, 0.723], [1.7, 0.632], [2.2, 0.552], [3.0, 0.544], [4.0, 0.614], [5.0, 0.703], [7.0, 0.887], [0.1, 0.985], [0.3, 0.956], [0.5, 0.926], [0.8, 0.88], [1.0, 0.849], [1.3, 0.804], [1.7, 0.746], [2.2, 0.686], [3.0, 0.645], [4.0, 0.673], [5.0, 0.738], [7.0, 0.896], [0.1, 0.991], [0.3, 0.974], [0.5, 0.957], [0.8, 0.931], [1.0, 0.915], [1.3, 0.892], [1.7, 0.863], [2.2, 0.833], [3.0, 0.803], [4.0, 0.802], [5.0, 0.831], [7.0, 0.937], [0.1, 0.998], [0.3, 0.993], [0.5, 0.989], [0.8, 0.983], [1.0, 0.98], [1.3, 0.975], [1.7, 0.97], [2.2, 0.966], [3.0, 0.965], [4.0, 0.972], [5.0, 0.988], [7.0, 1.043]], &quot;Ethane&quot;: [[0.1, 0.965], [0.3, 0.89], [0.5, 0.804], [0.8, 0.634], [1.0, 0.28], [1.3, 0.228], [1.7, 0.277], [2.2, 0.34], [3.0, 0.439], [4.0, 0.56], [5.0, 0.678], [7.0, 0.905], [0.1, 0.975], [0.3, 0.921], [0.5, 0.864], [0.8, 0.769], [1.0, 0.697], [1.3, 0.571], [1.7, 0.416], [2.2, 0.402], [3.0, 0.472], [4.0, 0.576], [5.0, 0.682], [7.0, 0.89], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.838], [1.0, 0.793], [1.3, 0.725], [1.7, 0.636], [2.2, 0.557], [3.0, 0.547], [4.0, 0.616], [5.0, 0.704], [7.0, 0.889], [0.1, 0.985], [0.3, 0.956], [0.5, 0.926], [0.8, 0.881], [1.0, 0.851], [1.3, 0.806], [1.7, 0.749], [2.2, 0.691], [3.0, 0.65], [4.0, 0.678], [5.0, 0.742], [7.0, 0.9], [0.1, 0.991], [0.3, 0.974], [0.5, 0.957], [0.8, 0.933], [1.0, 0.917], [1.3, 0.894], [1.7, 0.866], [2.2, 0.838], [3.0, 0.809], [4.0, 0.808], [5.0, 0.838], [7.0, 0.944], [0.1, 0.998], [0.3, 0.994], [0.5, 0.99], [0.8, 0.984], [1.0, 0.981], [1.3, 0.977], [1.7, 0.973], [2.2, 0.97], [3.0, 0.97], [4.0, 0.978], [5.0, 0.996], [7.0, 1.054]], &quot;Propane&quot;: [[0.1, 0.965], [0.3, 0.89], [0.5, 0.803], [0.8, 0.632], [1.0, 0.276], [1.3, 0.225], [1.7, 0.273], [2.2, 0.336], [3.0, 0.434], [4.0, 0.554], [5.0, 0.671], [7.0, 0.897], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.771], [1.0, 0.699], [1.3, 0.577], [1.7, 0.424], [2.2, 0.404], [3.0, 0.471], [4.0, 0.574], [5.0, 0.679], [7.0, 0.886], [0.1, 0.981], [0.3, 0.942], [0.5, 0.902], [0.8, 0.84], [1.0, 0.797], [1.3, 0.731], [1.7, 0.645], [2.2, 0.568], [3.0, 0.554], [4.0, 0.619], [5.0, 0.706], [7.0, 0.889], [0.1, 0.986], [0.3, 0.957], [0.5, 0.928], [0.8, 0.884], [1.0, 0.855], [1.3, 0.811], [1.7, 0.757], [2.2, 0.702], [3.0, 0.662], [4.0, 0.687], [5.0, 0.749], [7.0, 0.905], [0.1, 0.992], [0.3, 0.975], [0.5, 0.959], [0.8, 0.935], [1.0, 0.92], [1.3, 0.899], [1.7, 0.873], [2.2, 0.847], [3.0, 0.821], [4.0, 0.821], [5.0, 0.851], [7.0, 0.956], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.988], [1.0, 0.985], [1.3, 0.982], [1.7, 0.98], [2.2, 0.978], [3.0, 0.981], [4.0, 0.991], [5.0, 1.011], [7.0, 1.069]], &quot;n-Butane&quot;: [[0.1, 0.966], [0.3, 0.89], [0.5, 0.802], [0.8, 0.626], [1.0, 0.274], [1.3, 0.221], [1.7, 0.269], [2.2, 0.331], [3.0, 0.429], [4.0, 0.548], [5.0, 0.663], [7.0, 0.887], [0.1, 0.975], [0.3, 0.923], [0.5, 0.867], [0.8, 0.773], [1.0, 0.701], [1.3, 0.58], [1.7, 0.433], [2.2, 0.405], [3.0, 0.469], [4.0, 0.571], [5.0, 0.675], [7.0, 0.879], [0.1, 0.982], [0.3, 0.945], [0.5, 0.906], [0.8, 0.845], [1.0, 0.803], [1.3, 0.737], [1.7, 0.653], [2.2, 0.577], [3.0, 0.56], [4.0, 0.621], [5.0, 0.706], [7.0, 0.887], [0.1, 0.987], [0.3, 0.96], [0.5, 0.932], [0.8, 0.89], [1.0, 0.862], [1.3, 0.82], [1.7, 0.767], [2.2, 0.713], [3.0, 0.673], [4.0, 0.694], [5.0, 0.754], [7.0, 0.906], [0.1, 0.993], [0.3, 0.978], [0.5, 0.964], [0.8, 0.943], [1.0, 0.929], [1.3, 0.909], [1.7, 0.885], [2.2, 0.86], [3.0, 0.836], [4.0, 0.836], [5.0, 0.864], [7.0, 0.966], [0.1, 0.999], [0.3, 0.997], [0.5, 0.995], [0.8, 0.993], [1.0, 0.992], [1.3, 0.991], [1.7, 0.99], [2.2, 0.991], [3.0, 0.996], [4.0, 1.009], [5.0, 1.03], [7.0, 1.09]], &quot;Isopentane&quot;: [[0.1, 0.965], [0.3, 0.888], [0.5, 0.8], [0.8, 0.626], [1.0, 0.27], [1.3, 0.22], [1.7, 0.268], [2.2, 0.33], [3.0, 0.428], [4.0, 0.547], [5.0, 0.663], [7.0, 0.886], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.772], [1.0, 0.703], [1.3, 0.587], [1.7, 0.435], [2.2, 0.403], [3.0, 0.469], [4.0, 0.571], [5.0, 0.675], [7.0, 0.88], [0.1, 0.981], [0.3, 0.943], [0.5, 0.904], [0.8, 0.843], [1.0, 0.802], [1.3, 0.74], [1.7, 0.66], [2.2, 0.583], [3.0, 0.559], [4.0, 0.621], [5.0, 0.707], [7.0, 0.889], [0.1, 0.986], [0.3, 0.958], [0.5, 0.93], [0.8, 0.888], [1.0, 0.86], [1.3, 0.82], [1.7, 0.771], [2.2, 0.719], [3.0, 0.676], [4.0, 0.694], [5.0, 0.754], [7.0, 0.909], [0.1, 0.992], [0.3, 0.976], [0.5, 0.961], [0.8, 0.939], [1.0, 0.926], [1.3, 0.907], [1.7, 0.885], [2.2, 0.862], [3.0, 0.84], [4.0, 0.839], [5.0, 0.865], [7.0, 0.967], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.989], [1.0, 0.988], [1.3, 0.986], [1.7, 0.986], [2.2, 0.987], [3.0, 0.994], [4.0, 1.008], [5.0, 1.029], [7.0, 1.089]], &quot;n-Heptane&quot;: [[0.1, 0.964], [0.3, 0.885], [0.5, 0.793], [0.8, 0.606], [1.0, 0.275], [1.3, 0.215], [1.7, 0.26], [2.2, 0.318], [3.0, 0.412], [4.0, 0.527], [5.0, 0.638], [7.0, 0.854], [0.1, 0.975], [0.3, 0.922], [0.5, 0.866], [0.8, 0.772], [1.0, 0.703], [1.3, 0.59], [1.7, 0.445], [2.2, 0.404], [3.0, 0.461], [4.0, 0.557], [5.0, 0.657], [7.0, 0.855], [0.1, 0.982], [0.3, 0.945], [0.5, 0.908], [0.8, 0.849], [1.0, 0.81], [1.3, 0.75], [1.7, 0.673], [2.2, 0.596], [3.0, 0.561], [4.0, 0.615], [5.0, 0.695], [7.0, 0.87], [0.1, 0.987], [0.3, 0.961], [0.5, 0.935], [0.8, 0.896], [1.0, 0.87], [1.3, 0.833], [1.7, 0.787], [2.2, 0.737], [3.0, 0.688], [4.0, 0.696], [5.0, 0.749], [7.0, 0.896], [0.1, 0.993], [0.3, 0.979], [0.5, 0.966], [0.8, 0.948], [1.0, 0.936], [1.3, 0.92], [1.7, 0.901], [2.2, 0.882], [3.0, 0.86], [4.0, 0.854], [5.0, 0.873], [7.0, 0.964], [0.1, 0.999], [0.3, 0.997], [0.5, 0.996], [0.8, 0.995], [1.0, 0.995], [1.3, 0.996], [1.7, 0.998], [2.2, 1.002], [3.0, 1.011], [4.0, 1.027], [5.0, 1.047], [7.0, 1.102]], &quot;Nitrogen&quot;: [[0.1, 0.966], [0.3, 0.892], [0.5, 0.808], [0.8, 0.639], [1.0, 0.289], [1.3, 0.237], [1.7, 0.287], [2.2, 0.352], [3.0, 0.455], [4.0, 0.58], [5.0, 0.701], [7.0, 0.934], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.769], [1.0, 0.696], [1.3, 0.566], [1.7, 0.411], [2.2, 0.408], [3.0, 0.483], [4.0, 0.591], [5.0, 0.7], [7.0, 0.914], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.836], [1.0, 0.791], [1.3, 0.721], [1.7, 0.628], [2.2, 0.549], [3.0, 0.549], [4.0, 0.624], [5.0, 0.716], [7.0, 0.907], [0.1, 0.985], [0.3, 0.955], [0.5, 0.925], [0.8, 0.879], [1.0, 0.848], [1.3, 0.801], [1.7, 0.742], [2.2, 0.682], [3.0, 0.644], [4.0, 0.678], [5.0, 0.747], [7.0, 0.912], [0.1, 0.991], [0.3, 0.973], [0.5, 0.956], [0.8, 0.93], [1.0, 0.913], [1.3, 0.889], [1.7, 0.86], [2.2, 0.829], [3.0, 0.799], [4.0, 0.8], [5.0, 0.832], [7.0, 0.945], [0.1, 0.997], [0.3, 0.993], [0.5, 0.988], [0.8, 0.982], [1.0, 0.978], [1.3, 0.973], [1.7, 0.968], [2.2, 0.964], [3.0, 0.962], [4.0, 0.969], [5.0, 0.986], [7.0, 1.044]], &quot;CO2&quot;: [[0.1, 0.965], [0.3, 0.889], [0.5, 0.802], [0.8, 0.629], [1.0, 0.275], [1.3, 0.222], [1.7, 0.27], [2.2, 0.331], [3.0, 0.428], [4.0, 0.545], [5.0, 0.659], [7.0, 0.88], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.772], [1.0, 0.702], [1.3, 0.584], [1.7, 0.434], [2.2, 0.406], [3.0, 0.469], [4.0, 0.569], [5.0, 0.672], [7.0, 0.873], [0.1, 0.981], [0.3, 0.943], [0.5, 0.904], [0.8, 0.843], [1.0, 0.801], [1.3, 0.737], [1.7, 0.654], [2.2, 0.578], [3.0, 0.56], [4.0, 0.62], [5.0, 0.703], [7.0, 0.881], [0.1, 0.986], [0.3, 0.958], [0.5, 0.93], [0.8, 0.887], [1.0, 0.859], [1.3, 0.817], [1.7, 0.765], [2.2, 0.712], [3.0, 0.672], [4.0, 0.692], [5.0, 0.751], [7.0, 0.901], [0.1, 0.992], [0.3, 0.976], [0.5, 0.961], [0.8, 0.938], [1.0, 0.924], [1.3, 0.904], [1.7, 0.879], [2.2, 0.854], [3.0, 0.83], [4.0, 0.831], [5.0, 0.859], [7.0, 0.959], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.988], [1.0, 0.986], [1.3, 0.984], [1.7, 0.981], [2.2, 0.98], [3.0, 0.983], [4.0, 0.995], [5.0, 1.015], [7.0, 1.075]], &quot;Water&quot;: [[0.1, 0.966], [0.3, 0.888], [0.5, 0.796], [0.8, 0.608], [1.0, 0.229], [1.3, 0.174], [1.7, 0.208], [2.2, 0.254], [0.1, 0.976], [0.3, 0.926], [0.5, 0.871], [0.8, 0.778], [1.0, 0.708], [1.3, 0.588], [1.7, 0.417], [2.2, 0.341], [3.0, 0.372], [0.1, 0.983], [0.3, 0.949], [0.5, 0.912], [0.8, 0.854], [1.0, 0.813], [1.3, 0.75], [1.7, 0.663], [2.2, 0.566], [3.0, 0.493], [4.0, 0.509], [0.1, 0.988], [0.3, 0.963], [0.5, 0.938], [0.8, 0.899], [1.0, 0.872], [1.3, 0.831], [1.7, 0.778], [2.2, 0.715], [3.0, 0.642], [4.0, 0.612], [5.0, 0.63], [0.1, 0.994], [0.3, 0.98], [0.5, 0.967], [0.8, 0.947], [1.0, 0.934], [1.3, 0.915], [1.7, 0.89], [2.2, 0.861], [3.0, 0.823], [4.0, 0.794], [5.0, 0.786], [7.0, 0.82], [0.1, 0.999], [0.3, 0.996], [0.5, 0.994], [0.8, 0.991], [1.0, 0.988], [1.3, 0.985], [1.7, 0.982], [2.2, 0.978], [3.0, 0.974], [4.0, 0.973], [5.0, 0.977], [7.0, 0.997]]}, &quot;subs&quot;: [&quot;Methane&quot;, &quot;Ethylene&quot;, &quot;Ethane&quot;, &quot;Propane&quot;, &quot;n-Butane&quot;, &quot;Isopentane&quot;, &quot;n-Heptane&quot;, &quot;Nitrogen&quot;, &quot;CO2&quot;, &quot;Water&quot;]};
+
+const SUB={
+ 'Methane':{n:'Metano',m:'x',c:'#00838f'},
+ 'Ethylene':{n:'Etileno',m:'co',c:'#1565c0'},
+ 'Ethane':{n:'Etano',m:'tf',c:'#2e7d32'},
+ 'Propane':{n:'Propano',m:'do',c:'#8e24aa'},
+ 'n-Butane':{n:'n-Butano',m:'so',c:'#ef6c00'},
+ 'Isopentane':{n:'Isopentano',m:'sf',c:'#c62828'},
+ 'n-Heptane':{n:'n-Heptano',m:'tdf',c:'#5d4037'},
+ 'Nitrogen':{n:'Nitrógeno',m:'to',c:'#0277bd'},
+ 'CO2':{n:'CO₂',m:'df',c:'#00897b'},
+ 'Water':{n:'Agua',m:'cf',c:'#111111'}
+};
+const TRS=['2.00','1.50','1.30','1.20','1.10','1.00'];
+const TRLAB={'2.00':[3.4,0.06],'1.50':[3.6,0.05],'1.30':[3.6,0.05],'1.20':[2.0,-0.05],'1.10':[1.45,-0.05],'1.00':[0.78,-0.04]};
+const VBW=1000,VBH=660,L=66,Rm=26,Tm=28,Bm=56,PW=VBW-L-Rm,PH=VBH-Tm-Bm,PMAX=7,ZMIN=0.1,ZMAX=1.1;
+const px=p=>(L+p/PMAX*PW);
+const py=z=>(Tm+(ZMAX-z)/(ZMAX-ZMIN)*PH);
+const visible={}; Object.keys(SUB).forEach(k=>visible[k]=true);
+
+function mark(t,x,y,c){
+ x=+x;y=+y;const s=3.1, S=1.3;
+ if(t==='x') return '<path d=&quot;M'+(x-s)+' '+(y-s)+'L'+(x+s)+' '+(y+s)+'M'+(x+s)+' '+(y-s)+'L'+(x-s)+' '+(y+s)+'&quot; stroke=&quot;'+c+'&quot; stroke-width=&quot;'+S+'&quot;/>';
+ if(t==='co') return '<circle cx=&quot;'+x+'&quot; cy=&quot;'+y+'&quot; r=&quot;'+s+'&quot; fill=&quot;none&quot; stroke=&quot;'+c+'&quot; stroke-width=&quot;'+S+'&quot;/>';
+ if(t==='cf') return '<circle cx=&quot;'+x+'&quot; cy=&quot;'+y+'&quot; r=&quot;'+s+'&quot; fill=&quot;'+c+'&quot;/>';
+ if(t==='so') return '<rect x=&quot;'+(x-s)+'&quot; y=&quot;'+(y-s)+'&quot; width=&quot;'+(2*s)+'&quot; height=&quot;'+(2*s)+'&quot; fill=&quot;none&quot; stroke=&quot;'+c+'&quot; stroke-width=&quot;'+S+'&quot;/>';
+ if(t==='sf') return '<rect x=&quot;'+(x-s)+'&quot; y=&quot;'+(y-s)+'&quot; width=&quot;'+(2*s)+'&quot; height=&quot;'+(2*s)+'&quot; fill=&quot;'+c+'&quot;/>';
+ if(t==='tf') return '<path d=&quot;M'+x+' '+(y-s)+'L'+(x+s)+' '+(y+s*0.85)+'L'+(x-s)+' '+(y+s*0.85)+'Z&quot; fill=&quot;'+c+'&quot;/>';
+ if(t==='to') return '<path d=&quot;M'+x+' '+(y-s)+'L'+(x+s)+' '+(y+s*0.85)+'L'+(x-s)+' '+(y+s*0.85)+'Z&quot; fill=&quot;none&quot; stroke=&quot;'+c+'&quot; stroke-width=&quot;'+S+'&quot;/>';
+ if(t==='tdf')return '<path d=&quot;M'+x+' '+(y+s)+'L'+(x+s)+' '+(y-s*0.85)+'L'+(x-s)+' '+(y-s*0.85)+'Z&quot; fill=&quot;'+c+'&quot;/>';
+ if(t==='do') return '<path d=&quot;M'+x+' '+(y-s)+'L'+(x+s)+' '+y+'L'+x+' '+(y+s)+'L'+(x-s)+' '+y+'Z&quot; fill=&quot;none&quot; stroke=&quot;'+c+'&quot; stroke-width=&quot;'+S+'&quot;/>';
+ if(t==='df') return '<path d=&quot;M'+x+' '+(y-s)+'L'+(x+s)+' '+y+'L'+x+' '+(y+s)+'L'+(x-s)+' '+y+'Z&quot; fill=&quot;'+c+'&quot;/>';
+ return '';
+}
+function zAt(tr,pr){const a=DATA.avg[tr];let best=a[0];for(const p of a){if(Math.abs(p[0]-pr)<Math.abs(best[0]-pr))best=p;}return best[1];}
+
+function legendSVG(){
+ const bx=648,by=430,bw=326,bh=176;
+ let g='<g font-family=&quot;IBM Plex Sans,Segoe UI,sans-serif&quot;>';
+ g+='<rect x=&quot;'+bx+'&quot; y=&quot;'+by+'&quot; width=&quot;'+bw+'&quot; height=&quot;'+bh+'&quot; rx=&quot;7&quot; fill=&quot;#ffffff&quot; fill-opacity=&quot;0.94&quot; stroke=&quot;#cfd8e3&quot;/>';
+ g+='<text x=&quot;'+(bx+13)+'&quot; y=&quot;'+(by+20)+'&quot; font-size=&quot;12.5&quot; font-weight=&quot;700&quot; fill=&quot;#1a2233&quot;>Leyenda &amp;mdash; sustancias</text>';
+ const keys=Object.keys(SUB);
+ keys.forEach((k,idx)=>{const col=idx<5?0:1, rrow=idx%5;
+  const cx=bx+16+col*160, ry=by+44+rrow*23, s=SUB[k];
+  g+='<g onclick=&quot;toggle(\''+k+'\')&quot; style=&quot;cursor:pointer&quot; opacity=&quot;'+(visible[k]?1:0.28)+'&quot;>';
+  g+='<rect x=&quot;'+(cx-9)+'&quot; y=&quot;'+(ry-11)+'&quot; width=&quot;152&quot; height=&quot;20&quot; fill=&quot;#fff&quot; fill-opacity=&quot;0.01&quot;/>';
+  g+=mark(s.m,cx,ry-3,s.c);
+  g+='<text x=&quot;'+(cx+12)+'&quot; y=&quot;'+ry+'&quot; font-size=&quot;11.5&quot; fill=&quot;#26354f&quot;>'+s.n+'</text></g>';
+ });
+ const ly=by+44+5*23;
+ g+='<line x1=&quot;'+(bx+10)+'&quot; y1=&quot;'+(ly-3)+'&quot; x2=&quot;'+(bx+32)+'&quot; y2=&quot;'+(ly-3)+'&quot; stroke=&quot;#e0218a&quot; stroke-width=&quot;2.6&quot;/>';
+ g+='<text x=&quot;'+(bx+38)+'&quot; y=&quot;'+ly+'&quot; font-size=&quot;11.5&quot; fill=&quot;#26354f&quot;>curva media  T_R  (prom. hidrocarburos)</text>';
+ g+='</g>';
+ return g;
+}
+
+function buildSVG(){
+ const showPts=document.getElementById('ckPts').checked;
+ const showAvg=document.getElementById('ckAvg').checked;
+ const showG=document.getElementById('ckGuide').checked;
+ let g='<svg viewBox=&quot;0 0 '+VBW+' '+VBH+'&quot; role=&quot;img&quot; aria-label=&quot;Carta de compresibilidad generalizada Z vs presion reducida&quot;>';
+ g+='<rect x=&quot;'+L+'&quot; y=&quot;'+Tm+'&quot; width=&quot;'+PW+'&quot; height=&quot;'+PH+'&quot; fill=&quot;#fff&quot;/>';
+ for(let p=0;p<=PMAX+1e-9;p+=0.5){const x=px(p);g+='<line x1=&quot;'+x+'&quot; y1=&quot;'+Tm+'&quot; x2=&quot;'+x+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;'+(p%1===0?'#dbe2ea':'#eef2f7')+'&quot;/>';
+  if(p%0.5===0)g+='<text x=&quot;'+x+'&quot; y=&quot;'+(Tm+PH+16)+'&quot; font-size=&quot;11&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;middle&quot; font-family=&quot;monospace&quot;>'+p.toFixed(p%1===0?0:1)+'</text>';}
+ for(let z=ZMIN;z<=ZMAX+1e-9;z+=0.1){const y=py(z);g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+y+'&quot; x2=&quot;'+(L+PW)+'&quot; y2=&quot;'+y+'&quot; stroke=&quot;#dbe2ea&quot;/>';
+  g+='<text x=&quot;'+(L-9)+'&quot; y=&quot;'+(y+4)+'&quot; font-size=&quot;11&quot; fill=&quot;#5c6b84&quot; text-anchor=&quot;end&quot; font-family=&quot;monospace&quot;>'+z.toFixed(1)+'</text>';}
+ g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+Tm+'&quot; x2=&quot;'+L+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;#9aa7bd&quot; stroke-width=&quot;1.2&quot;/>';
+ g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+(Tm+PH)+'&quot; x2=&quot;'+(L+PW)+'&quot; y2=&quot;'+(Tm+PH)+'&quot; stroke=&quot;#9aa7bd&quot; stroke-width=&quot;1.2&quot;/>';
+ g+='<text x=&quot;'+(L+PW/2)+'&quot; y=&quot;'+(VBH-16)+'&quot; font-size=&quot;14&quot; fill=&quot;#1a2233&quot; text-anchor=&quot;middle&quot; font-weight=&quot;600&quot;>Presión reducida  P_R</text>';
+ g+='<text x=&quot;18&quot; y=&quot;'+(Tm+PH/2)+'&quot; font-size=&quot;14&quot; fill=&quot;#1a2233&quot; text-anchor=&quot;middle&quot; font-weight=&quot;600&quot; transform=&quot;rotate(-90 18 '+(Tm+PH/2)+')&quot;>Z = Pv/RT</text>';
+ if(showG){const zc=zAt('1.30',2.5);g+='<line x1=&quot;'+px(2.5)+'&quot; y1=&quot;'+(Tm+PH)+'&quot; x2=&quot;'+px(2.5)+'&quot; y2=&quot;'+py(zc)+'&quot; stroke=&quot;#d32f2f&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;5 4&quot;/>';
+  g+='<line x1=&quot;'+L+'&quot; y1=&quot;'+py(zc)+'&quot; x2=&quot;'+px(2.5)+'&quot; y2=&quot;'+py(zc)+'&quot; stroke=&quot;#d32f2f&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;5 4&quot;/>';
+  g+='<text x=&quot;'+(px(2.5)+5)+'&quot; y=&quot;'+(py(zc)-5)+'&quot; font-size=&quot;10.5&quot; fill=&quot;#d32f2f&quot;>P_R=2.5, Z≈'+zc.toFixed(2)+'</text>';}
+ if(showAvg){TRS.forEach(tr=>{const a=DATA.avg[tr].filter(p=>p[1]>=ZMIN&amp;&amp;p[1]<=ZMAX);
+  let d=a.map((p,i)=>(i?'L':'M')+px(p[0]).toFixed(1)+' '+py(p[1]).toFixed(1)).join(' ');
+  g+='<path d=&quot;'+d+'&quot; fill=&quot;none&quot; stroke=&quot;#e0218a&quot; stroke-width=&quot;2&quot;/>';
+  const lp=TRLAB[tr],z=zAt(tr,lp[0]);g+='<text x=&quot;'+px(lp[0])+'&quot; y=&quot;'+(py(z)+lp[1]*PH)+'&quot; font-size=&quot;12&quot; fill=&quot;#c2185b&quot; font-weight=&quot;700&quot;>T_R = '+tr+'</text>';});}
+ if(showPts){for(const k in SUB){if(!visible[k]||!DATA.pts[k])continue;const c=SUB[k].c,m=SUB[k].m;
+  for(const p of DATA.pts[k]){if(p[1]<ZMIN||p[1]>ZMAX)continue;g+=mark(m,px(p[0]).toFixed(1),py(p[1]).toFixed(1),c);}}}
+ g+=legendSVG();
+ g+='</svg>';return g;
+}
+function toggle(k){visible[k]=!visible[k];redraw();}
+function redraw(){document.getElementById('chart').innerHTML=buildSVG();attachHover();}
+function attachHover(){const svg=document.querySelector('#chart svg');if(!svg)return;const tt=document.getElementById('tt');
+ const all=[];for(const k in SUB){if(!visible[k]||!DATA.pts[k])continue;for(const p of DATA.pts[k])all.push({pr:p[0],z:p[1],n:SUB[k].n});}
+ svg.addEventListener('mousemove',ev=>{const r=svg.getBoundingClientRect(),kx=VBW/r.width,ky=VBH/r.height;
+  const vx=(ev.clientX-r.left)*kx,vy=(ev.clientY-r.top)*ky;let b=null,bd=1e9;
+  all.forEach(d=>{const dx=px(d.pr)-vx,dy=py(d.z)-vy,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;b=d;}});
+  if(b&amp;&amp;bd<120){tt.style.opacity=1;tt.style.left=(ev.clientX+12)+'px';tt.style.top=(ev.clientY-10)+'px';
+   tt.innerHTML=b.n+' &amp;middot; P_R='+b.pr+' &amp;middot; Z='+b.z.toFixed(3);}else tt.style.opacity=0;});
+ svg.addEventListener('mouseleave',()=>tt.style.opacity=0);}
+redraw();
+
+</script>
+</body>
+</html>
+"></iframe>
+</div>
+<div class="hint">Tres herramientas reunidas en una sola aplicación &middot; cada pestaña funciona de forma independiente.</div>
+</div>
+<script>
+
+const N=3;
+function fit(i){ const f=document.getElementById('fr'+i); if(!f||f.style.display==='none')return;
+ try{ const d=f.contentDocument||f.contentWindow.document;
+  const hh=Math.max(d.body.scrollHeight,d.documentElement.scrollHeight,520);
+  f.style.height=(hh+8)+'px'; }catch(e){ f.style.height='1100px'; } }
+function switchApp(i){ for(let k=0;k<N;k++){
+  document.getElementById('fr'+k).style.display=(k===i)?'block':'none';
+  document.getElementById('tb'+k).classList.toggle('active',k===i); }
+ setTimeout(()=>fit(i),60); setTimeout(()=>fit(i),320); }
+window.addEventListener('resize',()=>{for(let k=0;k<N;k++){const f=document.getElementById('fr'+k);if(f&&f.style.display!=='none')fit(k);}});
+window.addEventListener('load',()=>{switchApp(0);});
+
+</script>
+<style>/* === Accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Suite de Ecuaciones de Estado</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Comparador ampliado de las ecuaciones de estado con isotermas y región de saturación (datos IAPWS), carta Nelson–Obert y estados correspondientes.</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Seleccione la sustancia y la ecuación de estado que desea evaluar.</li><li>Ingrese las condiciones (presión, temperatura o volumen) en los campos de entrada.</li><li>Ejecute el cálculo y compare los resultados entre modelos (gas ideal, vdW, RK, SRK, PR, virial).</li><li>Analice las desviaciones respecto de la referencia y las isotermas graficadas.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trabajo de Frontera y Modos de Trabajo · Termo-IA-Dinámica</title>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+    svg: { fontCache: 'global' }
+  };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js" id="MathJax-script" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy:#1F3864; --blue:#2E75B6; --blue-soft:#EAF1F8; --blue-line:#BBD0E6;
+    --ink:#222; --grey:#595959; --bg:#F4F7FB; --card:#FFFFFF; --ok:#1E7E46;
+    --accent:#C9531B; --shadow:0 2px 10px rgba(31,56,100,.08);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:var(--ink);
+       background:var(--bg);line-height:1.6;font-size:16px}
+  /* ---------- Layout ---------- */
+  header.top{background:linear-gradient(120deg,var(--navy),#2c4a7a);color:#fff;
+       padding:18px 26px;position:sticky;top:0;z-index:30;box-shadow:var(--shadow);
+       display:flex;align-items:center;gap:16px}
+  header.top h1{font-size:1.15rem;margin:0;font-weight:600;letter-spacing:.2px}
+  header.top .sub{font-size:.78rem;color:#cdddf2;margin-top:2px}
+  .burger{display:none;background:rgba(255,255,255,.15);border:none;color:#fff;
+       font-size:1.3rem;border-radius:8px;padding:4px 12px;cursor:pointer}
+  .wrap{display:flex;max-width:1180px;margin:0 auto;gap:0}
+  nav.side{width:248px;flex:0 0 248px;background:var(--card);border-right:1px solid #e6ecf3;
+       padding:18px 0;position:sticky;top:69px;height:calc(100vh - 69px);overflow-y:auto}
+  nav.side a{display:flex;gap:10px;align-items:center;padding:10px 22px;color:var(--grey);
+       text-decoration:none;font-size:.92rem;border-left:3px solid transparent}
+  nav.side a .nm{display:inline-block;width:26px;height:26px;line-height:26px;text-align:center;
+       background:var(--blue-soft);color:var(--navy);border-radius:7px;font-weight:700;font-size:.8rem;flex:0 0 auto}
+  nav.side a:hover{background:#f7fafd;color:var(--navy)}
+  nav.side a.active{background:var(--blue-soft);color:var(--navy);border-left-color:var(--blue);font-weight:600}
+  main{flex:1 1 auto;padding:30px 38px;min-width:0}
+  section.mod{display:none;animation:fade .35s ease}
+  section.mod.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  /* ---------- Typography ---------- */
+  h2.mt{color:var(--navy);font-size:1.55rem;margin:.1em 0 .1em;border-bottom:2px solid var(--blue-line);
+       padding-bottom:8px}
+  h3{color:var(--blue);font-size:1.12rem;margin:1.5em 0 .4em}
+  .lead{color:var(--grey);font-size:1.02rem;margin-top:4px}
+  p{margin:.6em 0}
+  .card{background:var(--card);border:1px solid #e6ecf3;border-radius:12px;padding:20px 22px;
+       margin:16px 0;box-shadow:var(--shadow)}
+  .eqbox{background:var(--blue-soft);border:1px solid var(--blue-line);border-radius:10px;
+       padding:6px 16px;margin:14px 0;text-align:center;overflow-x:auto}
+  .note{border-left:4px solid var(--blue);background:#f7fbff;padding:10px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .tip{border-left:4px solid var(--accent);background:#fff7f2;padding:10px 16px;border-radius:0 8px 8px 0;margin:14px 0}
+  .pill{display:inline-block;background:var(--blue-soft);color:var(--navy);border-radius:20px;
+       padding:3px 12px;font-size:.78rem;font-weight:600;margin:0 6px 6px 0}
+  table.data{border-collapse:collapse;width:100%;margin:14px 0;font-size:.9rem}
+  table.data th{background:var(--navy);color:#fff;padding:8px 10px;text-align:left;font-weight:600}
+  table.data td{border:1px solid #dfe6ee;padding:7px 10px}
+  table.data tr:nth-child(even){background:#f7fafd}
+  /* ---------- Controls ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  label.fld{display:block;font-size:.82rem;color:var(--grey);margin:10px 0 3px;font-weight:600}
+  input[type=number],select{width:100%;padding:8px 10px;border:1px solid #c8d4e0;border-radius:8px;
+       font-size:.95rem;font-family:inherit;background:#fff}
+  input[type=number]:focus,select:focus{outline:2px solid var(--blue-soft);border-color:var(--blue)}
+  .seg{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 4px}
+  .seg button{flex:1 1 auto;padding:8px 6px;border:1px solid #c8d4e0;background:#fff;border-radius:8px;
+       cursor:pointer;font-size:.86rem;color:var(--grey);font-family:inherit}
+  .seg button.on{background:var(--navy);color:#fff;border-color:var(--navy);font-weight:600}
+  .btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:10px 18px;
+       font-size:.95rem;cursor:pointer;font-family:inherit;font-weight:600;margin-top:14px}
+  .btn:hover{background:#255f96}
+  .result{background:#0f2747;color:#eaf2fb;border-radius:10px;padding:14px 18px;margin-top:14px;font-size:.95rem}
+  .result b{color:#9ecbf5}
+  .result .big{font-size:1.5rem;color:#fff;font-weight:700}
+  .chartbox{position:relative;height:330px}
+  .steps{counter-reset:st}
+  .step{position:relative;padding:12px 16px 12px 50px;border:1px solid #e6ecf3;border-radius:10px;margin:10px 0;background:#fff}
+  .step::before{counter-increment:st;content:counter(st);position:absolute;left:12px;top:12px;
+       width:26px;height:26px;background:var(--blue);color:#fff;border-radius:50%;text-align:center;
+       line-height:26px;font-weight:700;font-size:.85rem}
+  details.ex{border:1px solid #e6ecf3;border-radius:12px;margin:14px 0;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+  details.ex>summary{cursor:pointer;padding:14px 18px;font-weight:600;color:var(--navy);
+       background:var(--blue-soft);list-style:none;display:flex;justify-content:space-between;align-items:center}
+  details.ex>summary::after{content:'▸';color:var(--blue);transition:.2s}
+  details.ex[open]>summary::after{transform:rotate(90deg)}
+  details.ex .body{padding:6px 20px 18px}
+  .ref{font-size:.82rem;color:var(--ok);font-weight:600}
+  footer.ft{max-width:1180px;margin:10px auto 30px;padding:16px 38px;color:var(--grey);font-size:.82rem;
+       border-top:1px solid #e0e7ef}
+  @media(max-width:820px){
+    nav.side{position:fixed;left:0;top:69px;transform:translateX(-100%);transition:.25s;z-index:25;box-shadow:6px 0 18px rgba(0,0,0,.12)}
+    nav.side.open{transform:none}
+    .burger{display:inline-block}
+    main{padding:22px 18px}
+  }
+/* === Mejoras de accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="burger" id="burger" aria-label="Menú">☰</button>
+  <div>
+    <h1>Trabajo de Frontera y Modos de Trabajo</h1>
+    <div class="sub">Termo-IA-Dinámica · Módulo 03 — Energía, calor y trabajo · App de autoestudio</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="side" id="side">
+    <a data-go="m0" class="active"><span class="nm">i</span> Inicio y mapa</a>
+    <a data-go="m1"><span class="nm">1</span> Concepto y signos</a>
+    <a data-go="m2"><span class="nm">2</span> Trabajo de frontera</a>
+    <a data-go="m3"><span class="nm">3</span> Procesos (p–V)</a>
+    <a data-go="m4"><span class="nm">4</span> Trayectoria</a>
+    <a data-go="m5"><span class="nm">5</span> Modos de trabajo</a>
+    <a data-go="m6"><span class="nm">6</span> Ejemplos resueltos</a>
+  </nav>
+
+  <main>
+  <!-- ===================== M0 ===================== -->
+  <section class="mod show" id="m0">
+    <h2 class="mt">Inicio · ¿Qué vas a estudiar?</h2>
+    <p class="lead">Una guía interactiva de autoestudio sobre el <b>trabajo</b> en termodinámica: cómo se calcula
+       cuando la frontera de un sistema se mueve, y cómo se evalúan otros modos de trabajo.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Mapa de la aplicación</h3>
+      <table class="data">
+        <tr><th>Módulo</th><th>Aprenderás a…</th></tr>
+        <tr><td><b>1 · Concepto y signos</b></td><td>Definir el trabajo, aplicar la convención de signos y distinguir trabajo, potencia y trabajo específico.</td></tr>
+        <tr><td><b>2 · Trabajo de frontera</b></td><td>Entender $W=\int p\,dV$ y por qué el trabajo es el <i>área</i> bajo la curva en el diagrama p–V.</td></tr>
+        <tr><td><b>3 · Procesos (p–V)</b></td><td>Calcular y graficar el trabajo en procesos isobárico, isocórico, isotérmico y politrópico.</td></tr>
+        <tr><td><b>4 · Trayectoria</b></td><td>Comprobar que el trabajo depende del camino y no es una propiedad del sistema.</td></tr>
+        <tr><td><b>5 · Modos de trabajo</b></td><td>Evaluar el trabajo de eje, de resorte y eléctrico con calculadoras dedicadas.</td></tr>
+        <tr><td><b>6 · Ejemplos resueltos</b></td><td>Seguir, paso a paso, problemas tipo examen con resultado verificable.</td></tr>
+      </table>
+      <div class="note">Recomendación de uso: lee la teoría de cada módulo, experimenta con las calculadoras
+        cambiando los datos, y al final resuelve los ejemplos del Módulo 6 intentándolos antes de abrir la solución.</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Convenciones de esta app</h3>
+      <p>Se trabaja con presión en <span class="pill">kPa</span>, volumen en <span class="pill">m³</span>
+         y, por tanto, trabajo en <span class="pill">kJ</span>, ya que
+         $1\ \text{kPa}\cdot\text{m}^3 = 1\ \text{kJ}$. La masa se expresa en kg.</p>
+    </div>
+  </section>
+
+  <!-- ===================== M1 ===================== -->
+  <section class="mod" id="m1">
+    <h2 class="mt">1 · Concepto de trabajo, signos y unidades</h2>
+
+    <div class="card">
+      <h3 style="margin-top:0">Definición</h3>
+      <p>Mecánicamente, el trabajo es el producto de una fuerza por la distancia recorrida en su dirección.
+         Termodinámicamente, es la <b>interacción</b> entre un sistema y su entorno cuyo único efecto externo
+         podría reducirse a <i>elevar un peso</i>.</p>
+      <div class="eqbox">$$W = F\cdot d$$</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Convención de signos</h3>
+      <p>Adoptamos el convenio clásico de la termodinámica:</p>
+      <table class="data">
+        <tr><th>Situación</th><th>Signo</th><th>Interpretación</th></tr>
+        <tr><td>El sistema <b>realiza</b> trabajo sobre el entorno (expansión)</td><td>$W>0$</td><td>El sistema entrega energía.</td></tr>
+        <tr><td>El entorno realiza trabajo <b>sobre</b> el sistema (compresión)</td><td>$W<0$</td><td>El sistema recibe energía.</td></tr>
+      </table>
+      <div class="tip">En un diagrama p–V, una expansión ($V_2>V_1$) da trabajo positivo; una compresión ($V_2<V_1$), negativo.</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Potencia y trabajo específico · unidades</h3>
+      <div class="eqbox">$$\dot W = \frac{\delta W}{dt} \qquad\qquad w = \frac{W}{m}$$</div>
+      <p>$\dot W$ es la <b>potencia</b> (rapidez con que se realiza trabajo) y $w$ el <b>trabajo específico</b>
+         (por unidad de masa). Unidades: kJ y kW (SI); Btu y Btu/h (sistema inglés).
+         Recuerda $1\ \text{kJ}=1\ \text{kPa}\cdot\text{m}^3$.</p>
+    </div>
+  </section>
+
+  <!-- ===================== M2 ===================== -->
+  <section class="mod" id="m2">
+    <h2 class="mt">2 · Trabajo de frontera móvil</h2>
+    <p class="lead">Cuando la frontera del sistema se desplaza —el émbolo de un cilindro-pistón— aparece el
+       <b>trabajo de frontera</b>.</p>
+
+    <div class="card">
+      <p>Para un desplazamiento infinitesimal del émbolo, la presión $p$ actúa sobre el área $A$ recorriendo $dx$:</p>
+      <div class="eqbox">$$\delta W = F\,dx = (pA)\,dx = p\,dV \;\Rightarrow\; W_b=\int_{1}^{2} p\,dV$$</div>
+      <div class="note">El valor de esta integral es el <b>área bajo la curva del proceso</b> en el diagrama p–V.
+        Por eso necesitamos conocer la relación $p(V)$ de cada proceso: el camino determina el área, y el área es el trabajo.</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Visualízalo</h3>
+      <p>Observa cómo el área sombreada (el trabajo) cambia con la presión y los volúmenes. Es una expansión isobárica de demostración.</p>
+      <div class="grid">
+        <div>
+          <label class="fld">Presión p (kPa)</label>
+          <input type="number" id="d2_p" value="600">
+          <label class="fld">Volumen inicial V₁ (m³)</label>
+          <input type="number" id="d2_v1" value="0.2" step="0.05">
+          <label class="fld">Volumen final V₂ (m³)</label>
+          <input type="number" id="d2_v2" value="0.8" step="0.05">
+          <div class="result" id="d2_out"></div>
+        </div>
+        <div><div class="chartbox"><canvas role="img" aria-label="Representación gráfica de Dinámica. Los datos se describen en la página." id="d2_chart"></canvas></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== M3 ===================== -->
+  <section class="mod" id="m3">
+    <h2 class="mt">3 · Trabajo en procesos característicos</h2>
+    <p class="lead">Elige un proceso, introduce los datos y obtén el trabajo, la curva p–V y el desarrollo paso a paso.</p>
+
+    <div class="card">
+      <div class="seg" id="p_seg">
+        <button data-proc="iso-p" class="on">Isobárico</button>
+        <button data-proc="iso-v">Isocórico</button>
+        <button data-proc="iso-t">Isotérmico</button>
+        <button data-proc="poly">Politrópico</button>
+      </div>
+      <div class="eqbox" id="p_formula"></div>
+
+      <div class="grid">
+        <div>
+          <label class="fld">Presión inicial p₁ (kPa)</label>
+          <input type="number" id="p_p1" value="600">
+          <label class="fld">Volumen inicial V₁ (m³)</label>
+          <input type="number" id="p_v1" value="0.20" step="0.05">
+          <label class="fld" id="lbl_v2">Volumen final V₂ (m³)</label>
+          <input type="number" id="p_v2" value="0.80" step="0.05">
+          <div id="row_n" style="display:none">
+            <label class="fld">Exponente politrópico n</label>
+            <input type="number" id="p_n" value="1.3" step="0.05">
+          </div>
+          <div id="row_p2" style="display:none">
+            <label class="fld">Presión final p₂ (kPa) — sólo isocórico</label>
+            <input type="number" id="p_p2" value="300">
+          </div>
+          <button class="btn" id="p_calc">Calcular trabajo</button>
+          <div class="result" id="p_out"></div>
+        </div>
+        <div><div class="chartbox"><canvas role="img" aria-label="Representación gráfica de Dinámica. Los datos se describen en la página." id="p_chart"></canvas></div></div>
+      </div>
+      <div class="steps" id="p_steps" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <!-- ===================== M4 ===================== -->
+  <section class="mod" id="m4">
+    <h2 class="mt">4 · El trabajo depende de la trayectoria</h2>
+    <p class="lead">Mismo estado inicial, mismo estado final… pero distinto trabajo. Eso demuestra que el trabajo
+       <b>no es una propiedad</b>: es una función de trayectoria.</p>
+
+    <div class="card">
+      <p>Unimos el estado 1 $(p_1,V_1)$ con el estado 2 $(p_2,V_2)$ por dos caminos:</p>
+      <p><b>Camino A</b>: primero isobárico a $p_1$ (de $V_1$ a $V_2$), luego isocórico a $V_2$ (de $p_1$ a $p_2$).
+         &nbsp;&nbsp;<b>Camino B</b>: primero isocórico a $V_1$, luego isobárico a $p_2$.</p>
+      <div class="eqbox">$$W_A = p_1\,(V_2-V_1) \qquad W_B = p_2\,(V_2-V_1)$$</div>
+      <div class="grid">
+        <div>
+          <label class="fld">p₁ (kPa)</label><input type="number" id="t_p1" value="600">
+          <label class="fld">V₁ (m³)</label><input type="number" id="t_v1" value="0.2" step="0.05">
+          <label class="fld">p₂ (kPa)</label><input type="number" id="t_p2" value="200">
+          <label class="fld">V₂ (m³)</label><input type="number" id="t_v2" value="0.8" step="0.05">
+          <button class="btn" id="t_calc">Comparar caminos</button>
+          <div class="result" id="t_out"></div>
+        </div>
+        <div><div class="chartbox"><canvas role="img" aria-label="Representación gráfica de Dinámica. Los datos se describen en la página." id="t_chart"></canvas></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== M5 ===================== -->
+  <section class="mod" id="m5">
+    <h2 class="mt">5 · Otros modos de trabajo</h2>
+    <p class="lead">No todo el trabajo proviene de una frontera móvil. Tres modos frecuentes:</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Trabajo de eje (flecha)</h3>
+      <div class="eqbox">$$W_{eje}=\int \tau\,d\theta = 2\pi N\,\tau$$</div>
+      <div class="grid">
+        <div>
+          <label class="fld">Par de torsión τ (N·m)</label><input type="number" id="e_t" value="200">
+          <label class="fld">Número de revoluciones N (rev)</label><input type="number" id="e_n" value="2000">
+          <button class="btn" id="e_calc">Calcular</button>
+          <div class="result" id="e_out"></div>
+        </div>
+        <div class="note">$\tau$ es el par de torsión y $N$ el número de vueltas del eje. Si se da la rapidez de giro
+          $\dot N$ (rev/s), la <b>potencia</b> es $\dot W = 2\pi\dot N\,\tau$.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Trabajo de resorte</h3>
+      <div class="eqbox">$$W_{res}=\tfrac12\,k\,(x_2^{2}-x_1^{2})$$</div>
+      <div class="grid">
+        <div>
+          <label class="fld">Constante del resorte k (kN/m)</label><input type="number" id="r_k" value="400">
+          <label class="fld">Deformación inicial x₁ (m)</label><input type="number" id="r_x1" value="0" step="0.01">
+          <label class="fld">Deformación final x₂ (m)</label><input type="number" id="r_x2" value="0.05" step="0.01">
+          <button class="btn" id="r_calc">Calcular</button>
+          <div class="result" id="r_out"></div>
+        </div>
+        <div class="note">$x$ se mide desde la posición natural (sin deformar) del resorte. Con $k$ en kN/m y $x$ en m,
+          el trabajo resulta en kJ.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Trabajo eléctrico</h3>
+      <div class="eqbox">$$W_{el}=\int V\,I\,dt = V\,I\,\Delta t \quad (V,I\ \text{constantes})$$</div>
+      <div class="grid">
+        <div>
+          <label class="fld">Tensión V (volt)</label><input type="number" id="l_v" value="120">
+          <label class="fld">Corriente I (ampere)</label><input type="number" id="l_i" value="2">
+          <label class="fld">Tiempo Δt (s)</label><input type="number" id="l_t" value="600">
+          <button class="btn" id="l_calc">Calcular</button>
+          <div class="result" id="l_out"></div>
+        </div>
+        <div class="note">$V$ en volt, $I$ en ampere y $\Delta t$ en segundos dan el trabajo en joule
+          ($1\ \text{V·A·s}=1\ \text{J}$).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== M6 ===================== -->
+  <section class="mod" id="m6">
+    <h2 class="mt">6 · Ejemplos resueltos paso a paso</h2>
+    <p class="lead">Problemas del banco del módulo (libro de Potter). Intenta resolverlos antes de abrir la solución;
+       cada uno termina con su <span class="ref">resultado de referencia</span>.</p>
+
+    <details class="ex">
+      <summary>Problema 3.1 · Agua a presión constante (isobárico) <span class="ref">W ≈ 1604.8 kJ</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> 4.0 kg de agua líquida saturada se mantienen a $p=600$ kPa mientras se agrega calor
+           hasta $T_2=600\,^{\circ}$C. Determine el trabajo realizado por el agua.</p>
+        <div class="steps">
+          <div class="step"><b>Datos.</b> $m=4.0$ kg, $p_1=p_2=600$ kPa, $T_2=600\,^{\circ}$C. Proceso isobárico.</div>
+          <div class="step"><b>Volúmenes específicos (tablas de vapor).</b> Líquido saturado a 6 bar: $v_1=0.0011006\ \text{m}^3/\text{kg}$;
+             vapor a 6 bar y 600 °C: $v_2=0.669761\ \text{m}^3/\text{kg}$.</div>
+          <div class="step"><b>Fórmula.</b> $W = p\,(V_2-V_1)=m\,p\,(v_2-v_1)$.</div>
+          <div class="step"><b>Sustitución.</b> $W = (600)(4.0)(0.669761-0.0011006)$.</div>
+          <div class="step"><b>Resultado.</b> $W \approx \mathbf{1604.8\ kJ}$ (positivo: el agua se expande y realiza trabajo).</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.2 · Vapor a presión constante <span class="ref">W ≈ 154.0 kJ</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> 2 kg de vapor saturado a 400 kPa en un cilindro-pistón se calientan a presión
+           constante hasta $T_2=300\,^{\circ}$C. Calcule el trabajo.</p>
+        <div class="steps">
+          <div class="step"><b>Datos.</b> $m=2$ kg, $p_1=p_2=400$ kPa, $T_2=300\,^{\circ}$C.</div>
+          <div class="step"><b>Volúmenes (tablas).</b> $v_1=0.462383\ \text{m}^3/\text{kg}$ (vapor sat. a 400 kPa);
+             $v_2=0.654892\ \text{m}^3/\text{kg}$ (400 kPa, 300 °C).</div>
+          <div class="step"><b>Sustitución.</b> $W = (400)(2)(0.654892-0.462383)$.</div>
+          <div class="step"><b>Resultado.</b> $W \approx \mathbf{154.0\ kJ}$.</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.3 · Recipiente rígido (isocórico) <span class="ref">W = 0 · x₂ ≈ 0.701</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> 0.025 kg de vapor con calidad $x=10\%$ a 200 kPa se calientan en un recipiente
+           <b>rígido</b> hasta $T_2=200\,^{\circ}$C. Encuentre la calidad final y el trabajo.</p>
+        <div class="steps">
+          <div class="step"><b>Clave.</b> Recipiente rígido $\Rightarrow V=$ cte $\Rightarrow v_2=v_1$.</div>
+          <div class="step"><b>Estado 1.</b> Con $x_1=0.10$ a 200 kPa: $v_1=0.0895226\ \text{m}^3/\text{kg}$.</div>
+          <div class="step"><b>Estado 2.</b> A 200 °C: $v_f=0.001156$, $v_g=0.12721\ \text{m}^3/\text{kg}$.
+             De $v_2=v_f+x_2(v_g-v_f)$ se despeja $x_2$.</div>
+          <div class="step"><b>Calidad final.</b> $x_2 \approx \mathbf{0.701}$.</div>
+          <div class="step"><b>Trabajo.</b> No hay cambio de volumen $\Rightarrow \mathbf{W=0}$.</div>
+        </div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.4 · Pistón con topes <span class="ref">W ≈ 28.3 kJ</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> Un pistón sin fricción de 16 kg; se agrega calor hasta $T_2=400\,^{\circ}$C; calidad
+           inicial 20 %. Se pide la presión inicial y el trabajo sobre el pistón.</p>
+        <div class="steps">
+          <div class="step"><b>Presión inicial (equilibrio del pistón).</b>
+             $p_1=p_0+\dfrac{m_p g}{A} \approx 120\ \text{kPa}$ (1.199 bar).</div>
+          <div class="step"><b>Estados.</b> Con $p_1$ y $x_1=0.20$: $v_1=0.286733$; al tocar los topes $v_2=0.45877\ \text{m}^3/\text{kg}$.</div>
+          <div class="step"><b>Trabajo (isobárico hasta los topes).</b> $W=p_1\,m\,(v_2-v_1)$ con $m\approx1.3696\times10^{-3}$ kg.</div>
+          <div class="step"><b>Resultado.</b> $W \approx \mathbf{28.3\ kJ}$ (valor a escala del dispositivo del problema).</div>
+        </div>
+        <div class="note">Verifícalo en el Módulo 3: selecciona <i>Isobárico</i> y usa $p_1=120$, los volúmenes totales
+           $V_1=m\,v_1$ y $V_2=m\,v_2$.</div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.17 · Presión variable $p=a+b/V$ <span class="ref">W ≈ 70.0 (unid. del problema)</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> $p=a+30/V$ (p en psi, V en ft³); en el estado 1, $p=7$ psia y $V=3$ ft³; se expande
+           hasta $p_2=50$ psia. Determine el trabajo.</p>
+        <div class="steps">
+          <div class="step"><b>Constante a.</b> $7 = a + 30/3 \Rightarrow a=3$.</div>
+          <div class="step"><b>Trabajo.</b> $W=\displaystyle\int_{V_1}^{V_2}\!\Big(a+\tfrac{30}{V}\Big)dV
+             = a(V_2-V_1)+30\ln\!\dfrac{V_2}{V_1}$.</div>
+          <div class="step"><b>Resultado.</b> $W \approx \mathbf{70.0}$ (en las unidades psi·ft³ del problema).</div>
+        </div>
+        <div class="tip">Este caso muestra que, con $p(V)$ no elemental, el trabajo sigue siendo el área $\int p\,dV$:
+           la parte $30/V$ aporta un término logarítmico, igual que en el proceso isotérmico.</div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.16 · Resorte + gas <span class="ref">W = W_resorte + W_gas</span></summary>
+      <div class="body">
+        <p><b>Enunciado.</b> Un gas comprime un resorte ($k=400$ kN/m) a la vez que vence la presión. El trabajo
+           total es la suma del trabajo del resorte y del gas contra la presión.</p>
+        <div class="steps">
+          <div class="step"><b>Trabajo del resorte.</b> $W_{res}=\tfrac12 k(x_2^2-x_1^2)$ — calcúlalo en el Módulo 5.</div>
+          <div class="step"><b>Trabajo del gas.</b> $W_{gas}=p\,\Delta V$ con $\Delta V = A\cdot \Delta x$.</div>
+          <div class="step"><b>Total.</b> $W = W_{res}+W_{gas}$.</div>
+        </div>
+        <div class="note">Relaciona este problema con el Módulo 5 (resorte) y el Módulo 2 (frontera): el trabajo total
+           combina ambos modos.</div>
+      </div>
+    </details>
+
+    <details class="ex">
+      <summary>Problema 3.19 · Ciclo de tres procesos (trabajo neto)</summary>
+      <div class="body">
+        <p><b>Enunciado.</b> 2 kg de aire recorren un ciclo: 1→2 isobárico, 2→3 isocórico, 3→1 isotérmico.
+           Se pide el trabajo neto.</p>
+        <div class="steps">
+          <div class="step"><b>1→2 isobárico.</b> $W_{12}=p_1(V_2-V_1)$.</div>
+          <div class="step"><b>2→3 isocórico.</b> $W_{23}=0$.</div>
+          <div class="step"><b>3→1 isotérmico.</b> $W_{31}=mRT_1\ln(V_1/V_2)$.</div>
+          <div class="step"><b>Neto.</b> $W_{neto}=W_{12}+W_{23}+W_{31}=$ área encerrada por el ciclo en el plano p–V.</div>
+        </div>
+        <div class="tip">El ciclo completo ya está implementado en la app <b>Trabajo.html</b> (simulador de ciclo cerrado)
+           del mismo módulo. Esta aplicación se enfoca en los procesos individuales que lo componen.</div>
+      </div>
+    </details>
+  </section>
+  </main>
+</div>
+
+<footer class="ft">
+  Termo-IA-Dinámica · Módulo 03 — Trabajo de frontera y modos de trabajo · Aplicación de autoestudio.
+  Fundamentada en el material del módulo (Potter, pág. 69–73; presentación de teoría Trabajo y Calor).
+</footer>
+
+<script>
+// ---------------- Navegación ----------------
+const links = document.querySelectorAll('nav.side a');
+const mods  = document.querySelectorAll('section.mod');
+const side  = document.getElementById('side');
+function go(id){
+  mods.forEach(m=>m.classList.toggle('show', m.id===id));
+  links.forEach(a=>a.classList.toggle('active', a.dataset.go===id));
+  side.classList.remove('open');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+links.forEach(a=>a.addEventListener('click',()=>go(a.dataset.go)));
+document.getElementById('burger').addEventListener('click',()=>side.classList.toggle('open'));
+
+// ---------------- Utilidades de gráfica ----------------
+const COL = {curve:'#2E75B6', fill:'rgba(46,117,182,.18)', a:'#C9531B', b:'#1E7E46', pt:'#1F3864'};
+function fmt(x, d=2){ if(!isFinite(x)) return '—';
+  return Math.abs(x)>=1000 ? x.toLocaleString('es-MX',{maximumFractionDigits:d}) : x.toFixed(d); }
+
+function pvChart(canvasId, pts, opts={}){
+  const ctx = document.getElementById(canvasId);
+  if(ctx._chart) ctx._chart.destroy();
+  const datasets = [{
+    label: opts.label||'Proceso', data: pts.map(p=>({x:p.v,y:p.p})),
+    borderColor: opts.color||COL.curve, backgroundColor: opts.fillColor||COL.fill,
+    fill: opts.fill===false?false:'origin', tension: opts.tension||0,
+    pointRadius: opts.pointRadius??0, borderWidth:2.5
+  }];
+  if(opts.extra) datasets.push(...opts.extra);
+  ctx._chart = new Chart(ctx,{
+    type:'line', data:{datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false, animation:{duration:500},
+      plugins:{legend:{display:!!opts.legend, position:'bottom', labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{label:c=>`p=${fmt(c.parsed.y)} kPa · V=${fmt(c.parsed.x,3)} m³`}}},
+      scales:{
+        x:{type:'linear',title:{display:true,text:'Volumen V (m³)'},grid:{color:'#eef2f7'},
+           min:0, suggestedMax: opts.xmax},
+        y:{title:{display:true,text:'Presión p (kPa)'},grid:{color:'#eef2f7'},
+           min:0, suggestedMax: opts.ymax}
+      }
+    }
+  });
+  return ctx._chart;
+}
+
+// ---------------- M2 demo ----------------
+function demo2(){
+  const p=+v('d2_p'), v1=+v('d2_v1'), v2=+v('d2_v2');
+  const W = p*(v2-v1);
+  pvChart('d2_chart',[{v:v1,p:p},{v:v2,p:p}],{xmax:Math.max(v1,v2)*1.25, ymax:p*1.5});
+  document.getElementById('d2_out').innerHTML =
+    `Área sombreada = trabajo<br><span class="big">W = ${fmt(W)} kJ</span>`;
+}
+['d2_p','d2_v1','d2_v2'].forEach(id=>document.getElementById(id).addEventListener('input',demo2));
+
+// ---------------- M3 procesos ----------------
+let proc='iso-p';
+const formulas={
+  'iso-p':'$$W=p\\,(V_2-V_1)$$',
+  'iso-v':'$$W=0\\quad(V=\\text{cte})$$',
+  'iso-t':'$$W=p_1V_1\\,\\ln\\!\\frac{V_2}{V_1}$$',
+  'poly' :'$$W=\\frac{p_2V_2-p_1V_1}{1-n}$$'
+};
+function v(id){return document.getElementById(id).value;}
+function setProc(p){
+  proc=p;
+  document.querySelectorAll('#p_seg button').forEach(b=>b.classList.toggle('on',b.dataset.proc===p));
+  document.getElementById('row_n').style.display  = p==='poly'?'block':'none';
+  document.getElementById('row_p2').style.display = p==='iso-v'?'block':'none';
+  document.getElementById('lbl_v2').style.opacity = p==='iso-v'?'.4':'1';
+  document.getElementById('p_v2').disabled = p==='iso-v';
+  const f=document.getElementById('p_formula'); f.innerHTML=formulas[p];
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([f]);
+  calcProc();
+}
+function curvePts(p,p1,v1,v2,n){
+  const pts=[]; const N=60;
+  if(p==='iso-p'){ pts.push({v:v1,p:p1},{v:v2,p:p1}); }
+  else if(p==='iso-v'){ const p2=+v('p_p2'); pts.push({v:v1,p:p1},{v:v1,p:p2}); }
+  else if(p==='iso-t'){ for(let i=0;i<=N;i++){const V=v1+(v2-v1)*i/N; pts.push({v:V,p:p1*v1/V});} }
+  else { for(let i=0;i<=N;i++){const V=v1+(v2-v1)*i/N; pts.push({v:V,p:p1*Math.pow(v1/V,n)});} }
+  return pts;
+}
+function calcProc(){
+  const p1=+v('p_p1'), v1=+v('p_v1'), v2=+v('p_v2'), n=+v('p_n'), p2v=+v('p_p2');
+  let W, p2, steps=[];
+  if(proc==='iso-p'){
+    W=p1*(v2-v1); p2=p1;
+    steps=[`Proceso isobárico: $p$ constante = ${fmt(p1)} kPa.`,
+           `$W=p\\,(V_2-V_1)=${fmt(p1)}\\,(${fmt(v2,3)}-${fmt(v1,3)})$`,
+           `$W=${fmt(W)}$ kJ`];
+  } else if(proc==='iso-v'){
+    W=0; p2=p2v;
+    steps=[`Proceso isocórico: $V$ constante = ${fmt(v1,3)} m³, no hay desplazamiento de frontera.`,
+           `$W=\\int p\\,dV = 0$ porque $dV=0$.`,`$W=0$ kJ`];
+  } else if(proc==='iso-t'){
+    W=p1*v1*Math.log(v2/v1); p2=p1*v1/v2;
+    steps=[`Proceso isotérmico (gas ideal): $pV=$ cte $\\Rightarrow p_2=p_1V_1/V_2=${fmt(p2)}$ kPa.`,
+           `$W=p_1V_1\\ln(V_2/V_1)=${fmt(p1)}\\cdot${fmt(v1,3)}\\cdot\\ln(${fmt(v2,3)}/${fmt(v1,3)})$`,
+           `$W=${fmt(W)}$ kJ`];
+  } else {
+    p2=p1*Math.pow(v1/v2,n); W=(p2*v2-p1*v1)/(1-n);
+    steps=[`Proceso politrópico $pV^{n}=$ cte con $n=${fmt(n,2)}$.`,
+           `$p_2=p_1(V_1/V_2)^n=${fmt(p2)}$ kPa.`,
+           `$W=\\dfrac{p_2V_2-p_1V_1}{1-n}=\\dfrac{${fmt(p2)}\\cdot${fmt(v2,3)}-${fmt(p1)}\\cdot${fmt(v1,3)}}{1-${fmt(n,2)}}$`,
+           `$W=${fmt(W)}$ kJ`];
+  }
+  const pts=curvePts(proc,p1,v1,v2,n);
+  const vmax=Math.max(v1,v2,...pts.map(o=>o.v))*1.2;
+  const pmax=Math.max(p1,p2,...pts.map(o=>o.p))*1.3;
+  pvChart('p_chart',pts,{xmax:vmax,ymax:pmax,fill:proc!=='iso-v',
+    pointRadius:proc==='iso-v'?4:0});
+  const sign = W>1e-9?'expansión, el sistema realiza trabajo':(W<-1e-9?'compresión, trabajo sobre el sistema':'sin trabajo de frontera');
+  document.getElementById('p_out').innerHTML=
+    `<b>p₂</b> = ${fmt(p2)} kPa &nbsp;·&nbsp; <span style="font-size:.8rem">${sign}</span><br>
+     <span class="big">W = ${fmt(W)} kJ</span>`;
+  const sc=document.getElementById('p_steps');
+  sc.innerHTML = steps.map(s=>`<div class="step">${s}</div>`).join('');
+  if(window.MathJax&&MathJax.typesetPromise) MathJax.typesetPromise([sc]);
+}
+document.querySelectorAll('#p_seg button').forEach(b=>b.addEventListener('click',()=>setProc(b.dataset.proc)));
+document.getElementById('p_calc').addEventListener('click',calcProc);
+['p_p1','p_v1','p_v2','p_n','p_p2'].forEach(id=>document.getElementById(id).addEventListener('input',calcProc));
+
+// ---------------- M4 trayectoria ----------------
+function calcPath(){
+  const p1=+v('t_p1'), v1=+v('t_v1'), p2=+v('t_p2'), v2=+v('t_v2');
+  const WA=p1*(v2-v1), WB=p2*(v2-v1), dif=WA-WB;
+  const pathA=[{v:v1,p:p1},{v:v2,p:p1},{v:v2,p:p2}];
+  const pathB=[{v:v1,p:p1},{v:v1,p:p2},{v:v2,p:p2}];
+  const ctx=document.getElementById('t_chart'); if(ctx._chart) ctx._chart.destroy();
+  ctx._chart=new Chart(ctx,{type:'line',
+    data:{datasets:[
+      {label:`Camino A  (W=${fmt(WA)} kJ)`,data:pathA.map(o=>({x:o.v,y:o.p})),borderColor:COL.a,backgroundColor:'rgba(201,83,27,.12)',fill:'origin',pointRadius:4,borderWidth:2.5},
+      {label:`Camino B  (W=${fmt(WB)} kJ)`,data:pathB.map(o=>({x:o.v,y:o.p})),borderColor:COL.b,backgroundColor:'rgba(30,126,70,.10)',fill:false,pointRadius:4,borderWidth:2.5,borderDash:[6,4]}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11}}}},
+      scales:{x:{type:'linear',title:{display:true,text:'Volumen V (m³)'},min:0,suggestedMax:Math.max(v1,v2)*1.25,grid:{color:'#eef2f7'}},
+              y:{title:{display:true,text:'Presión p (kPa)'},min:0,suggestedMax:Math.max(p1,p2)*1.3,grid:{color:'#eef2f7'}}}}
+  });
+  document.getElementById('t_out').innerHTML=
+    `<b>W<sub>A</sub></b> = ${fmt(WA)} kJ &nbsp;·&nbsp; <b>W<sub>B</sub></b> = ${fmt(WB)} kJ<br>
+     <span class="big">ΔW = ${fmt(dif)} kJ</span><br>
+     <span style="font-size:.8rem">Mismos estados, distinto trabajo ⇒ el trabajo depende del camino.</span>`;
+}
+document.getElementById('t_calc').addEventListener('click',calcPath);
+['t_p1','t_v1','t_p2','t_v2'].forEach(id=>document.getElementById(id).addEventListener('input',calcPath));
+
+// ---------------- M5 modos ----------------
+function calcEje(){const tau=+v('e_t'),N=+v('e_n');const W=2*Math.PI*N*tau;
+  document.getElementById('e_out').innerHTML=`$W=2\\pi N\\tau$<br><span class="big">W = ${fmt(W/1000)} kJ</span><br><span style="font-size:.8rem">(${fmt(W)} J)</span>`;
+  typeset('e_out');}
+function calcRes(){const k=+v('r_k'),x1=+v('r_x1'),x2=+v('r_x2');const W=0.5*k*(x2*x2-x1*x1);
+  document.getElementById('r_out').innerHTML=`<span class="big">W = ${fmt(W)} kJ</span><br><span style="font-size:.8rem">k en kN/m, x en m ⇒ kJ</span>`;}
+function calcEl(){const V=+v('l_v'),I=+v('l_i'),t=+v('l_t');const W=V*I*t;
+  document.getElementById('l_out').innerHTML=`<span class="big">W = ${fmt(W/1000)} kJ</span><br><span style="font-size:.8rem">(${fmt(W)} J = ${fmt(W/3.6e6,4)} kWh)</span>`;}
+function typeset(id){const el=document.getElementById(id);if(window.MathJax&&MathJax.typesetPromise)MathJax.typesetPromise([el]);}
+document.getElementById('e_calc').addEventListener('click',calcEje);
+document.getElementById('r_calc').addEventListener('click',calcRes);
+document.getElementById('l_calc').addEventListener('click',calcEl);
+
+// ---------------- Init ----------------
+function initAll(){ demo2(); setProc('iso-p'); calcPath(); calcEje(); calcRes(); calcEl(); }
+if(window.Chart) initAll();
+else window.addEventListener('load', initAll);
+</script>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Trabajo de Frontera y Modos de Trabajo</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Trabajo de frontera y modos de trabajo: procesos isobárico, isotérmico, politrópico y adiabático, con curva p–V y desarrollo paso a paso.</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Configure los parámetros de operación con los deslizadores o campos de entrada.</li><li>Ejecute o actualice el cálculo y observe los diagramas e indicadores de desempeño.</li><li>Modifique un parámetro a la vez para realizar análisis de sensibilidad.</li><li>Abra las secciones «DESPLEGAR / CONTRAER» para consultar conceptos y desarrollos paso a paso.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>

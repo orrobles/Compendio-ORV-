@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TermoIA · Cuestionario de Vapor (Calderas) — Autoevaluable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#eef1f5;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;
+ --accent:#1976d2;--accent2:#1565c0;--accent-light:#e3f0fd;--mono:'IBM Plex Mono',Consolas,monospace;
+ --good:#2e7d32;--good-bg:#e8f5e9;--warn:#f57c00;--bad:#c62828;--bad-bg:#fdecea;--gold:#b08800;
+ --hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;
+ font-size:15px;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+ padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center;width:80%}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.brand{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2}
+.wrap{width:100%;max-width:1280px;padding:14px 18px 0;display:flex;flex-direction:column}
+.tabbar{display:flex;background:#fff;border:1px solid var(--border);border-radius:10px 10px 0 0;overflow:hidden;flex-wrap:wrap}
+.tab-btn{flex:1;min-width:165px;padding:12px 8px;background:#f0f4f8;border:none;border-right:1px solid var(--border);
+ cursor:pointer;font-size:.88rem;font-weight:600;color:var(--muted);transition:background .12s,color .12s}
+.tab-btn:last-child{border-right:none}
+.tab-btn:hover{background:#e7eef6;color:var(--accent)}
+.tab-btn.active{background:#fff;color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.stage{width:100%;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;padding:22px 26px 30px}
+.panel{display:none}.panel.active{display:block;animation:fade .2s ease}
+@keyframes fade{from{opacity:.3}to{opacity:1}}
+h2.sec{font-size:1.18rem;color:var(--accent2);font-weight:700;margin-bottom:4px}
+.lead{color:var(--muted);font-size:.92rem;margin-bottom:16px;max-width:80ch}
+.idbar{display:flex;gap:14px;flex-wrap:wrap;background:#f7f9fc;border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:18px}
+.idbar .fld{display:flex;flex-direction:column;gap:3px}
+.idbar label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.idbar input{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:.9rem;min-width:200px}
+.q{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:9px;padding:14px 16px;margin-bottom:14px;background:#fff}
+.q .qhead{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.q .qnum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;
+ display:flex;align-items:center;justify-content:center;font-size:.82rem;font-family:var(--mono)}
+.q .qtext{font-weight:600;font-size:.98rem;line-height:1.4}
+.q .tag{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.tag.con{background:#e3f0fd;color:#1565c0}.tag.num{background:#fff3e0;color:#e65100}
+.opts{display:flex;flex-direction:column;gap:7px;margin-left:36px}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:8px 11px;border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:background .1s,border-color .1s}
+.opt:hover{background:#f5f9ff;border-color:#b9d4f2}
+.opt input{margin-top:3px;flex:none}
+.opt .ot{font-size:.9rem;line-height:1.35}
+.opt.correct{background:var(--good-bg);border-color:#9ccc9e}
+.opt.wrong{background:var(--bad-bg);border-color:#e3a8a3}
+.numwrap{margin-left:36px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.numwrap input{width:130px;padding:8px 10px;border:1px solid var(--border);border-radius:7px;font-family:var(--mono);font-size:.92rem}
+.numwrap .u{font-family:var(--mono);color:var(--muted);font-size:.85rem}
+.fb{margin:10px 0 0 36px;font-size:.86rem;padding:9px 12px;border-radius:7px;display:none;line-height:1.45}
+.fb.show{display:block}
+.fb.ok{background:var(--good-bg);color:#1b5e20;border:1px solid #b6dbb8}
+.fb.no{background:var(--bad-bg);color:#9c2a22;border:1px solid #e3b4af}
+.fb b{font-weight:700}
+.actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px;position:sticky;bottom:0;background:#fff;padding:12px 0 2px;border-top:1px dashed var(--border)}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:600;font-size:.9rem;cursor:pointer;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-ghost{background:#eef2f7;color:var(--accent2);border:1px solid var(--border)}.btn-ghost:hover{background:#e2e9f2}
+.score{font-family:var(--mono);font-weight:600;font-size:1rem;padding:8px 16px;border-radius:8px;background:#f2f5f9;border:1px solid var(--border)}
+.score b{font-size:1.25rem}
+.scorebar{height:12px;border-radius:7px;background:#e6ebf2;overflow:hidden;flex:1;min-width:160px;max-width:320px}
+.scorebar > i{display:block;height:100%;width:0;background:linear-gradient(90deg,#43a047,#7cb342);transition:width .5s}
+/* paneles de gráficas */
+.toolrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#f7f9fc;border:1px solid var(--border);border-radius:9px;padding:11px 14px;margin-bottom:14px}
+.toolrow label{font-size:.74rem;color:var(--muted);font-weight:600}
+.toolrow input,.toolrow select{padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:.85rem;background:#fff}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.seg button{padding:7px 14px;background:#fff;border:none;cursor:pointer;font-size:.82rem;color:var(--muted);font-weight:600}
+.seg button.active{background:var(--accent);color:#fff}
+.canvas-card{border:1px solid var(--border);border-radius:10px;padding:12px;background:#fcfdff}
+canvas{max-width:100%;display:block;margin:0 auto;background:#fff;border-radius:6px}
+.readout{font-family:var(--mono);font-size:.85rem;color:var(--text);background:#f2f5f9;border:1px solid var(--border);border-radius:7px;padding:10px 13px;margin-top:12px;line-height:1.7}
+.readout .k{color:var(--muted)}.readout .v{color:var(--accent2);font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:880px){.grid2{grid-template-columns:1fr}}
+table.steam{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:.8rem;margin-top:4px}
+table.steam th,table.steam td{border:1px solid var(--border);padding:5px 8px;text-align:right}
+table.steam th{background:#eef3f9;color:var(--accent2);font-weight:600;position:sticky;top:0}
+table.steam tr.hl td{background:#fff7e6;font-weight:600}
+.tblscroll{max-height:330px;overflow:auto;border:1px solid var(--border);border-radius:8px}
+.solver{border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px;background:#fff}
+.solver h3{font-size:1rem;color:var(--accent2);margin-bottom:6px}
+.step{font-size:.88rem;line-height:1.6;padding:7px 0;border-bottom:1px dashed #e7ecf3}
+.step:last-child{border-bottom:none}
+.step .mono{font-family:var(--mono);color:#243; background:#f4f7fb;padding:1px 5px;border-radius:4px}
+.res{font-weight:700;color:var(--good);font-family:var(--mono)}
+.note{font-size:.82rem;color:var(--muted);background:#f7f9fc;border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 6px 6px 0;margin-top:12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.78rem;color:var(--muted);margin-top:8px;justify-content:center}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.diagram-svg{width:100%;height:auto;display:block}
+.footer{font-size:.74rem;color:var(--muted);text-align:center;margin-top:18px;line-height:1.5}
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+ <span class="brand">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 8 11 13 14 20 6"/><polyline points="17 6 20 6 20 9"/></svg>
+  Termo<span style="color:#f97316"> &middot; IA &middot; </span>Din&aacute;mica
+  <span style="background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center">
+   <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></span>
+ </span>
+ <div class="topbar-center"><div class="topbar-text">
+  <h1>Cuestionario de Vapor &middot; Calderas</h1>
+  <p>Autoevaluable &middot; Diagrama T&ndash;v / P&ndash;T &middot; Tabla de vapor y calidad x &middot; Calderas y circuito &middot; Control de nivel</p>
+ </div></div>
+ <span style="visibility:hidden;font-size:1.05rem">Termo IA Dinamica</span>
+</div>
+
+<div class="wrap">
+ <div class="tabbar" role="tablist">
+  <button class="tab-btn active" role="tab" id="tb0" onclick="switchTab(0)">① Cuestionario</button>
+  <button class="tab-btn" role="tab" id="tb1" onclick="switchTab(1)">② Diagrama T&ndash;v / P&ndash;T</button>
+  <button class="tab-btn" role="tab" id="tb2" onclick="switchTab(2)">③ Tabla de vapor &amp; calidad x</button>
+  <button class="tab-btn" role="tab" id="tb3" onclick="switchTab(3)">④ Caldera y circuito</button>
+  <button class="tab-btn" role="tab" id="tb4" onclick="switchTab(4)">⑤ Control de nivel</button>
+ </div>
+ <div class="stage">
+
+  <!-- ===================== TAB 1: CUESTIONARIO ===================== -->
+  <section class="panel active" id="p0" role="tabpanel" aria-labelledby="tb0">
+   <h2 class="sec">Cuestionario autoevaluable — Calderas de vapor</h2>
+   <p class="lead">16 reactivos conceptuales y 3 numéricos (problemas 17 y 18). Selecciona o captura tu respuesta y pulsa <b>Calificar</b> para recibir retroalimentación inmediata. Apóyate en las pestañas de diagramas y la tabla de vapor.</p>
+   <div class="idbar">
+    <div class="fld"><label for="nm">Nombre</label><input id="nm" type="text" placeholder="Nombre del estudiante"></div>
+    <div class="fld"><label for="sc">Sección</label><input id="sc" type="text" placeholder="Sección / equipo"></div>
+   </div>
+   <div id="quizList"></div>
+   <div class="actions">
+    <button class="btn btn-primary" onclick="gradeQuiz()">Calificar</button>
+    <button class="btn btn-ghost" onclick="resetQuiz()">Reiniciar</button>
+    <div class="score" id="scoreBox" style="display:none">Calificación: <b id="scoreVal">0</b> / <span id="scoreMax">19</span> &nbsp;(<span id="scorePct">0</span>%)</div>
+    <div class="scorebar" id="scoreBarWrap" style="display:none"><i id="scoreBar"></i></div>
+   </div>
+  </section>
+
+  <!-- ===================== TAB 2: DIAGRAMAS ===================== -->
+  <section class="panel" id="p1" role="tabpanel" aria-labelledby="tb1">
+   <h2 class="sec">Diagrama T&ndash;v y curva de saturación P&ndash;T del agua</h2>
+   <p class="lead">El domo de saturación separa el líquido comprimido (izquierda), la mezcla líquido+vapor (interior) y el vapor sobrecalentado (derecha). Ajusta la presión y el volumen específico para ubicar el estado y leer la calidad.</p>
+   <div class="toolrow">
+    <span>Presión absoluta:</span>
+    <input id="dP" type="range" min="10" max="2000" step="10" value="600" oninput="updateDiagram()" style="width:220px">
+    <span class="mono" id="dPval" style="font-family:var(--mono);color:var(--accent2);font-weight:600">600 kPa</span>
+    <label for="dv">v (m³/kg):</label>
+    <input id="dv" type="number" min="0.001" max="200" step="0.001" value="0.2" oninput="updateDiagram()">
+   </div>
+   <div class="grid2">
+    <div class="canvas-card">
+     <canvas id="tvCanvas" width="560" height="430" aria-label="Diagrama temperatura contra volumen específico"></canvas>
+     <div class="legend"><span><i style="background:#1976d2"></i>Domo de saturación</span><span><i style="background:#e65100"></i>Isóbara / línea de mezcla</span><span><i style="background:#c62828"></i>Estado actual</span></div>
+    </div>
+    <div class="canvas-card">
+     <canvas id="ptCanvas" width="560" height="430" aria-label="Curva de saturación presión contra temperatura"></canvas>
+     <div class="legend"><span><i style="background:#1976d2"></i>Curva P–T sat.</span><span><i style="background:#c62828"></i>Estado actual</span><span><i style="background:#b08800"></i>Punto crítico</span></div>
+    </div>
+   </div>
+   <div class="readout" id="diagReadout"></div>
+  </section>
+
+  <!-- ===================== TAB 3: TABLA + CALIDAD ===================== -->
+  <section class="panel" id="p2" role="tabpanel" aria-labelledby="tb2">
+   <h2 class="sec">Tabla de vapor saturado y calculadora de calidad (x)</h2>
+   <p class="lead">Tabla de agua saturada (por presión, valores tipo Cengel). La calculadora interpola y resuelve la calidad <span class="mono">x = (v − v<sub>f</sub>)/(v<sub>g</sub> − v<sub>f</sub>)</span>. Abajo, la solución paso a paso de los problemas 17 y 18.</p>
+   <div class="grid2">
+    <div>
+     <div class="toolrow">
+      <label for="cP">P (kPa):</label><input id="cP" type="number" value="630" step="10" min="1" max="2000" oninput="calcQuality()">
+      <label for="cv">v (m³/kg):</label><input id="cv" type="number" value="0.2" step="0.001" min="0.0001" oninput="calcQuality()">
+     </div>
+     <div class="readout" id="calcOut"></div>
+     <div class="note">v<sub>f</sub> = volumen específico de líquido saturado; v<sub>g</sub> = de vapor saturado. Si v &lt; v<sub>f</sub> el estado es líquido comprimido; si v &gt; v<sub>g</sub> es vapor sobrecalentado.</div>
+    </div>
+    <div>
+     <div class="tblscroll"><table class="steam" id="steamTable">
+      <thead><tr><th>P<br>kPa</th><th>T<sub>sat</sub><br>°C</th><th>v<sub>f</sub><br>m³/kg</th><th>v<sub>g</sub><br>m³/kg</th><th>h<sub>f</sub><br>kJ/kg</th><th>h<sub>fg</sub><br>kJ/kg</th><th>h<sub>g</sub><br>kJ/kg</th></tr></thead>
+      <tbody id="steamBody"></tbody>
+     </table></div>
+    </div>
+   </div>
+
+   <div class="solver">
+    <h3>Problema 17 — Calidad a v = 0.2 m³/kg</h3>
+    <div id="solveP17"></div>
+   </div>
+   <div class="solver">
+    <h3>Problema 18 — Evaporación completa a 600 kPa</h3>
+    <div id="solveP18"></div>
+   </div>
+  </section>
+
+  <!-- ===================== TAB 4: CALDERA Y CIRCUITO ===================== -->
+  <section class="panel" id="p3" role="tabpanel" aria-labelledby="tb3">
+   <h2 class="sec">Tipos de caldera y circuito típico de vapor</h2>
+   <p class="lead">Selecciona el tipo de caldera para comparar la disposición de fluidos. Abajo, el circuito cerrado de vapor: generación, distribución, proceso y retorno de condensado.</p>
+   <div class="toolrow">
+    <span>Tipo de caldera:</span>
+    <span class="seg"><button id="bk0" class="active" onclick="setBoiler('piro')">Pirotubular</button><button id="bk1" onclick="setBoiler('acuo')">Acuotubular</button></span>
+   </div>
+   <div class="canvas-card" id="boilerWrap"></div>
+   <div class="readout" id="boilerInfo"></div>
+   <h3 style="margin:22px 0 6px;color:var(--accent2);font-size:1.02rem">Circuito típico de vapor</h3>
+   <div class="canvas-card" id="circuitWrap"></div>
+  </section>
+
+  <!-- ===================== TAB 5: CONTROL DE NIVEL ===================== -->
+  <section class="panel" id="p4" role="tabpanel" aria-labelledby="tb4">
+   <h2 class="sec">Control de nivel: on-off (todo/nada) vs modulante</h2>
+   <p class="lead">Simulación del nivel de agua en el calderín. El control <b>on-off</b> arranca y para la bomba entre dos consignas (el nivel oscila); el <b>modulante</b> regula el caudal de forma continua y mantiene el nivel estable.</p>
+   <div class="toolrow">
+    <span>Modo:</span>
+    <span class="seg"><button id="lc0" class="active" onclick="setLevelMode('onoff')">On-off</button><button id="lc1" onclick="setLevelMode('mod')">Modulante</button></span>
+    <button class="btn btn-ghost" id="lcPlay" onclick="toggleLevel()">Pausar</button>
+    <label for="dem">Demanda:</label><input id="dem" type="range" min="0.2" max="1.6" step="0.1" value="0.8" style="width:160px">
+   </div>
+   <div class="canvas-card"><canvas id="levelCanvas" width="900" height="360" aria-label="Simulación de control de nivel de la caldera"></canvas></div>
+   <div class="readout" id="levelInfo"></div>
+  </section>
+
+ </div>
+ <p class="footer">TermoIA · Dinámica — Cuestionario interactivo de vapor. Datos de saturación tipo tablas estándar (Cengel A-5). Material base: cuestionario de Calderas de vapor + referencia «El vapor en la industria» (VaInGe-r_307).</p>
+</div>
+
+<script>
+/* ===================== DATOS: agua saturada (por presión) ===================== */
+/* P[kPa], Tsat[°C], vf[m3/kg], vg[m3/kg], hf[kJ/kg], hfg[kJ/kg], hg[kJ/kg] */
+const SAT=[
+ [1,6.97,0.0010001,129.19,29.30,2484.4,2513.7],
+ [5,32.87,0.0010053,28.185,137.75,2423.0,2560.7],
+ [10,45.81,0.0010103,14.670,191.81,2392.1,2583.9],
+ [20,60.06,0.0010172,7.6481,251.42,2357.5,2608.9],
+ [30,69.09,0.0010223,5.2287,289.27,2335.3,2624.6],
+ [40,75.86,0.0010265,3.9933,317.62,2318.4,2636.1],
+ [50,81.32,0.0010300,3.2403,340.54,2304.7,2645.2],
+ [75,91.76,0.0010372,2.2172,384.44,2278.0,2662.4],
+ [100,99.61,0.0010432,1.6941,417.51,2257.5,2675.0],
+ [101.325,99.97,0.0010435,1.6734,419.06,2256.5,2675.6],
+ [150,111.35,0.0010527,1.1594,467.13,2226.0,2693.1],
+ [200,120.21,0.0010605,0.88578,504.71,2201.6,2706.3],
+ [250,127.41,0.0010672,0.71873,535.35,2181.2,2716.5],
+ [300,133.52,0.0010732,0.60582,561.43,2163.5,2724.9],
+ [400,143.61,0.0010839,0.46242,604.66,2133.4,2738.1],
+ [500,151.83,0.0010931,0.37483,640.09,2108.0,2748.1],
+ [600,158.83,0.0011013,0.31560,670.50,2085.8,2756.4],
+ [700,164.95,0.0011089,0.27278,697.06,2065.8,2762.8],
+ [800,170.41,0.0011160,0.24035,720.87,2047.5,2768.3],
+ [1000,179.88,0.0011272,0.19437,762.51,2014.6,2777.1],
+ [1200,187.96,0.0011386,0.16326,798.33,1985.4,2783.8],
+ [1500,198.29,0.0011539,0.13171,844.55,1946.4,2791.0],
+ [2000,212.38,0.0011767,0.099587,908.47,1889.8,2798.3]
+];
+const PCRIT=22064, TCRIT=373.95, VCRIT=0.003106;
+
+function interpP(P){
+ if(P<=SAT[0][0]) P=SAT[0][0];
+ if(P>=SAT[SAT.length-1][0]) P=SAT[SAT.length-1][0];
+ for(let i=0;i<SAT.length-1;i++){
+  const a=SAT[i],b=SAT[i+1];
+  if(P>=a[0]&&P<=b[0]){
+   const f=(P-a[0])/(b[0]-a[0]);
+   const lin=(j)=>a[j]+f*(b[j]-a[j]);
+   return {P:P,T:lin(1),vf:lin(2),vg:lin(3),hf:lin(4),hfg:lin(5),hg:lin(6)};
+  }
+ }
+ const z=SAT[SAT.length-1];
+ return {P:P,T:z[1],vf:z[2],vg:z[3],hf:z[4],hfg:z[5],hg:z[6]};
+}
+const f2=(x)=>Number(x).toFixed(2), f3=(x)=>Number(x).toFixed(3), f4=(x)=>Number(x).toFixed(4);
+
+/* ===================== TAB 1: motor de cuestionario ===================== */
+const QUIZ=[
+ {t:'con',q:'¿Qué es el vapor (de agua) en términos termodinámicos?',
+  o:['Agua en fase gaseosa que transporta energía como calor latente y sirve de fuerza motriz','Una mezcla de aire caliente con humedad','Agua líquida pulverizada en gotas muy finas','Un gas distinto del agua generado en la combustión'],c:0,
+  e:'El vapor es agua en fase gaseosa; es incoloro, inodoro y estéril, y es el medio de transferencia de calor más eficiente en la industria.'},
+ {t:'con',q:'¿Para qué se utiliza principalmente el vapor en la industria?',
+  o:['Solo para generar electricidad','Como fuerza motriz (turbinas) y como medio de transferencia de calor','Únicamente para esterilización y limpieza','Como refrigerante en ciclos frigoríficos'],c:1,
+  e:'Tras usarse como fuerza motriz se comprobó su eficacia como portador de energía calorífica: calentar, evaporar, esterilizar, secar, cocinar, etc.'},
+ {t:'con',q:'El funcionamiento básico de una caldera consiste en:',
+  o:['Comprimir vapor para elevar su presión','Condensar vapor para recuperar el agua','Convertir agua en vapor aplicando calor (combustión)','Separar el aire disuelto del agua de alimentación'],c:2,
+  e:'La caldera convierte agua en vapor aplicando calor: el agua se calienta hasta la temperatura de saturación y luego se evapora.'},
+ {t:'con',q:'¿Cuál de los siguientes NO es una variable que afecte el funcionamiento de la caldera?',
+  o:['Presión de operación','Nivel de agua','Demanda de vapor','El color de la tubería de distribución'],c:3,
+  e:'Las variables relevantes son presión, temperatura, nivel de agua, demanda de vapor, calidad del agua (sólidos disueltos) y la combustión.'},
+ {t:'con',q:'El nivel de agua en la caldera se controla mediante:',
+  o:['Sondas/electrodos y un controlador que acciona la bomba o válvula de alimentación','Una válvula de seguridad que libera presión','El quemador de combustible','El purgador de condensado de la línea'],c:0,
+  e:'Sondas conductivas o capacitivas miden el nivel y el controlador acciona la bomba o la válvula de alimentación (on-off o modulante).'},
+ {t:'con',q:'¿Cómo se mide el nivel de agua dentro de la caldera?',
+  o:['Con manómetros de Bourdon','Con sondas conductivas/capacitivas e indicadores de nivel (columna de agua)','Con termopares en el hogar','Con caudalímetros en la línea de vapor'],c:1,
+  e:'Se emplean electrodos conductivos, sondas capacitivas y cristales/columnas indicadoras de nivel.'},
+ {t:'con',q:'La principal desventaja del control de nivel on-off (todo/nada) es:',
+  o:['Que requiere una válvula proporcional costosa','Que mantiene el nivel exactamente constante','Que produce oscilaciones del nivel y arranques/paros frecuentes de la bomba','Que no puede usarse en calderas pirotubulares'],c:2,
+  e:'El nivel oscila entre dos límites y la bomba arranca y para de forma continua, generando fluctuaciones de presión y fatiga del equipo.'},
+ {t:'con',q:'¿Cómo funciona un control de nivel on-off?',
+  o:['Regula continuamente el caudal según la demanda','La bomba arranca a nivel bajo y se detiene a nivel alto, entre dos consignas','Mantiene la válvula siempre parcialmente abierta','Modula el quemador en función del nivel'],c:1,
+  e:'Es un control de dos posiciones: arranque a nivel bajo y paro a nivel alto.'},
+ {t:'con',q:'El control de nivel modulante (modulado) se caracteriza por:',
+  o:['Encender y apagar la bomba de forma brusca','Regular de forma continua el caudal de alimentación para mantener el nivel estable','Operar sin sondas de nivel','Funcionar solo a alta presión'],c:1,
+  e:'Usa una válvula con actuador proporcional (sonda capacitiva) que ajusta de forma continua el aporte de agua a la demanda.'},
+ {t:'con',q:'Sobre operar la caldera a alta presión frente a baja presión, a ALTA presión:',
+  o:['La tubería debe ser mayor y se pierde más calor','El vapor arrastra más agua y baja su calidad','Se usa menor tubería, hay menor pérdida de calor y mejor calidad de vapor tras reducción','Disminuye el rendimiento de la caldera'],c:2,
+  e:'A alta presión: tubería más pequeña, menor pérdida de calor y coste; al reducir la presión en el punto de uso mejora la sequedad/calidad y la caldera rinde más.'},
+ {t:'con',q:'La "demanda de vapor" se refiere a:',
+  o:['La presión máxima admisible de la caldera','El caudal de vapor (kg/h) que los procesos requieren en un instante dado','La cantidad de combustible quemado','El volumen interno del calderín'],c:1,
+  e:'Es el consumo instantáneo de vapor que solicitan los procesos.'},
+ {t:'con',q:'Un aumento brusco de la demanda de vapor tiende a:',
+  o:['Elevar la presión y el nivel de la caldera','Reducir la presión y favorecer el arrastre de agua con el vapor','No afectar ninguna variable','Apagar el quemador automáticamente'],c:1,
+  e:'Mayor demanda baja la presión, aumenta el burbujeo y puede incrementar el arrastre de agua; exige mayor aporte de calor y de agua.'},
+ {t:'con',q:'El "vapor flash" (revaporizado) se produce cuando:',
+  o:['El vapor se sobrecalienta en el sobrecalentador','Condensado a alta presión se descarga a menor presión y parte se reevapora','El agua se congela dentro de la tubería','Se inyecta aire comprimido en el vapor'],c:1,
+  e:'Al caer la presión, el condensado (líquido saturado a P alta) queda por encima de la T de saturación de la P baja y una fracción se evapora espontáneamente.'},
+ {t:'con',q:'El "golpe de ariete" en una línea de vapor se debe a:',
+  o:['Exceso de aire disuelto en el agua','Sobrepresión del quemador','Condensado acumulado arrastrado a alta velocidad o colapso brusco de burbujas de vapor','Vibración normal de la bomba de alimentación'],c:2,
+  e:'El condensado mal drenado es impulsado como un tapón por el vapor y/o las burbujas colapsan al condensar, produciendo impactos y daño en tuberías y accesorios.'},
+ {t:'con',q:'Los "sólidos disueltos" (TDS) en la caldera son:',
+  o:['Lodos de combustión depositados en el hogar','Sales y minerales disueltos en el agua que se concentran al evaporarse','Gotas de agua arrastradas por el vapor','Partículas de óxido desprendidas de los tubos'],c:1,
+  e:'Son sales disueltas (medidas en ppm); al evaporarse el agua, su concentración aumenta dentro de la caldera.'},
+ {t:'con',q:'Los sólidos disueltos se controlan principalmente mediante:',
+  o:['Purgas (blowdown) controladas por conductividad y tratamiento del agua','Aumentando la presión de trabajo','Cerrando los purgadores de condensado','Elevando el nivel de agua del calderín'],c:0,
+  e:'Las purgas de superficie/fondo reguladas por conductividad extraen agua concentrada; el tratamiento del agua reduce el aporte de sales.'},
+ {t:'num',q:'Problema 17a. Para v = 0.2 m³/kg a P = 40 kPa, calcula la calidad x (en %).',
+  ans:4.98,tol:0.7,u:'%',
+  e:'A 40 kPa: v_f=0.001026, v_g=3.9933 m³/kg. x=(0.2−0.001026)/(3.9933−0.001026)=0.0498 → 4.98 %. T=T_sat=75.86 °C.'},
+ {t:'num',q:'Problema 17b. Para v = 0.2 m³/kg a P = 630 kPa, calcula la calidad x (en %).',
+  ans:65.9,tol:1.6,u:'%',
+  e:'Interpolando a 630 kPa: v_f≈0.001103, v_g≈0.30275 m³/kg, T_sat≈160.7 °C. x=(0.2−0.001103)/(0.30275−0.001103)=0.659 → 65.9 %.'},
+ {t:'num',q:'Problema 18. Agua saturada (líquido) ocupa 1.2 m³ y se evapora por completo a 600 kPa constante. Volumen final (m³).',
+  ans:344,tol:6,u:'m³',
+  e:'A 600 kPa: v_f=0.0011013, v_g=0.31560. m=V/v_f=1.2/0.0011013=1089.6 kg. V_final=m·v_g=1089.6·0.31560≈344 m³.'}
+];
+
+function renderQuiz(){
+ const host=document.getElementById('quizList'); host.innerHTML='';
+ QUIZ.forEach((it,i)=>{
+  const n=i+1;
+  const card=document.createElement('div'); card.className='q'; card.id='q'+i;
+  const tag=it.t==='num'?'<span class="tag num">Numérico</span>':'<span class="tag con">Concepto</span>';
+  let body='';
+  if(it.t==='num'){
+   body='<div class="numwrap"><input type="number" step="0.01" id="ans'+i+'" aria-label="Respuesta pregunta '+n+'" placeholder="respuesta"><span class="u">'+it.u+'</span></div>';
+  }else{
+   body='<div class="opts">'+it.o.map((op,j)=>
+    '<label class="opt" id="opt'+i+'_'+j+'"><input type="radio" name="q'+i+'" value="'+j+'"><span class="ot">'+op+'</span></label>').join('')+'</div>';
+  }
+  card.innerHTML='<div class="qhead"><span class="qnum">'+n+'</span><span class="qtext">'+it.q+tag+'</span></div>'+body+'<div class="fb" id="fb'+i+'"></div>';
+  host.appendChild(card);
+ });
+}
+function gradeQuiz(){
+ let score=0;
+ QUIZ.forEach((it,i)=>{
+  const fb=document.getElementById('fb'+i); let ok=false, given=null;
+  if(it.t==='num'){
+   const v=parseFloat(document.getElementById('ans'+i).value);
+   given=isNaN(v)?null:v;
+   ok=(given!==null)&&Math.abs(given-it.ans)<=it.tol;
+  }else{
+   const sel=document.querySelector('input[name="q'+i+'"]:checked');
+   given=sel?parseInt(sel.value):null;
+   ok=(given===it.c);
+   document.querySelectorAll('#q'+i+' .opt').forEach(el=>el.classList.remove('correct','wrong'));
+   if(given!==null){ document.getElementById('opt'+i+'_'+it.c).classList.add('correct');
+    if(!ok) document.getElementById('opt'+i+'_'+given).classList.add('wrong'); }
+  }
+  if(ok) score++;
+  fb.className='fb show '+(ok?'ok':'no');
+  let head=ok?'✓ Correcto. ':(given===null?'• Sin responder. ':'✗ Incorrecto. ');
+  fb.innerHTML='<b>'+head+'</b>'+it.e;
+ });
+ const max=QUIZ.length, pct=Math.round(score/max*100);
+ document.getElementById('scoreVal').textContent=score;
+ document.getElementById('scoreMax').textContent=max;
+ document.getElementById('scorePct').textContent=pct;
+ document.getElementById('scoreBox').style.display='inline-block';
+ document.getElementById('scoreBarWrap').style.display='block';
+ document.getElementById('scoreBar').style.width=pct+'%';
+ document.getElementById('scoreBar').style.background = pct>=70?'linear-gradient(90deg,#43a047,#7cb342)':(pct>=50?'linear-gradient(90deg,#f9a825,#fbc02d)':'linear-gradient(90deg,#e53935,#ef5350)');
+ const sb=document.getElementById('scoreBox'); if(sb.scrollIntoView) sb.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function resetQuiz(){
+ renderQuiz();
+ document.getElementById('scoreBox').style.display='none';
+ document.getElementById('scoreBarWrap').style.display='none';
+}
+
+/* ===================== TAB 2: diagramas T-v y P-T ===================== */
+function updateDiagram(){
+ const P=+document.getElementById('dP').value;
+ const v=+document.getElementById('dv').value;
+ document.getElementById('dPval').textContent=P+' kPa';
+ const s=interpP(P);
+ const x=(v-s.vf)/(s.vg-s.vf);
+ drawTv(s,v,x); drawPT(s);
+ let fase, xtxt;
+ if(v<s.vf){fase='Líquido comprimido (v &lt; v_f)';xtxt='—';}
+ else if(v>s.vg){fase='Vapor sobrecalentado (v &gt; v_g)';xtxt='—';}
+ else{fase='Mezcla líquido + vapor';xtxt=(x*100).toFixed(1)+' %';}
+ document.getElementById('diagReadout').innerHTML=
+  '<span class="k">P =</span> <span class="v">'+f2(P)+' kPa</span> &nbsp;·&nbsp; <span class="k">T_sat =</span> <span class="v">'+f2(s.T)+' °C</span> &nbsp;·&nbsp; '+
+  '<span class="k">v_f =</span> <span class="v">'+f4(s.vf)+'</span> &nbsp; <span class="k">v_g =</span> <span class="v">'+f4(s.vg)+' m³/kg</span><br>'+
+  '<span class="k">v =</span> <span class="v">'+f3(v)+' m³/kg</span> &nbsp;→&nbsp; <span class="k">Estado:</span> <span class="v">'+fase+'</span> &nbsp;·&nbsp; <span class="k">calidad x =</span> <span class="v">'+xtxt+'</span>';
+}
+function logx(v,x0,x1,w,pad){ const lo=Math.log10(0.0009),hi=Math.log10(220); return pad+(Math.log10(v)-lo)/(hi-lo)*(w-2*pad); }
+function drawTv(s,v,x){
+ const cv=document.getElementById('tvCanvas'),g=cv.getContext('2d'),W=cv.width,H=cv.height,pad=46;
+ g.clearRect(0,0,W,H);
+ const Ty=(T)=>H-pad-(T/380)*(H-2*pad);
+ // ejes
+ g.strokeStyle='#c7d0db';g.lineWidth=1;g.beginPath();g.moveTo(pad,pad-6);g.lineTo(pad,H-pad);g.lineTo(W-12,H-pad);g.stroke();
+ g.fillStyle='#5c6b84';g.font='12px IBM Plex Sans';
+ g.fillText('T (°C)',8,pad+4); g.fillText('v (m³/kg, log)',W-118,H-pad+30);
+ for(let T=0;T<=350;T+=50){const y=Ty(T);g.strokeStyle='#eef2f7';g.beginPath();g.moveTo(pad,y);g.lineTo(W-12,y);g.stroke();g.fillStyle='#9aa7b8';g.fillText(T,16,y+4);}
+ const vt=[0.001,0.01,0.1,1,10,100];
+ vt.forEach(vv=>{const xx=logx(vv,0,0,W,pad);g.fillStyle='#9aa7b8';g.fillText(vv,xx-6,H-pad+16);});
+ // domo
+ g.strokeStyle='#1976d2';g.lineWidth=2.2;g.beginPath();let first=true;
+ for(const r of SAT){const xx=logx(r[2],0,0,W,pad),yy=Ty(r[1]);if(first){g.moveTo(xx,yy);first=false;}else g.lineTo(xx,yy);}
+ g.lineTo(logx(VCRIT,0,0,W,pad),Ty(TCRIT));
+ for(let i=SAT.length-1;i>=0;i--){const r=SAT[i];g.lineTo(logx(r[3],0,0,W,pad),Ty(r[1]));}
+ g.stroke();
+ // etiquetas regiones
+ g.fillStyle='#90a4ae';g.font='11px IBM Plex Sans';
+ g.fillText('líquido',pad+8,Ty(250)); g.fillText('mezcla L+V',W*0.42,Ty(120)); g.fillText('vapor sobrecal.',W-150,Ty(250));
+ // punto crítico
+ const cx=logx(VCRIT,0,0,W,pad),cy=Ty(TCRIT);g.fillStyle='#b08800';g.beginPath();g.arc(cx,cy,4,0,7);g.fill();
+ g.fillText('crítico',cx-14,cy-8);
+ // isóbara horizontal (tie line) y estado
+ const y=Ty(s.T),xf=logx(s.vf,0,0,W,pad),xg=logx(s.vg,0,0,W,pad);
+ g.strokeStyle='#e65100';g.lineWidth=2;g.beginPath();g.moveTo(xf,y);g.lineTo(xg,y);g.stroke();
+ g.fillStyle='#e65100';g.beginPath();g.arc(xf,y,3.5,0,7);g.fill();g.beginPath();g.arc(xg,y,3.5,0,7);g.fill();
+ const vx=Math.min(Math.max(v,0.0009),200),px=logx(vx,0,0,W,pad);
+ g.fillStyle='#c62828';g.beginPath();g.arc(px,y,6,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=1.5;g.stroke();
+}
+function drawPT(s){
+ const cv=document.getElementById('ptCanvas'),g=cv.getContext('2d'),W=cv.width,H=cv.height,pad=46;
+ g.clearRect(0,0,W,H);
+ const Tx=(T)=>pad+(T/380)*(W-2*pad);
+ const lo=Math.log10(0.8),hi=Math.log10(25000);
+ const Py=(P)=>H-pad-(Math.log10(P)-lo)/(hi-lo)*(H-2*pad);
+ g.strokeStyle='#c7d0db';g.lineWidth=1;g.beginPath();g.moveTo(pad,pad-6);g.lineTo(pad,H-pad);g.lineTo(W-12,H-pad);g.stroke();
+ g.fillStyle='#5c6b84';g.font='12px IBM Plex Sans';g.fillText('P (kPa, log)',8,pad+4);g.fillText('T (°C)',W-60,H-pad+30);
+ [1,10,100,1000,10000].forEach(P=>{const y=Py(P);g.strokeStyle='#eef2f7';g.beginPath();g.moveTo(pad,y);g.lineTo(W-12,y);g.stroke();g.fillStyle='#9aa7b8';g.fillText(P,14,y+4);});
+ for(let T=0;T<=350;T+=50){const xx=Tx(T);g.fillStyle='#9aa7b8';g.fillText(T,xx-8,H-pad+16);}
+ g.strokeStyle='#1976d2';g.lineWidth=2.2;g.beginPath();let first=true;
+ for(const r of SAT){const xx=Tx(r[1]),yy=Py(r[0]);if(first){g.moveTo(xx,yy);first=false;}else g.lineTo(xx,yy);}
+ g.lineTo(Tx(TCRIT),Py(PCRIT));g.stroke();
+ g.fillStyle='#b08800';g.beginPath();g.arc(Tx(TCRIT),Py(PCRIT),4,0,7);g.fill();g.fillText('punto crítico',Tx(TCRIT)-70,Py(PCRIT)+4);
+ g.fillStyle='#90a4ae';g.font='11px IBM Plex Sans';g.fillText('LÍQUIDO',Tx(250),Py(8000));g.fillText('VAPOR',Tx(120),Py(8));
+ const xx=Tx(s.T),yy=Py(s.P);g.fillStyle='#c62828';g.beginPath();g.arc(xx,yy,6,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=1.5;g.stroke();
+ g.fillStyle='#c62828';g.font='11px IBM Plex Mono';g.fillText(f2(s.P)+' kPa / '+f2(s.T)+'°C',xx+9,yy-6);
+}
+
+/* ===================== TAB 3: tabla + calidad + solver ===================== */
+function buildTable(){
+ const b=document.getElementById('steamBody'); b.innerHTML='';
+ SAT.forEach(r=>{ if(r[0]===101.325) return;
+  b.innerHTML+='<tr><td>'+r[0]+'</td><td>'+f2(r[1])+'</td><td>'+f4(r[2])+'</td><td>'+f4(r[3])+'</td><td>'+f1(r[4])+'</td><td>'+f1(r[5])+'</td><td>'+f1(r[6])+'</td></tr>';
+ });
+}
+const f1=(x)=>Number(x).toFixed(1);
+function calcQuality(){
+ const P=+document.getElementById('cP').value, v=+document.getElementById('cv').value;
+ const s=interpP(P); const x=(v-s.vf)/(s.vg-s.vf);
+ let estado,xt;
+ if(v<s.vf){estado='Líquido comprimido';xt='x < 0 (no aplica)';}
+ else if(v>s.vg){estado='Vapor sobrecalentado';xt='x > 1 (no aplica)';}
+ else{estado='Mezcla líquido–vapor';xt=(x*100).toFixed(2)+' %  (x = '+f4(x)+')';}
+ document.getElementById('calcOut').innerHTML=
+  '<span class="k">T_sat =</span> <span class="v">'+f2(s.T)+' °C</span><br>'+
+  '<span class="k">v_f =</span> <span class="v">'+f4(s.vf)+'</span> &nbsp; <span class="k">v_g =</span> <span class="v">'+f4(s.vg)+' m³/kg</span><br>'+
+  '<span class="k">Estado:</span> <span class="v">'+estado+'</span><br>'+
+  '<span class="k">Calidad:</span> <span class="v">'+xt+'</span>';
+ // resaltar fila más cercana
+ const rows=document.querySelectorAll('#steamBody tr'); let best=1e9,bi=-1;
+ rows.forEach((tr,i)=>{const pv=parseFloat(tr.children[0].textContent);const d=Math.abs(pv-P);if(d<best){best=d;bi=i;}tr.classList.remove('hl');});
+ if(bi>=0) rows[bi].classList.add('hl');
+}
+function solveProblems(){
+ const a=interpP(40), b=interpP(630), c=interpP(600), v=0.2;
+ const xa=(v-a.vf)/(a.vg-a.vf), xb=(v-b.vf)/(b.vg-b.vf);
+ document.getElementById('solveP17').innerHTML=
+  '<div class="step"><b>Datos:</b> v = <span class="mono">0.2 m³/kg</span>; se pide x y T a (a) 40 kPa y (b) 630 kPa. Fórmula: <span class="mono">x = (v − v_f)/(v_g − v_f)</span>.</div>'+
+  '<div class="step"><b>(a) 40 kPa</b> → v_f=<span class="mono">'+f4(a.vf)+'</span>, v_g=<span class="mono">'+f4(a.vg)+'</span>, T_sat=<span class="mono">'+f2(a.T)+' °C</span>.<br>x = (0.2 − '+f4(a.vf)+')/('+f4(a.vg)+' − '+f4(a.vf)+') = <span class="res">'+f4(xa)+' ≈ '+(xa*100).toFixed(2)+' %</span>. &nbsp; T = <span class="res">'+f2(a.T)+' °C</span>.</div>'+
+  '<div class="step"><b>(b) 630 kPa</b> (interpolado 600–700) → v_f=<span class="mono">'+f4(b.vf)+'</span>, v_g=<span class="mono">'+f4(b.vg)+'</span>, T_sat=<span class="mono">'+f2(b.T)+' °C</span>.<br>x = (0.2 − '+f4(b.vf)+')/('+f4(b.vg)+' − '+f4(b.vf)+') = <span class="res">'+f4(xb)+' ≈ '+(xb*100).toFixed(2)+' %</span>. &nbsp; T = <span class="res">'+f2(b.T)+' °C</span>.</div>'+
+  '<div class="note">A menor presión, v_g es mucho mayor, por lo que el mismo v=0.2 m³/kg representa una calidad muy baja (casi líquido). A 630 kPa el mismo volumen corresponde a una mezcla mayoritariamente vapor.</div>';
+ const m=1.2/c.vf, Vf=m*c.vg;
+ document.getElementById('solveP18').innerHTML=
+  '<div class="step"><b>Datos:</b> líquido saturado, V₁ = <span class="mono">1.2 m³</span>, P = <span class="mono">600 kPa</span> constante, se evapora por completo (estado final = vapor saturado).</div>'+
+  '<div class="step"><b>Propiedades a 600 kPa:</b> v_f = <span class="mono">'+f4(c.vf)+'</span>, v_g = <span class="mono">'+f4(c.vg)+' m³/kg</span>.</div>'+
+  '<div class="step"><b>Masa:</b> m = V₁ / v_f = 1.2 / '+f4(c.vf)+' = <span class="res">'+f1(m)+' kg</span> (constante).</div>'+
+  '<div class="step"><b>Volumen final:</b> V₂ = m · v_g = '+f1(m)+' · '+f4(c.vg)+' = <span class="res">'+f1(Vf)+' m³ ≈ 344 m³</span>.</div>'+
+  '<div class="note">La masa no cambia; el volumen crece en la relación v_g/v_f ≈ '+f1(c.vg/c.vf)+'×, de ahí el gran aumento de volumen al evaporar.</div>';
+}
+
+/* ===================== TAB 4: caldera y circuito (SVG) ===================== */
+function setBoiler(type){
+ document.getElementById('bk0').classList.toggle('active',type==='piro');
+ document.getElementById('bk1').classList.toggle('active',type==='acuo');
+ const w=document.getElementById('boilerWrap'); const info=document.getElementById('boilerInfo');
+ if(type==='piro'){
+  w.innerHTML=
+  '<svg viewBox="0 0 640 300" class="diagram-svg" role="img" aria-label="Caldera pirotubular">'+
+  '<rect x="60" y="60" width="500" height="180" rx="14" fill="#eaf2fb" stroke="#1976d2" stroke-width="2.5"/>'+
+  '<rect x="60" y="60" width="500" height="42" fill="#cfe3f7"/><text x="310" y="86" text-anchor="middle" font-size="13" fill="#1565c0" font-weight="600">Cámara de vapor (agua por el exterior de los tubos)</text>'+
+  '<ellipse cx="120" cy="170" rx="34" ry="48" fill="#fde8d2" stroke="#e65100" stroke-width="2"/><text x="120" y="174" text-anchor="middle" font-size="11" fill="#b34700">Hogar</text>'+
+  '<line x1="154" y1="150" x2="520" y2="150" stroke="#e65100" stroke-width="6" stroke-linecap="round"/>'+
+  '<line x1="154" y1="170" x2="520" y2="170" stroke="#e65100" stroke-width="6" stroke-linecap="round"/>'+
+  '<line x1="154" y1="190" x2="520" y2="190" stroke="#e65100" stroke-width="6" stroke-linecap="round"/>'+
+  '<text x="350" y="138" text-anchor="middle" font-size="10" fill="#b34700">tubos de humos (gases de combustión)</text>'+
+  '<rect x="540" y="120" width="40" height="90" fill="#dfe6ee" stroke="#90a4ae"/><text x="560" y="170" text-anchor="middle" font-size="9" fill="#5c6b84" transform="rotate(90 560 170)">chimenea</text>'+
+  '<path d="M90 60 L90 36 L140 36" fill="none" stroke="#1976d2" stroke-width="3"/><text x="150" y="32" font-size="11" fill="#1565c0">Vapor</text>'+
+  '<circle cx="60" cy="240" r="3" fill="#e65100"/><text x="20" y="262" font-size="11" fill="#b34700">Quemador →</text>'+
+  '</svg>';
+  info.innerHTML='<b>Pirotubular:</b> los gases de combustión circulan <b>por el interior</b> de los tubos y el agua los rodea por fuera. Hasta ~20 bar y ~30 t/h. Económicas, de alto rendimiento y fácil mantenimiento.';
+ }else{
+  w.innerHTML=
+  '<svg viewBox="0 0 640 300" class="diagram-svg" role="img" aria-label="Caldera acuotubular">'+
+  '<ellipse cx="320" cy="70" rx="70" ry="26" fill="#cfe3f7" stroke="#1976d2" stroke-width="2.5"/><text x="320" y="74" text-anchor="middle" font-size="11" fill="#1565c0">Domo superior (vapor)</text>'+
+  '<ellipse cx="320" cy="250" rx="60" ry="22" fill="#eaf2fb" stroke="#1976d2" stroke-width="2.5"/><text x="320" y="254" text-anchor="middle" font-size="10" fill="#1565c0">Domo inferior (agua)</text>'+
+  '<g stroke="#1976d2" stroke-width="4" fill="none">'+
+  '<path d="M270 92 C250 150 250 180 275 232"/><path d="M295 94 C285 150 285 185 300 233"/><path d="M345 94 C355 150 355 185 340 233"/><path d="M370 92 C390 150 390 180 365 232"/></g>'+
+  '<text x="430" y="160" font-size="10" fill="#1565c0">agua por el interior</text><text x="430" y="176" font-size="10" fill="#1565c0">de los tubos</text>'+
+  '<path d="M150 250 Q150 160 150 110" fill="none" stroke="#e65100" stroke-width="3" stroke-dasharray="6 5"/><text x="120" y="200" font-size="11" fill="#b34700" transform="rotate(-90 120 200)">Calor (hogar)</text>'+
+  '<path d="M320 44 L320 22" stroke="#1976d2" stroke-width="3"/><text x="330" y="22" font-size="11" fill="#1565c0">Vapor</text>'+
+  '</svg>';
+  info.innerHTML='<b>Acuotubular:</b> el <b>agua circula por el interior</b> de los tubos y el calor se aplica por fuera. Más seguras y aptas para <b>presiones altas</b>. Disposición de domo superior (vapor) e inferior (agua).';
+ }
+}
+function buildCircuit(){
+ document.getElementById('circuitWrap').innerHTML=
+ '<svg viewBox="0 0 880 270" class="diagram-svg" role="img" aria-label="Circuito típico de vapor">'+
+ '<defs><marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#1976d2"/></marker>'+
+ '<marker id="arO" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#e65100"/></marker></defs>'+
+ '<rect x="30" y="150" width="120" height="80" rx="10" fill="#fde8d2" stroke="#e65100" stroke-width="2"/><text x="90" y="186" text-anchor="middle" font-size="12" fill="#b34700" font-weight="600">Caldera</text><text x="90" y="204" text-anchor="middle" font-size="10" fill="#b34700">generación</text>'+
+ '<rect x="250" y="40" width="130" height="60" rx="10" fill="#e3f0fd" stroke="#1976d2" stroke-width="2"/><text x="315" y="66" text-anchor="middle" font-size="12" fill="#1565c0" font-weight="600">Distribución</text><text x="315" y="84" text-anchor="middle" font-size="10" fill="#1565c0">colector / líneas</text>'+
+ '<rect x="500" y="40" width="140" height="60" rx="10" fill="#e3f0fd" stroke="#1976d2" stroke-width="2"/><text x="570" y="66" text-anchor="middle" font-size="12" fill="#1565c0" font-weight="600">Equipo de proceso</text><text x="570" y="84" text-anchor="middle" font-size="10" fill="#1565c0">intercambiador</text>'+
+ '<rect x="720" y="150" width="130" height="80" rx="10" fill="#eef6ee" stroke="#2e7d32" stroke-width="2"/><text x="785" y="186" text-anchor="middle" font-size="12" fill="#1b5e20" font-weight="600">Tanque</text><text x="785" y="204" text-anchor="middle" font-size="10" fill="#1b5e20">alimentación</text>'+
+ // vapor (azul): caldera -> distribución -> proceso
+ '<path d="M120 150 L120 70 L250 70" fill="none" stroke="#1976d2" stroke-width="3" marker-end="url(#ar)"/>'+
+ '<path d="M380 70 L500 70" fill="none" stroke="#1976d2" stroke-width="3" marker-end="url(#ar)"/>'+
+ '<text x="175" y="60" font-size="11" fill="#1565c0" font-weight="600">vapor</text>'+
+ // condensado (naranja): proceso -> tanque -> caldera (bomba)
+ '<path d="M610 100 L610 190 L720 190" fill="none" stroke="#e65100" stroke-width="3" stroke-dasharray="2 0" marker-end="url(#arO)"/>'+
+ '<text x="624" y="150" font-size="11" fill="#b34700" font-weight="600">condensado</text>'+
+ '<circle cx="690" cy="190" r="12" fill="#fff" stroke="#e65100" stroke-width="2"/><text x="690" y="194" text-anchor="middle" font-size="9" fill="#b34700">P</text>'+
+ '<path d="M720 210 L150 210 L150 230" fill="none" stroke="#2e7d32" stroke-width="3" marker-end="url(#ar)"/>'+
+ '<text x="400" y="226" font-size="11" fill="#1b5e20" font-weight="600">agua de alimentación (bomba)</text>'+
+ '<circle cx="150" cy="230" r="12" fill="#fff" stroke="#2e7d32" stroke-width="2"/><text x="150" y="234" text-anchor="middle" font-size="9" fill="#1b5e20">P</text>'+
+ '</svg>';
+}
+
+/* ===================== TAB 5: control de nivel ===================== */
+let lvMode='onoff', lvPlaying=true, lvLevel=0.5, lvPumpOn=true, lvT=0, lvRAF=null;
+function setLevelMode(m){lvMode=m;document.getElementById('lc0').classList.toggle('active',m==='onoff');document.getElementById('lc1').classList.toggle('active',m==='mod');}
+function toggleLevel(){lvPlaying=!lvPlaying;document.getElementById('lcPlay').textContent=lvPlaying?'Pausar':'Reanudar';if(lvPlaying)stepLevel();}
+function stepLevel(){
+ const cv=document.getElementById('levelCanvas');if(!cv)return;const g=cv.getContext('2d'),W=cv.width,H=cv.height;
+ const dem=+document.getElementById('dem').value; lvT+=0.016;
+ const HI=0.72, LO=0.40, SET=0.56;
+ let inflow;
+ if(lvMode==='onoff'){
+  if(lvLevel>=HI) lvPumpOn=false; if(lvLevel<=LO) lvPumpOn=true;
+  inflow=lvPumpOn?1.5:0;
+ }else{
+  const err=SET-lvLevel; inflow=Math.max(0,Math.min(1.6, dem + err*6)); lvPumpOn=inflow>0.05;
+ }
+ lvLevel += (inflow-dem)*0.0016; lvLevel=Math.max(0.12,Math.min(0.9,lvLevel));
+ // dibujo
+ g.clearRect(0,0,W,H);
+ const dx=140,dy=30,dw=520,dh=H-70;
+ // calderín
+ g.fillStyle='#f4f8fc';g.strokeStyle='#1976d2';g.lineWidth=2.5;
+ roundRect(g,dx,dy,dw,dh,16);g.fill();g.stroke();
+ // agua
+ const wy=dy+dh-lvLevel*dh;
+ g.fillStyle='#bcdcff';g.beginPath();g.moveTo(dx+2,wy);
+ for(let xx=0;xx<=dw-4;xx+=8){const yy=wy+Math.sin((xx/40)+lvT*4)*3;g.lineTo(dx+2+xx,yy);}
+ g.lineTo(dx+dw-2,dy+dh-2);g.lineTo(dx+2,dy+dh-2);g.closePath();g.fill();
+ // burbujas
+ g.fillStyle='rgba(255,255,255,.6)';for(let i=0;i<8;i++){const bx=dx+40+i*60,by=dy+dh-((lvT*60+i*30)%(lvLevel*dh));g.beginPath();g.arc(bx,by,2.5,0,7);g.fill();}
+ // líneas de consigna
+ const lineY=(lv)=>dy+dh-lv*dh;
+ g.setLineDash([6,5]);g.lineWidth=1.4;
+ g.strokeStyle='#c62828';g.beginPath();g.moveTo(dx,lineY(HI));g.lineTo(dx+dw,lineY(HI));g.stroke();
+ g.strokeStyle='#e65100';g.beginPath();g.moveTo(dx,lineY(LO));g.lineTo(dx+dw,lineY(LO));g.stroke();
+ if(lvMode==='mod'){g.strokeStyle='#2e7d32';g.beginPath();g.moveTo(dx,lineY(SET));g.lineTo(dx+dw,lineY(SET));g.stroke();}
+ g.setLineDash([]);
+ g.fillStyle='#c62828';g.font='11px IBM Plex Sans';g.fillText('Nivel ALTO',dx+dw+6,lineY(HI)+4);
+ g.fillStyle='#e65100';g.fillText('Nivel BAJO',dx+dw+6,lineY(LO)+4);
+ if(lvMode==='mod'){g.fillStyle='#2e7d32';g.fillText('Consigna',dx+dw+6,lineY(SET)+4);}
+ g.fillStyle='#1565c0';g.font='13px IBM Plex Sans';g.fillText('Calderín',dx+10,dy+22);
+ // bomba/válvula
+ g.fillStyle=lvPumpOn?'#2e7d32':'#9aa7b8';g.beginPath();g.arc(70,dy+dh-20,22,0,7);g.fill();
+ g.fillStyle='#fff';g.font='10px IBM Plex Sans';g.textAlign='center';g.fillText(lvMode==='onoff'?'BOMBA':'VÁLV.',70,dy+dh-22);g.fillText(lvPumpOn?'ON':'OFF',70,dy+dh-10);g.textAlign='left';
+ // tubo entrada
+ g.strokeStyle=lvPumpOn?'#2e7d32':'#cfd8e3';g.lineWidth=6;g.beginPath();g.moveTo(70,dy+dh-42);g.lineTo(70,dy+dh-2);g.lineTo(dx,dy+dh-2);g.stroke();
+ // salida vapor
+ g.strokeStyle='#1976d2';g.lineWidth=5;g.beginPath();g.moveTo(dx+dw/2,dy);g.lineTo(dx+dw/2,dy-22);g.stroke();
+ g.fillStyle='#1565c0';g.fillText('vapor → demanda',dx+dw/2+8,dy-12);
+ document.getElementById('levelInfo').innerHTML=
+  '<span class="k">Modo:</span> <span class="v">'+(lvMode==='onoff'?'On-off (todo/nada)':'Modulante')+'</span> &nbsp;·&nbsp; '+
+  '<span class="k">Nivel:</span> <span class="v">'+(lvLevel*100).toFixed(0)+'%</span> &nbsp;·&nbsp; '+
+  '<span class="k">Aporte:</span> <span class="v">'+(lvMode==='onoff'?(lvPumpOn?'bomba ON':'bomba OFF'):'válvula '+(inflow*62.5).toFixed(0)+'%')+'</span> &nbsp;·&nbsp; '+
+  '<span class="k">'+(lvMode==='onoff'?'El nivel oscila entre las consignas alta y baja.':'El nivel se mantiene cerca de la consigna.')+'</span>';
+ if(lvPlaying) lvRAF=requestAnimationFrame(stepLevel);
+}
+function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+
+/* ===================== navegación ===================== */
+let started={};
+function switchTab(i){
+ for(let k=0;k<5;k++){document.getElementById('tb'+k).classList.toggle('active',k===i);document.getElementById('p'+k).classList.toggle('active',k===i);}
+ if(i===1&&!started[1]){updateDiagram();started[1]=1;}
+ if(i===2&&!started[2]){calcQuality();solveProblems();started[2]=1;}
+ if(i===3&&!started[3]){setBoiler('piro');buildCircuit();started[3]=1;}
+ if(i===4){ if(!started[4]){started[4]=1;} lvPlaying=true;document.getElementById('lcPlay').textContent='Pausar'; if(lvRAF)cancelAnimationFrame(lvRAF); stepLevel(); }
+ else { lvPlaying=false; if(lvRAF)cancelAnimationFrame(lvRAF); }
+}
+/* init */
+renderQuiz(); buildTable();
+</script>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Cuestionario de Vapor Interactivo</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Cuestionario autoevaluable sobre calderas de vapor, apoyado en un diagrama T–v y la curva de saturación P–T para ubicar estados y leer la calidad.</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Lea cada pregunta y apóyese en el diagrama interactivo para razonar la respuesta.</li><li>Seleccione una opción y use «Verificar» para recibir retroalimentación inmediata.</li><li>Ubique en el diagrama T–v o en la curva P–T el estado descrito por la pregunta.</li><li>Repita el cuestionario hasta lograr todas las respuestas correctas.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>

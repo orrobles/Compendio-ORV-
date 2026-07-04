@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TermoIA · Ecuaciones de Estado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;
+  --accent:#1976d2;--accent2:#1565c0;--accent-dark:#1565c0;--accent-light:#e3f0fd;
+  --mono:'IBM Plex Mono',Consolas,monospace;
+  --good:#2e7d32;--warn:#f57c00;--bad:#c62828;--gold:#b08800;
+  --hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.main-wrapper{width:100%;max-width:1280px;padding:0 20px;display:flex;flex-direction:column}
+.subtitle-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+  border-radius:8px 8px 0 0;flex-wrap:wrap}
+.subtitle-bar .ct{font-size:.93rem;font-weight:600}
+.subtitle-bar .right{margin-left:auto;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.sub-box{display:flex;align-items:center;gap:7px;background:#eceff1;border:1px solid var(--border);border-radius:8px;padding:4px 10px}
+.sub-box label{font-size:0.75rem;color:var(--muted);font-weight:600}
+.sub-box select,.sub-box input{padding:4px 6px;border:1px solid var(--border);border-radius:5px;font-family:var(--mono);font-size:.82rem;background:#fff}
+.crit-readout{font-family:var(--mono);font-size:0.75rem;color:var(--muted);background:#f2f5f9;border:1px solid var(--border);
+  border-radius:6px;padding:4px 9px;white-space:nowrap}
+.unit-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.unit-btn{padding:5px 14px;background:#fff;border:none;cursor:pointer;font-size:.8rem;color:var(--muted)}
+.unit-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.tabbar{display:flex;background:#fff;border:1px solid var(--border);border-top:none;flex-wrap:wrap}
+.tab-btn{flex:1;min-width:160px;padding:11px 8px;background:#f0f4f8;border:none;border-right:1px solid var(--border);
+  cursor:pointer;font-size:.9rem;font-weight:600;color:var(--muted)}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:#fff;color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+.tab-pane{display:none;background:#fff;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:16px}
+.tab-pane.active{display:block}
+.concepto{background:var(--accent-light);border:1px solid #bcd8f6;border-radius:12px;padding:13px 16px;font-size:.9rem;
+  margin-bottom:14px;color:#26354f;line-height:1.55}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.98rem;color:var(--accent-dark);font-weight:700}
+.concepto summary h3::before{content:"\25B8 ";color:var(--accent-dark)}
+.concepto[open] summary h3::before{content:"\25BE "}
+.concepto[open] summary{margin-bottom:8px}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto b{color:var(--accent-dark)}
+.concepto .eqline{font-family:var(--mono);background:#fff;border:1px solid #bcd8f6;border-radius:5px;padding:6px 10px;
+  margin:7px 0;display:block;color:#26354f;overflow-x:auto}
+.layout{display:grid;grid-template-columns:1fr 380px;gap:14px;align-items:start}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:12px}
+.panel h3{font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:10px;
+  border-bottom:1px solid var(--border);padding-bottom:6px}
+.prow{display:flex;justify-content:space-between;padding:4px 0;font-size:.87rem;border-bottom:1px dashed #eef2f7;gap:10px}
+.prow:last-child{border-bottom:none}
+.prow .k{color:var(--muted)}
+.prow .v{font-family:var(--mono);font-weight:600;text-align:right}
+.prow .v.big{font-size:1.05rem;color:var(--accent)}
+.prow .v.red{color:var(--bad)} .prow .v.green{color:var(--good)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:.77rem;color:var(--muted);margin-bottom:3px}
+.field input,.field select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;
+  font-family:var(--mono);font-size:.88rem;color:var(--text);background:#fff}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field .u{color:var(--muted);font-weight:400}
+.btn{display:inline-block;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;
+  font-weight:600;font-size:.9rem}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+.steps{font-size:.82rem;line-height:1.65;font-family:var(--mono);background:#f7f9fc;border:1px solid var(--border);
+  border-radius:6px;padding:10px 12px;margin-top:10px;white-space:pre-wrap;color:#26354f}
+.msg{margin-top:8px;padding:8px 12px;border-radius:6px;font-size:.85rem;display:none}
+.msg.ok{display:block;background:#e8f5e9;color:var(--good);border:1px solid #c8e6c9}
+.msg.bad{display:block;background:#ffebee;color:var(--bad);border:1px solid #ffcdd2}
+.msg.warn{display:block;background:#fff3e0;color:#e65100;border:1px solid #ffe0b2}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.note{font-size:0.75rem;color:var(--muted);margin-top:8px;line-height:1.5}
+.radio-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rbtn{flex:1;min-width:70px;background:#f7f9fc;border:1px solid var(--border);border-radius:6px;color:var(--muted);
+  font-size:.82rem;font-weight:600;padding:7px 6px;cursor:pointer;text-align:center}
+.rbtn.active{background:var(--accent-light);border-color:var(--accent);color:var(--accent-dark);box-shadow:inset 0 0 0 1px var(--accent)}
+.badge{display:inline-block;font-family:var(--mono);font-size:.8rem;font-weight:600;padding:5px 14px;border-radius:14px;margin-top:6px}
+.b-green{background:#e8f5e9;color:#1b5e20;border:1px solid #a5d6a7}
+.b-amber{background:#fff8e1;color:#e65100;border:1px solid #ffcc80}
+.b-red{background:#ffebee;color:#b71c1c;border:1px solid #ef9a9a}
+table.cmp{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:4px}
+table.cmp th{background:var(--accent2);color:#fff;font-size:0.75rem;text-transform:uppercase;letter-spacing:.04em;
+  padding:8px 10px;text-align:right;font-weight:600}
+table.cmp th:first-child{text-align:left}
+table.cmp td{padding:7px 10px;border-bottom:1px solid #eef2f7;font-family:var(--mono);text-align:right}
+table.cmp td:first-child{text-align:left;font-family:'IBM Plex Sans',sans-serif;color:var(--muted);font-weight:500}
+table.cmp tr:nth-child(even) td{background:#f8fafc}
+table.cmp .best td{background:#e8f5e9!important}
+.chartbox svg{width:100%;height:auto;display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:.76rem}
+.legend .li{display:flex;align-items:center;gap:5px}
+.legend .sw{width:14px;height:3px;border-radius:2px;flex-shrink:0}
+.empty{color:#90a4ae;font-size:.86rem;text-align:center;padding:30px 10px}
+.eqtag{font-family:var(--mono);font-size:.82rem;color:#26354f;background:#f2f5f9;border:1px solid var(--border);
+  border-radius:5px;padding:4px 9px;display:block;margin-bottom:8px;overflow-x:auto}
+/* === Mejoras de accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 8 11 13 14 20 6"/><polyline points="17 6 20 6 20 9"/></svg>
+    Termo<span style="color:#f97316"> · IA · </span>Dinámica
+    <span style="background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></span>
+  </span>
+  <div class="topbar-center"><div class="topbar-text">
+    <h1>Ecuaciones de Estado</h1>
+    <p>Gas ideal · Factor de compresibilidad · van der Waals · Redlich-Kwong · SRK · Peng-Robinson · Virial</p>
+  </div></div>
+  <span style="visibility:hidden;font-size:1.05rem">Termo · IA · Dinámica</span>
+</div>
+
+<div class="main-wrapper">
+<div class="subtitle-bar">
+  <span>🧪</span>
+  <span class="ct">Comportamiento P–v–T de sustancias puras</span>
+  <div class="right">
+    <div class="sub-box">
+      <label>Sustancia</label>
+      <select id="subSel" onchange="onSubChange()">
+        <option value="Air">Aire</option>
+        <option value="N2" selected>Nitrógeno · N₂</option>
+        <option value="O2">Oxígeno · O₂</option>
+        <option value="CO2">Dióxido de carbono · CO₂</option>
+        <option value="CO">Monóxido de carbono · CO</option>
+        <option value="H2O">Agua · H₂O</option>
+        <option value="CH4">Metano · CH₄</option>
+        <option value="H2">Hidrógeno · H₂</option>
+        <option value="R134a">Refrigerante · R-134a</option>
+        <option value="NH3">Amoniaco · NH₃</option>
+        <option value="custom">Personalizado…</option>
+      </select>
+    </div>
+    <span class="crit-readout" id="critOut"></span>
+    <div class="unit-toggle">
+      <button id="btn-si" class="unit-btn active" onclick="setUnits('SI')">SI</button>
+      <button id="btn-ing" class="unit-btn" onclick="setUnits('ING')">Inglés</button>
+    </div>
+  </div>
+</div>
+
+<!-- custom critical props -->
+<div id="customBar" class="subtitle-bar" style="display:none;border-top:none">
+  <span class="note" style="margin:0">Propiedades críticas (SI):</span>
+  <div class="sub-box"><label>M [kg/kmol]</label><input id="cM" type="number" value="28.01" style="width:80px"></div>
+  <div class="sub-box"><label>T<sub>c</sub> [K]</label><input id="cTc" type="number" value="126.2" style="width:80px"></div>
+  <div class="sub-box"><label>P<sub>c</sub> [kPa]</label><input id="cPc" type="number" value="3390" style="width:90px"></div>
+  <div class="sub-box"><label>ω</label><input id="cW" type="number" value="0.039" step="0.001" style="width:70px"></div>
+  <button class="btn ghost" style="padding:5px 12px" onclick="onSubChange()">Aplicar</button>
+</div>
+
+<div class="tabbar">
+  <button class="tab-btn active" id="tb-m1" onclick="switchTab('m1')">① Gas ideal</button>
+  <button class="tab-btn" id="tb-m2" onclick="switchTab('m2')">② Compresibilidad Z</button>
+  <button class="tab-btn" id="tb-m3" onclick="switchTab('m3')">③ Ecuaciones reales</button>
+  <button class="tab-btn" id="tb-m4" onclick="switchTab('m4')">④ Comparador</button>
+</div>
+
+<!-- ═══════════════ M1 GAS IDEAL ═══════════════ -->
+<div class="tab-pane active" id="pane-m1">
+  <details class="concepto" open>
+    <summary><h3>Concepto — Modelo de gas ideal e interpretación microscópica</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+    <div>La <b>ecuación de estado del gas ideal</b> vincula presión, volumen y temperatura cuando las moléculas están tan separadas que su volumen propio y sus fuerzas intermoleculares son despreciables (límite de baja densidad).
+    <span class="eqline">Pv = RT &nbsp;|&nbsp; PV = mRT &nbsp;|&nbsp; P = ρRT &nbsp;|&nbsp; PV = N R<sub>u</sub> T &nbsp;,&nbsp; R = R<sub>u</sub>/M , &nbsp; R<sub>u</sub> = 8.314 kJ/kmol·K</span>
+    <b>Interpretación microscópica</b>: al disminuir la presión (o aumentar el volumen específico), la distancia media entre moléculas crece, las interacciones se anulan y el factor de compresibilidad <b>Z = Pv/RT → 1</b>. Por ello todo gas real tiende al comportamiento ideal cuando P → 0 o T ≫ T<sub>c</sub>.</div>
+  </details>
+  <div class="layout">
+    <div class="panel">
+      <h3>Datos</h3>
+      <div class="radio-row">
+        <div class="rbtn active" id="m1-P" onclick="m1Solve('P')">Calcular P</div>
+        <div class="rbtn" id="m1-v" onclick="m1Solve('v')">Calcular v</div>
+        <div class="rbtn" id="m1-T" onclick="m1Solve('T')">Calcular T</div>
+      </div>
+      <div id="m1-inputs" class="grid2"></div>
+      <div class="field"><label>Masa m [kg] <span class="u">(opcional → calcula V, n)</span></label><input id="m1_m" type="number" placeholder="ej. 1"></div>
+      <button class="btn" onclick="runM1()">Calcular</button>
+      <div class="msg" id="m1msg"></div>
+    </div>
+    <div class="panel">
+      <h3>Resultados</h3>
+      <div id="m1out"><div class="empty">Introduzca dos variables y presione <b>Calcular</b>.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M2 COMPRESIBILIDAD ═══════════════ -->
+<div class="tab-pane" id="pane-m2">
+  <details class="concepto" open>
+    <summary><h3>Concepto — Factor de compresibilidad y estados correspondientes</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+    <div>El <b>factor de compresibilidad</b> mide la desviación del gas real respecto al ideal. El <b>principio de los estados correspondientes</b> establece que Z es aproximadamente la misma función para todas las sustancias en términos de sus <b>propiedades reducidas</b>.
+    <span class="eqline">Z = Pv/RT &nbsp;|&nbsp; T<sub>R</sub> = T/T<sub>c</sub> &nbsp;|&nbsp; P<sub>R</sub> = P/P<sub>c</sub> &nbsp;|&nbsp; v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)</span>
+    Aquí Z se obtiene por cálculo a partir de la forma reducida de Redlich-Kwong (cúbica en Z), método consistente con la <b>carta generalizada de Nelson-Obert</b> y que permite trazarla.</div>
+  </details>
+  <div class="layout">
+    <div>
+      <div class="panel">
+        <h3>Estado</h3>
+        <div class="grid2">
+          <div class="field"><label>Temperatura T [<span data-u="T">K</span>]</label><input id="m2_T" type="number" data-q="T" value="175"></div>
+          <div class="field"><label>Presión P [<span data-u="P">kPa</span>]</label><input id="m2_P" type="number" data-q="P" value="10000"></div>
+        </div>
+        <button class="btn" onclick="runM2()">Calcular Z</button>
+        <div class="msg" id="m2msg"></div>
+        <div id="m2out" style="margin-top:12px"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Carta de compresibilidad Z–P<sub>R</sub></h3>
+      <div class="chartbox" id="m2chart"></div>
+      <div class="legend" id="m2legend"></div>
+      <div class="note">Isotermas T<sub>R</sub> generadas por la cúbica reducida de RK. El punto ● marca el estado calculado.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M3 ECUACIONES REALES ═══════════════ -->
+<div class="tab-pane" id="pane-m3">
+  <details class="concepto" open>
+    <summary><h3>Concepto — Ecuaciones de estado reales (cúbicas y virial)</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+    <div>Las ecuaciones cúbicas corrigen el modelo ideal incorporando el <b>covolumen b</b> (tamaño molecular) y el término <b>a</b> (atracción intermolecular). Sus constantes se obtienen de las propiedades críticas.
+    <span class="eqline">van der Waals: (P + a/v²)(v − b) = RT ,&nbsp; a = 27R²T<sub>c</sub>²/64P<sub>c</sub> ,&nbsp; b = RT<sub>c</sub>/8P<sub>c</sub></span>
+    <span class="eqline">Redlich-Kwong: P = RT/(v−b) − a /[v(v+b)√T] ,&nbsp; a = 0.4275 R²T<sub>c</sub><sup>2.5</sup>/P<sub>c</sub> ,&nbsp; b = 0.0867 RT<sub>c</sub>/P<sub>c</sub></span>
+    <b>Selección por presión</b>: gas ideal y virial truncada → presiones bajas-moderadas; cúbicas (vdW, RK, SRK, PR) → amplio rango incluso a alta presión. Existen ~600 ecuaciones de estado.</div>
+  </details>
+  <div class="layout">
+    <div class="panel">
+      <h3>Modelo y datos</h3>
+      <div class="field"><label>Ecuación de estado</label>
+        <select id="m3_eos" onchange="renderM3eq()">
+          <option value="vdw">van der Waals (1873)</option>
+          <option value="rk" selected>Redlich-Kwong (1949)</option>
+          <option value="srk">Soave-Redlich-Kwong (1972)</option>
+          <option value="pr">Peng-Robinson (1976)</option>
+          <option value="vir">Virial — 2º coef. (Pitzer)</option>
+        </select>
+      </div>
+      <span class="eqtag" id="m3eq"></span>
+      <div class="radio-row">
+        <div class="rbtn active" id="m3-P" onclick="m3Mode('P')">P dado (T, v)</div>
+        <div class="rbtn" id="m3-v" onclick="m3Mode('v')">v dado (T, P)</div>
+      </div>
+      <div class="grid2" id="m3-inputs"></div>
+      <button class="btn" onclick="runM3()">Calcular</button>
+      <div class="msg" id="m3msg"></div>
+    </div>
+    <div class="panel">
+      <h3>Resultados</h3>
+      <div id="m3out"><div class="empty">Elija ecuación, modo y datos.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ M4 COMPARADOR ═══════════════ -->
+<div class="tab-pane" id="pane-m4">
+  <details class="concepto" open>
+    <summary><h3>Concepto — Comparador de métodos / banco de pruebas</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+    <div>Para un mismo estado (T, v) se estima la presión con <b>todos</b> los modelos y se contrasta el error frente a un valor de referencia, para decidir <b>qué ecuación conviene</b>. El caso precargado reproduce el ejemplo de N₂ del material del curso (T = 175 K, v = 0.00375 m³/kg, P<sub>ref</sub> ≈ 10 MPa).</div>
+  </details>
+  <div class="layout">
+    <div class="panel">
+      <h3>Estado de prueba</h3>
+      <div class="grid2">
+        <div class="field"><label>Temperatura T [<span data-u="T">K</span>]</label><input id="m4_T" type="number" data-q="T" value="175"></div>
+        <div class="field"><label>Volumen específico v [<span data-u="v">m³/kg</span>]</label><input id="m4_v" type="number" data-q="v" value="0.00375"></div>
+      </div>
+      <div class="field"><label>Presión de referencia P<sub>ref</sub> [<span data-u="P">kPa</span>] <span class="u">(opcional)</span></label><input id="m4_Pref" type="number" data-q="P" value="10000"></div>
+      <button class="btn" onclick="runM4()">Calcular todos</button>
+      <button class="btn ghost" onclick="loadN2()">Cargar ejemplo N₂</button>
+      <div class="msg" id="m4msg"></div>
+    </div>
+    <div class="panel">
+      <h3>Comparación</h3>
+      <div id="m4out"><div class="empty">Presione <b>Calcular todos</b>.</div></div>
+      <div class="chartbox" id="m4chart" style="margin-top:12px"></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════════════
+   ECUACIONES DE ESTADO — TermoIA·Dinámica
+   Unidades internas (SI):  P[kPa]  T[K]  v[m³/kg]  R[kJ/kg·K]=kPa·m³/kg·K
+   (porque 1 kJ/kg·K = 1 kPa·m³/kg·K  ⇒  P[kPa] = R·T/v )
+   ════════════════════════════════════════════════════════════════════════ */
+const Ru = 8.314;   // kJ/kmol·K
+
+/* ── Base de datos de sustancias (SI): M[kg/kmol], Tc[K], Pc[kPa], ω ── */
+const SUBS = {
+  Air :{n:'Aire',          M:28.97, Tc:132.5, Pc:3770 , w:0.035},
+  N2  :{n:'Nitrógeno N₂',  M:28.01, Tc:126.2, Pc:3390 , w:0.039},
+  O2  :{n:'Oxígeno O₂',    M:32.00, Tc:154.6, Pc:5040 , w:0.022},
+  CO2 :{n:'CO₂',           M:44.01, Tc:304.2, Pc:7390 , w:0.224},
+  CO  :{n:'CO',            M:28.01, Tc:132.9, Pc:3500 , w:0.066},
+  H2O :{n:'Agua H₂O',      M:18.02, Tc:647.1, Pc:22060, w:0.344},
+  CH4 :{n:'Metano CH₄',    M:16.04, Tc:190.6, Pc:4600 , w:0.011},
+  H2  :{n:'Hidrógeno H₂',  M:2.016, Tc:33.2 , Pc:1300 , w:-0.216},
+  R134a:{n:'R-134a',       M:102.03,Tc:374.2, Pc:4059 , w:0.327},
+  NH3 :{n:'Amoniaco NH₃',  M:17.03, Tc:405.5, Pc:11280, w:0.250}
+};
+function getSub(){
+  const k=document.getElementById('subSel').value;
+  let s;
+  if(k==='custom'){
+    const M=+document.getElementById('cM').value, Tc=+document.getElementById('cTc').value,
+          Pc=+document.getElementById('cPc').value, w=+document.getElementById('cW').value;
+    s={n:'Personalizado', M, Tc, Pc, w};
+  } else s=Object.assign({},SUBS[k]);
+  s.R = Ru/s.M;            // kJ/kg·K
+  return s;
+}
+
+/* ── Unidades (factor SI→display) ── */
+let SYS='SI';
+const UF={ SI :{P:1,T:1,v:1,rho:1,vm:1},
+           ING:{P:0.1450377,T:1.8,v:16.0185,rho:0.0624280,vm:16.0185} };
+const UL={ SI :{P:'kPa',T:'K',v:'m³/kg',rho:'kg/m³',vm:'m³/kmol'},
+           ING:{P:'psia',T:'°R',v:'ft³/lbm',rho:'lbm/ft³',vm:'ft³/lbmol'} };
+const toSI =(q,val)=>val/UF[SYS][q];
+const toD  =(q,si )=>si *UF[SYS][q];
+const UNL  =q=>UL[SYS][q];
+
+/* ── Utilidades ── */
+function fmt(x,sig){ sig=sig||5; if(!isFinite(x))return '—';
+  if(x===0)return '0';
+  const a=Math.abs(x);
+  if(a>=1e5||a<1e-3) return x.toExponential(Math.max(2,sig-2)).replace('e','×10^');
+  return (+x.toPrecision(sig)).toString();
+}
+function row(k,v,cls){ return `<div class="prow"><span class="k">${k}</span><span class="v ${cls||''}">${v}</span></div>`; }
+function setMsg(id,t,c){ const e=document.getElementById(id); if(!t){e.className='msg';e.textContent='';return;} e.className='msg '+c; e.innerHTML=t; }
+
+/* Raíces reales de z³ + a z² + b z + c = 0  (Cardano) */
+function cubicRoots(a,b,c){
+  const p=b-a*a/3, q=2*a*a*a/27 - a*b/3 + c;
+  const D=q*q/4 + p*p*p/27; let r=[];
+  if(D>1e-13){ const u=Math.cbrt(-q/2+Math.sqrt(D)), w=Math.cbrt(-q/2-Math.sqrt(D)); r=[u+w-a/3]; }
+  else { const rad=Math.sqrt(Math.max(0,-p*p*p/27)); const ph=Math.acos(Math.max(-1,Math.min(1,(-q/2)/(rad||1e-30)))); const m=2*Math.cbrt(rad);
+    r=[m*Math.cos(ph/3)-a/3, m*Math.cos((ph+2*Math.PI)/3)-a/3, m*Math.cos((ph+4*Math.PI)/3)-a/3]; }
+  return r.filter(x=>isFinite(x));
+}
+
+/* ── Constantes y funciones por EOS ── */
+function eosConst(eos,s,T){
+  const {R,Tc,Pc,w}=s, Tr=T/Tc; let o={};
+  if(eos==='vdw'){ o.a=27*R*R*Tc*Tc/(64*Pc); o.b=R*Tc/(8*Pc); }
+  else if(eos==='rk'){ o.a=0.42748*R*R*Math.pow(Tc,2.5)/Pc; o.b=0.08664*R*Tc/Pc; }
+  else if(eos==='srk'){ o.a=0.42748*R*R*Tc*Tc/Pc; o.b=0.08664*R*Tc/Pc; o.m=0.480+1.574*w-0.176*w*w; o.al=Math.pow(1+o.m*(1-Math.sqrt(Tr)),2); }
+  else if(eos==='pr'){ o.a=0.45724*R*R*Tc*Tc/Pc; o.b=0.07780*R*Tc/Pc; o.m=0.37464+1.54226*w-0.26992*w*w; o.al=Math.pow(1+o.m*(1-Math.sqrt(Tr)),2); }
+  else if(eos==='vir'){ const B0=0.083-0.422/Math.pow(Tr,1.6), B1=0.139-0.172/Math.pow(Tr,4.2); o.Bhat=B0+w*B1; o.B=o.Bhat*R*Tc/Pc; }
+  return o;
+}
+function pFromTv(eos,s,T,v){
+  const R=s.R, c=eosConst(eos,s,T);
+  if(eos==='vdw') return R*T/(v-c.b)-c.a/(v*v);
+  if(eos==='rk')  return R*T/(v-c.b)-c.a/(v*(v+c.b)*Math.sqrt(T));
+  if(eos==='srk') return R*T/(v-c.b)-c.a*c.al/(v*(v+c.b));
+  if(eos==='pr')  return R*T/(v-c.b)-c.a*c.al/(v*(v+c.b)+c.b*(v-c.b));
+  if(eos==='vir'){ const Z=1+c.B/v; return Z*R*T/v; }
+}
+/* v dado (T,P): devuelve {roots:[v...], Z:[...]} */
+function vFromTP(eos,s,T,P){
+  const R=s.R, c=eosConst(eos,s,T); let zs=[];
+  if(eos==='vir'){ const k=c.B*P/(R*T); const Z=(1+Math.sqrt(1+4*k))/2; zs=[Z]; }
+  else{
+    const Bp=c.b*P/(R*T);
+    if(eos==='vdw'){ const Ap=c.a*P/(R*R*T*T); zs=cubicRoots(-(1+Bp), Ap, -Ap*Bp); }
+    else if(eos==='rk'){ const Ap=c.a*P/(R*R*Math.pow(T,2.5)); zs=cubicRoots(-1,(Ap-Bp-Bp*Bp),-Ap*Bp); }
+    else if(eos==='srk'){ const Ap=c.a*c.al*P/(R*R*T*T); zs=cubicRoots(-1,(Ap-Bp-Bp*Bp),-Ap*Bp); }
+    else if(eos==='pr'){ const Ap=c.a*c.al*P/(R*R*T*T); zs=cubicRoots(-(1-Bp),(Ap-3*Bp*Bp-2*Bp),-(Ap*Bp-Bp*Bp-Bp*Bp*Bp)); }
+  }
+  zs=zs.filter(z=>z>0);
+  const vs=zs.map(z=>z*R*T/P).sort((x,y)=>x-y);
+  return {roots:vs, Z:vs.map(v=>P*v/(R*T))};
+}
+/* Z generalizado por RK reducida */
+function zChart(Tr,Pr){
+  const A=0.42748*Pr/Math.pow(Tr,2.5), B=0.08664*Pr/Tr;
+  const r=cubicRoots(-1,(A-B-B*B),-A*B).filter(z=>z>0);
+  return r.length? Math.max(...r):NaN;
+}
+
+/* ════════════════ NAVEGACIÓN / GLOBAL ════════════════ */
+function switchTab(id){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+id).classList.add('active');
+  document.getElementById('tb-'+id).classList.add('active');
+}
+function onSubChange(){
+  const k=document.getElementById('subSel').value;
+  document.getElementById('customBar').style.display = (k==='custom')?'flex':'none';
+  const s=getSub();
+  document.getElementById('critOut').innerHTML =
+    `M=${fmt(s.M,4)} · R=${fmt(s.R,4)} kJ/kg·K · T<sub>c</sub>=${fmt(s.Tc,4)} K · P<sub>c</sub>=${fmt(s.Pc,4)} kPa · ω=${fmt(s.w,3)}`;
+}
+function setUnits(sys){
+  if(sys===SYS)return;
+  const old=SYS;
+  document.querySelectorAll('[data-q]').forEach(inp=>{
+    const q=inp.dataset.q, val=parseFloat(inp.value);
+    if(isFinite(val)){ const si=val/UF[old][q]; inp.value = +(si*UF[sys][q]).toPrecision(6); }
+  });
+  SYS=sys;
+  document.querySelectorAll('[data-u]').forEach(sp=>sp.textContent=UNL(sp.dataset.u));
+  document.getElementById('btn-si').classList.toggle('active',sys==='SI');
+  document.getElementById('btn-ing').classList.toggle('active',sys==='ING');
+  renderM1inputs(); renderM3inputs();              // reconstruye con etiquetas/valores convertidos
+  // recalcula salidas ya presentes para mantener consistencia de unidades
+  if(document.querySelector('#m1out .prow')) runM1();
+  if(document.querySelector('#m2out .prow')) runM2();
+  if(document.querySelector('#m3out .prow')) runM3();
+  if(document.querySelector('#m4out table'))  runM4();
+}
+
+/* ════════════════ M1 — GAS IDEAL ════════════════ */
+let M1solve='P';
+function m1Solve(q){ M1solve=q; ['P','v','T'].forEach(x=>document.getElementById('m1-'+x).classList.toggle('active',x===q)); renderM1inputs(); }
+function renderM1inputs(){
+  const need={P:['T','v'],v:['T','P'],T:['P','v']}[M1solve];
+  const lab={T:'Temperatura T',P:'Presión P',v:'Volumen específico v'};
+  const def={T:'300',P:'101.325',v:'0.5'};
+  document.getElementById('m1-inputs').innerHTML = need.map(q=>
+    `<div class="field"><label>${lab[q]} [<span data-u="${q}">${UNL(q)}</span>]</label>
+      <input id="m1_${q}" type="number" data-q="${q}" value="${document.getElementById('m1_'+q)?document.getElementById('m1_'+q).value:def[q]}"></div>`).join('');
+}
+function runM1(){
+  setMsg('m1msg','');
+  const s=getSub(), R=s.R;
+  const get=q=>toSI(q,parseFloat(document.getElementById('m1_'+q).value));
+  let T,P,v, steps='';
+  try{
+    if(M1solve==='P'){ T=get('T'); v=get('v'); if(!(T>0&&v>0))throw 0; P=R*T/v;
+      steps=`P = R·T / v\n  = ${fmt(R,4)}·${fmt(T,4)} / ${fmt(v,4)}\n  = ${fmt(P,5)} kPa`; }
+    else if(M1solve==='v'){ T=get('T'); P=get('P'); if(!(T>0&&P>0))throw 0; v=R*T/P;
+      steps=`v = R·T / P\n  = ${fmt(R,4)}·${fmt(T,4)} / ${fmt(P,5)}\n  = ${fmt(v,5)} m³/kg`; }
+    else { P=get('P'); v=get('v'); if(!(P>0&&v>0))throw 0; T=P*v/R;
+      steps=`T = P·v / R\n  = ${fmt(P,5)}·${fmt(v,5)} / ${fmt(R,4)}\n  = ${fmt(T,5)} K`; }
+  }catch(e){ setMsg('m1msg','Introduzca valores numéricos positivos en ambos campos.','bad'); return; }
+  const rho=1/v, vm=v*s.M;
+  const m=parseFloat(document.getElementById('m1_m').value);
+  let extra='';
+  if(isFinite(m)&&m>0){
+    const Vtot=m*toD('v',v);              // volumen total en unidades de despliegue
+    extra = row('Volumen total V = m·v',`${fmt(Vtot,5)} ${SYS==='SI'?'m³':'ft³'}`,'')
+          + row('Moles n = m/M',`${fmt(m/s.M,4)} kmol`,'');
+  }
+  document.getElementById('m1out').innerHTML =
+    row('Sustancia',s.n,'')+
+    row('Presión P',`${fmt(toD('P',P),5)} ${UNL('P')}`, M1solve==='P'?'big':'')+
+    row('Temperatura T',`${fmt(toD('T',T),5)} ${UNL('T')}`, M1solve==='T'?'big':'')+
+    row('Volumen específico v',`${fmt(toD('v',v),5)} ${UNL('v')}`, M1solve==='v'?'big':'')+
+    row('Densidad ρ = 1/v',`${fmt(toD('rho',rho),5)} ${UNL('rho')}`,'')+
+    row('Volumen molar v̄ = v·M',`${fmt(toD('vm',vm),5)} ${UNL('vm')}`,'')+
+    extra+
+    `<div class="steps">${steps}</div>`;
+}
+
+/* ════════════════ M2 — COMPRESIBILIDAD ════════════════ */
+function runM2(){
+  setMsg('m2msg','');
+  const s=getSub(), R=s.R;
+  const T=toSI('T',parseFloat(document.getElementById('m2_T').value));
+  const P=toSI('P',parseFloat(document.getElementById('m2_P').value));
+  if(!(T>0&&P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
+  const Tr=T/s.Tc, Pr=P/s.Pc, Z=zChart(Tr,Pr);
+  const v=Z*R*T/P, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
+  let cls,txt;
+  if(Math.abs(Z-1)<=0.05){cls='b-green';txt='Gas ideal aceptable (Z ≈ 1)';}
+  else if(Math.abs(Z-1)<=0.15){cls='b-amber';txt='Desviación moderada — corrección recomendada';}
+  else{cls='b-red';txt='Gas real — use una ecuación de estado';}
+  document.getElementById('m2out').innerHTML =
+    row('Sustancia',s.n,'')+
+    row('T<sub>R</sub> = T/T<sub>c</sub>',fmt(Tr,4),'')+
+    row('P<sub>R</sub> = P/P<sub>c</sub>',fmt(Pr,4),'')+
+    row('Factor Z',fmt(Z,4),'big')+
+    row('v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
+    row('v ideal = RT/P',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'')+
+    row("v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)",fmt(vR,4),'')+
+    `<div style="text-align:center"><span class="badge ${cls}">${txt}</span></div>`;
+  drawM2({Tr,Pr,Z});
+}
+function drawM2(pt){
+  const W=380,H=300,mL=46,mR=12,mT=12,mB=34, x0=mL,x1=W-mR,y0=H-mB,y1=mT;
+  const PRmax=7, Zmin=0.2,Zmax=1.1;
+  const sx=Pr=>x0+(Pr/PRmax)*(x1-x0);
+  const sy=Z =>y0+((Z-Zmin)/(Zmax-Zmin))*(y1-y0);
+  const iso=[{Tr:1.0,c:'#c62828'},{Tr:1.2,c:'#ef6c00'},{Tr:1.5,c:'#2e7d32'},{Tr:2.0,c:'#1976d2'},{Tr:3.0,c:'#6a1b9a'}];
+  let g=`<svg viewBox="0 0 ${W} ${H}">`;
+  // axes grid
+  for(let z=0.2;z<=1.1001;z+=0.1){ const y=sy(z); g+=`<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" stroke="#eef2f7"/>`;
+    g+=`<text x="${x0-6}" y="${y+3}" font-size="9" fill="#5c6b84" text-anchor="end" font-family="monospace">${z.toFixed(1)}</text>`; }
+  for(let p=0;p<=PRmax;p++){ const x=sx(p); g+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y1}" stroke="#f3f6fa"/>`;
+    g+=`<text x="${x}" y="${y0+14}" font-size="9" fill="#5c6b84" text-anchor="middle" font-family="monospace">${p}</text>`; }
+  g+=`<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y0}" stroke="#9aa7bd"/><line x1="${x0}" y1="${y0}" x2="${x0}" y2="${y1}" stroke="#9aa7bd"/>`;
+  g+=`<text x="${(x0+x1)/2}" y="${H-2}" font-size="10" fill="#26354f" text-anchor="middle">Presión reducida P_R</text>`;
+  g+=`<text x="12" y="${(y0+y1)/2}" font-size="10" fill="#26354f" text-anchor="middle" transform="rotate(-90 12 ${(y0+y1)/2})">Z = Pv/RT</text>`;
+  // ideal reference Z=1
+  g+=`<line x1="${x0}" y1="${sy(1)}" x2="${x1}" y2="${sy(1)}" stroke="#b0bec5" stroke-dasharray="4 3"/>`;
+  // isotherms
+  iso.forEach(o=>{ let d=''; for(let p=0.05;p<=PRmax;p+=0.1){ const z=zChart(o.Tr,p); if(isFinite(z)&&z>=Zmin&&z<=Zmax){ d+=(d?'L':'M')+sx(p).toFixed(1)+' '+sy(z).toFixed(1)+' '; } }
+    g+=`<path d="${d}" fill="none" stroke="${o.c}" stroke-width="1.6"/>`; });
+  if(pt&&isFinite(pt.Z)){ const px=sx(Math.min(pt.Pr,PRmax)), py=sy(Math.max(Zmin,Math.min(Zmax,pt.Z)));
+    g+=`<circle cx="${px}" cy="${py}" r="5" fill="#111" stroke="#fff" stroke-width="1.5"/>`; }
+  g+='</svg>';
+  document.getElementById('m2chart').innerHTML=g;
+  document.getElementById('m2legend').innerHTML=iso.map(o=>`<span class="li"><span class="sw" style="background:${o.c}"></span>T_R=${o.Tr.toFixed(1)}</span>`).join('')+
+    `<span class="li"><span class="sw" style="background:#b0bec5"></span>ideal Z=1</span>`;
+}
+
+/* ════════════════ M3 — EOS REALES ════════════════ */
+let M3mode='P';
+const M3EQ={ vdw:'P = RT/(v−b) − a/v²',
+  rk:'P = RT/(v−b) − a /[v(v+b)√T]',
+  srk:'P = RT/(v−b) − aα(T)/[v(v+b)]',
+  pr:'P = RT/(v−b) − aα(T)/[v(v+b)+b(v−b)]',
+  vir:'Z = 1 + B/v ,  B = (B⁰+ωB¹)·RTc/Pc' };
+function renderM3eq(){ document.getElementById('m3eq').textContent=M3EQ[document.getElementById('m3_eos').value]; }
+function m3Mode(m){ M3mode=m; document.getElementById('m3-P').classList.toggle('active',m==='P'); document.getElementById('m3-v').classList.toggle('active',m==='v'); renderM3inputs(); }
+function renderM3inputs(){
+  const a=`<div class="field"><label>Temperatura T [<span data-u="T">${UNL('T')}</span>]</label><input id="m3_T" type="number" data-q="T" value="${document.getElementById('m3_T')?document.getElementById('m3_T').value:'175'}"></div>`;
+  const b = (M3mode==='P')
+    ? `<div class="field"><label>Volumen específico v [<span data-u="v">${UNL('v')}</span>]</label><input id="m3_v" type="number" data-q="v" value="${document.getElementById('m3_v')?document.getElementById('m3_v').value:'0.00375'}"></div>`
+    : `<div class="field"><label>Presión P [<span data-u="P">${UNL('P')}</span>]</label><input id="m3_P" type="number" data-q="P" value="${document.getElementById('m3_P')?document.getElementById('m3_P').value:'10000'}"></div>`;
+  document.getElementById('m3-inputs').innerHTML=a+b;
+}
+function runM3(){
+  setMsg('m3msg','');
+  const s=getSub(), R=s.R, eos=document.getElementById('m3_eos').value;
+  const T=toSI('T',parseFloat(document.getElementById('m3_T').value));
+  if(!(T>0)){ setMsg('m3msg','T inválida.','bad'); return; }
+  const c=eosConst(eos,s,T);
+  let cst='';
+  if(eos==='vir'){ cst=row('B̂ (2º coef. reducido)',fmt(c.Bhat,4),'')+row('B',`${fmt(c.B,4)} m³/kg`,''); }
+  else{ cst=row('a',`${fmt(c.a,4)}`,'')+row('b',`${fmt(c.b,5)} m³/kg`,''); if(c.al!=null) cst+=row('m(ω)',fmt(c.m,4),'')+row('α(T)',fmt(c.al,4),''); }
+  let body='', warn='';
+  if(M3mode==='P'){
+    const v=toSI('v',parseFloat(document.getElementById('m3_v').value));
+    if(!(v>0)){ setMsg('m3msg','v inválido.','bad'); return; }
+    if(c.b!=null && v<=c.b){ setMsg('m3msg','v debe ser mayor que el covolumen b.','bad'); return; }
+    const P=pFromTv(eos,s,T,v), Pid=R*T/v, Z=P*v/(R*T);
+    if(eos==='vir' && Math.abs(c.B/v)>0.2) warn='El virial truncado a 2º coeficiente solo es fiable a presiones bajas-moderadas (|B/v| ≤ 0.2). Aquí está fuera de rango.';
+    body=row('Presión P',`${fmt(toD('P',P),5)} ${UNL('P')}`,'big')+row('Factor Z',fmt(Z,4),'')+
+         row('P (gas ideal)',`${fmt(toD('P',Pid),5)} ${UNL('P')}`,'')+
+         row('Desviación vs ideal',`${fmt((P-Pid)/Pid*100,3)} %`, (Math.abs((P-Pid)/Pid)>0.05?'red':'green'));
+  } else {
+    const P=toSI('P',parseFloat(document.getElementById('m3_P').value));
+    if(!(P>0)){ setMsg('m3msg','P inválida.','bad'); return; }
+    const sol=vFromTP(eos,s,T,P);
+    if(!sol.roots.length){ setMsg('m3msg','Sin raíz real positiva para ese estado.','bad'); return; }
+    const vid=R*T/P;
+    const vg=sol.roots[sol.roots.length-1], Zg=P*vg/(R*T);
+    body=row('v (vapor / gas)',`${fmt(toD('v',vg),5)} ${UNL('v')}`,'big')+row('Z (vapor)',fmt(Zg,4),'');
+    if(sol.roots.length===3){ const vl=sol.roots[0]; body+=row('v (líquido)',`${fmt(toD('v',vl),5)} ${UNL('v')}`,'')+
+        row('Z (líquido)',fmt(P*vl/(R*T),4),'')+`<div class="note">Tres raíces reales: región de coexistencia / cercana a saturación. Se reportan las raíces extremas.</div>`; }
+    body+=row('v (gas ideal)',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'');
+  }
+  if(warn) setMsg('m3msg',warn,'warn');
+  document.getElementById('m3out').innerHTML = row('Sustancia',s.n,'')+row('Ecuación',document.getElementById('m3_eos').selectedOptions[0].text,'')+'<hr style="border:none;border-top:1px solid #eef2f7;margin:6px 0">'+cst+'<hr style="border:none;border-top:1px solid #eef2f7;margin:6px 0">'+body;
+}
+
+/* ════════════════ M4 — COMPARADOR ════════════════ */
+function loadN2(){
+  document.getElementById('subSel').value='N2'; onSubChange();
+  if(SYS!=='SI') setUnits('SI');
+  document.getElementById('m4_T').value=175; document.getElementById('m4_v').value=0.00375; document.getElementById('m4_Pref').value=10000;
+  runM4();
+}
+function runM4(){
+  setMsg('m4msg','');
+  const s=getSub(), R=s.R;
+  const T=toSI('T',parseFloat(document.getElementById('m4_T').value));
+  const v=toSI('v',parseFloat(document.getElementById('m4_v').value));
+  const prefRaw=parseFloat(document.getElementById('m4_Pref').value);
+  const Pref=isFinite(prefRaw)?toSI('P',prefRaw):null;
+  if(!(T>0&&v>0)){ setMsg('m4msg','Introduzca T y v positivos.','bad'); return; }
+  const Tr=T/s.Tc;
+  // métodos
+  const methods=[];
+  methods.push({n:'Gas ideal', P:R*T/v});
+  // Z-carta: Pr a partir de P ideal (1ª estimación), Z reducido
+  const Pid=R*T/v, Zc=zChart(Tr,Pid/s.Pc); methods.push({n:'Z (carta gen.)',P:Zc*R*T/v, extra:`Z=${fmt(Zc,3)}`});
+  methods.push({n:'van der Waals',P:pFromTv('vdw',s,T,v)});
+  methods.push({n:'Redlich-Kwong',P:pFromTv('rk',s,T,v)});
+  methods.push({n:'Soave-RK',P:pFromTv('srk',s,T,v)});
+  methods.push({n:'Peng-Robinson',P:pFromTv('pr',s,T,v)});
+  const cvir=eosConst('vir',s,T); const inRange=Math.abs(cvir.B/v)<=0.2;
+  methods.push({n:'Virial (2º)',P:pFromTv('vir',s,T,v), extra: inRange?'':'fuera de rango'});
+  // errores
+  methods.forEach(m=>{ m.err = (Pref!=null)? (m.P-Pref)/Pref*100 : null; });
+  let best=null; if(Pref!=null){ best=methods.reduce((a,b)=>Math.abs(a.err)<=Math.abs(b.err)?a:b); }
+  // tabla
+  let th=`<tr><th>Método</th><th>P [${UNL('P')}]</th>${Pref!=null?'<th>Error</th>':''}</tr>`;
+  let tr=methods.map(m=>`<tr class="${(best&&m===best)?'best':''}"><td>${m.n}${m.extra?` <span style="color:#90a4ae">(${m.extra})</span>`:''}</td><td>${fmt(toD('P',m.P),5)}</td>${Pref!=null?`<td class="">${m.err>=0?'+':''}${fmt(m.err,3)}%</td>`:''}</tr>`).join('');
+  let head=row('Sustancia',s.n,'')+row('Estado',`T=${fmt(toD('T',T),4)} ${UNL('T')} · v=${fmt(toD('v',v),4)} ${UNL('v')} · T_R=${fmt(Tr,3)}`,'')+(Pref!=null?row('Referencia P_ref',`${fmt(toD('P',Pref),5)} ${UNL('P')}`,''):'');
+  document.getElementById('m4out').innerHTML = head+`<table class="cmp">${th}${tr}</table>`+
+    (best?`<div class="note">Mejor aproximación: <b>${best.n}</b> (error ${best.err>=0?'+':''}${fmt(best.err,2)}%).</div>`:'<div class="note">Introduzca P_ref para calcular el error relativo.</div>');
+  drawM4(methods,Pref);
+}
+function drawM4(methods,Pref){
+  const box=document.getElementById('m4chart');
+  if(Pref==null){ box.innerHTML='<div class="note">Gráfico de error disponible al indicar P_ref.</div>'; return; }
+  const W=380,H=210,mL=110,mR=40,mT=8,mB=22, x0=mL,x1=W-mR;
+  const errs=methods.map(m=>Math.abs(m.err));
+  const emax=Math.max(10,...errs)*1.1, n=methods.length, bh=(H-mT-mB)/n-6;
+  const sx=e=>x0+(e/emax)*(x1-x0);
+  let g=`<svg viewBox="0 0 ${W} ${H}">`;
+  g+=`<line x1="${x0}" y1="${mT}" x2="${x0}" y2="${H-mB}" stroke="#9aa7bd"/>`;
+  for(let e=0;e<=emax;e+= (emax>60?20:emax>20?10:5)){ const x=sx(e); g+=`<line x1="${x}" y1="${mT}" x2="${x}" y2="${H-mB}" stroke="#eef2f7"/><text x="${x}" y="${H-8}" font-size="8.5" fill="#5c6b84" text-anchor="middle" font-family="monospace">${e}%</text>`; }
+  methods.forEach((m,i)=>{ const y=mT+i*((H-mT-mB)/n)+3; const e=Math.abs(m.err);
+    const col= e<=2?'#2e7d32': e<=10?'#f57c00':'#c62828';
+    g+=`<rect x="${x0}" y="${y}" width="${Math.max(1,sx(e)-x0)}" height="${bh}" fill="${col}" rx="2"/>`;
+    g+=`<text x="${x0-6}" y="${y+bh/2+3}" font-size="9" fill="#26354f" text-anchor="end">${m.n}</text>`;
+    g+=`<text x="${sx(e)+4}" y="${y+bh/2+3}" font-size="8.5" fill="#5c6b84" font-family="monospace">${m.err>=0?'+':''}${m.err.toFixed(1)}%</text>`; });
+  g+='</svg>';
+  box.innerHTML='<div class="note" style="margin:0 0 4px">|Error| relativo por método</div>'+g;
+}
+
+/* ════════════════ INIT ════════════════ */
+onSubChange(); renderM1inputs(); renderM3eq(); renderM3inputs();
+runM2(); loadN2(); switchTab('m1');
+</script>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Ecuaciones de Estado</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Calculadora de ecuaciones de estado: gas ideal, factor Z, van der Waals, Redlich–Kwong, SRK, Peng–Robinson y desarrollo virial.</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Seleccione la sustancia y la ecuación de estado que desea evaluar.</li><li>Ingrese las condiciones (presión, temperatura o volumen) en los campos de entrada.</li><li>Ejecute el cálculo y compare los resultados entre modelos (gas ideal, vdW, RK, SRK, PR, virial).</li><li>Analice las desviaciones respecto de la referencia y las isotermas graficadas.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>

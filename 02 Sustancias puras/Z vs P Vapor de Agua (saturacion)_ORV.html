@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TermoIA - Z vs P del vapor de agua</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;--accent:#1976d2;--accent2:#1565c0;
+--mono:'IBM Plex Mono',Consolas,monospace;--hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.wrap{width:100%;max-width:1080px;padding:0 20px;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+border-radius:8px 8px 0 0;flex-wrap:wrap}
+.bar .ct{font-size:.93rem;font-weight:600}
+.bar .right{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 16px}
+.concepto{background:#eef4fb;border:1px solid #cfe0f5;border-radius:10px;padding:11px 14px;font-size:.86rem;color:#26354f;line-height:1.55;margin-bottom:14px}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.92rem;color:#1565c0;font-weight:700}
+.concepto summary h3::before{content:"\25B8 ";color:#1565c0}
+.concepto[open] summary h3::before{content:"\25BE "}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:#5c6b84;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto .cbody{margin-top:8px}
+.concepto b{color:#1565c0}
+.chartbox svg{width:100%;height:auto;display:block}
+.tt{position:fixed;pointer-events:none;background:#1a2233;color:#fff;font-family:var(--mono);font-size:0.75rem;
+padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
+/* === Mejoras de accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+<span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 8 11 13 14 20 6"/><polyline points="17 6 20 6 20 9"/></svg>
+Termo<span style="color:#f97316"> &middot; IA &middot; </span>Din&aacute;mica
+<span style="background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></span>
+</span>
+<div class="topbar-center"><div class="topbar-text">
+<h1>Factor de compresibilidad del vapor de agua</h1>
+<p>Z = Pv/RT del H&#8322;O &middot; isotermas de sobrecalentamiento y regi&oacute;n de saturaci&oacute;n &middot; datos IAPWS</p>
+</div></div>
+<span style="visibility:hidden;font-size:1.05rem">Termo IA Dinamica</span>
+</div>
+<div class="wrap">
+<div class="bar">
+<span>&#128167;</span><span class="ct">Diagrama Z&ndash;P del agua</span>
+<div class="right">
+<label class="chk"><input type="checkbox" id="ckDome" checked onchange="redraw()"> Regi&oacute;n bif&aacute;sica</label><label class="chk"><input type="checkbox" id="ckIdeal" checked onchange="redraw()"> Referencia Z = 1</label>
+</div>
+</div>
+<div class="card">
+<details class="concepto" open>
+<summary><h3>Acerca de este diagrama</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+<div class="cbody">Cada isoterma subcr&iacute;tica (200, 280, 360 &deg;C) desciende desde Z = 1 y termina exactamente sobre la l&iacute;nea de <b>vapor saturado</b>. La <b>regi&oacute;n bif&aacute;sica</b> (L+V) queda encerrada entre las curvas de l&iacute;quido y vapor saturado, que convergen en el <b>punto cr&iacute;tico</b> (T<sub>c</sub> = 373.95 &deg;C, P<sub>c</sub> = 220.6 bar, Z<sub>c</sub> = 0.229). Las isotermas supercr&iacute;ticas (440, 500 &deg;C) no cruzan la campana. Use la casilla <b>Regi&oacute;n bif&aacute;sica</b> para mostrarla u ocultarla.</div>
+</details>
+<div class="chartbox" id="chart"></div>
+</div>
+</div>
+<div class="tt" id="tt"></div>
+<script>
+const DATA = {"R": 461.518, "Tc": 373.95, "Pc": 220.64, "Zc": 0.2294, "dome": [[40, 0.074, 0.0001, 0.9972], [60, 0.199, 0.0001, 0.9947], [80, 0.474, 0.0003, 0.9906], [100, 1.014, 0.0006, 0.9845], [120, 1.987, 0.0012, 0.9758], [140, 3.615, 0.002, 0.9641], [160, 6.182, 0.0034, 0.9488], [180, 10.028, 0.0054, 0.9295], [200, 15.549, 0.0082, 0.9058], [220, 23.196, 0.0121, 0.8774], [240, 33.469, 0.0174, 0.8438], [260, 46.923, 0.0243, 0.8042], [280, 64.166, 0.0335, 0.7579], [300, 85.879, 0.0456, 0.7032], [310, 101.372, 0.0547, 0.6655], [320, 112.843, 0.0618, 0.6377], [330, 131.926, 0.0744, 0.5913], [340, 146.007, 0.0845, 0.5562], [350, 169.393, 0.1036, 0.4947], [360, 186.66, 0.1211, 0.4439], [368, 205.459, 0.1472, 0.3754], [372, 215.539, 0.1714, 0.3191], [373.95, 220.64, 0.2294, 0.2294]], "iso": {"200": [[0.5, 0.9974], [3, 0.985], [6, 0.967], [9, 0.949], [12, 0.93], [15.55, 0.9058]], "280": [[0.5, 0.9986], [5, 0.986], [10, 0.971], [20, 0.939], [30, 0.906], [40, 0.868], [50, 0.826], [60, 0.778], [64.17, 0.7579]], "360": [[0.5, 0.9992], [10, 0.983], [25, 0.956], [50, 0.909], [75, 0.856], [100, 0.797], [120, 0.743], [140, 0.68], [160, 0.604], [180, 0.496], [186.66, 0.4439]], "440": [[0.5, 0.9995], [20, 0.978], [50, 0.945], [90, 0.897], [130, 0.846], [170, 0.789], [210, 0.728], [250, 0.66], [290, 0.586], [330, 0.507], [350, 0.4692]], "500": [[0.5, 0.9996], [20, 0.984], [50, 0.961], [90, 0.928], [130, 0.893], [170, 0.857], [210, 0.819], [250, 0.78], [290, 0.74], [330, 0.7], [350, 0.68]]}};
+
+const ISO=[
+ {T:200,c:'#7b1fa2',dash:'4 5',sub:true},
+ {T:280,c:'#c62828',dash:'9 6',sub:true},
+ {T:360,c:'#ef6c00',dash:'2 5',sub:true},
+ {T:440,c:'#2e7d32',dash:'10 4 2 4',sub:false},
+ {T:500,c:'#00838f',dash:'',sub:false}
+];
+const VBW=960,VBH=600,L=70,Rm=40,Tm=46,Bm=64,PMAX=350,ZMAX=1.2;
+const PW=VBW-L-Rm,PH=VBH-Tm-Bm;
+const sx=P=>L+(P/PMAX)*PW;
+const sy=Z=>Tm+(1-Z/ZMAX)*PH;
+const ptsToPath=a=>a.map((p,i)=>(i?'L':'M')+sx(p[0]).toFixed(1)+' '+sy(p[1]).toFixed(1)).join(' ');
+
+function buildSVG(showDome){
+ const show200=true;
+ const showIdeal=document.getElementById('ckIdeal').checked;
+ let g='<svg viewBox="0 0 '+VBW+' '+VBH+'" role="img" aria-label="Factor de compresibilidad Z del vapor de agua frente a la presion">';
+ g+='<rect x="'+L+'" y="'+Tm+'" width="'+PW+'" height="'+PH+'" fill="#fff"/>';
+ for(let p=0;p<=PMAX;p+=50){ const x=sx(p); g+='<line x1="'+x+'" y1="'+Tm+'" x2="'+x+'" y2="'+(Tm+PH)+'" stroke="#e2e8f0"/>';
+  g+='<text x="'+x+'" y="'+(Tm+PH+18)+'" font-size="12" fill="#5c6b84" text-anchor="middle" font-family="monospace">'+p+'</text>'; }
+ for(let z=0;z<=ZMAX+1e-9;z+=0.2){ const y=sy(z); g+='<line x1="'+L+'" y1="'+y+'" x2="'+(L+PW)+'" y2="'+y+'" stroke="#e2e8f0"/>';
+  g+='<text x="'+(L-10)+'" y="'+(y+4)+'" font-size="12" fill="#5c6b84" text-anchor="end" font-family="monospace">'+z.toFixed(1)+'</text>'; }
+ g+='<line x1="'+L+'" y1="'+Tm+'" x2="'+L+'" y2="'+(Tm+PH)+'" stroke="#9aa7bd" stroke-width="1.2"/>';
+ g+='<line x1="'+L+'" y1="'+(Tm+PH)+'" x2="'+(L+PW)+'" y2="'+(Tm+PH)+'" stroke="#9aa7bd" stroke-width="1.2"/>';
+ g+='<text x="'+(L+PW/2)+'" y="'+(VBH-20)+'" font-size="14" fill="#1a2233" text-anchor="middle" font-weight="600">Presión (bar)</text>';
+ g+='<text x="22" y="'+(Tm+PH/2)+'" font-size="14" fill="#1a2233" text-anchor="middle" font-weight="600" transform="rotate(-90 22 '+(Tm+PH/2)+')">Z (adimensional)</text>';
+ if(showIdeal){ const y=sy(1); g+='<line x1="'+L+'" y1="'+y+'" x2="'+(L+PW)+'" y2="'+y+'" stroke="#90a4ae" stroke-width="1.4" stroke-dasharray="5 4"/>';
+  g+='<text x="'+(L+PW-6)+'" y="'+(y-6)+'" font-size="11" fill="#78909c" text-anchor="end" font-style="italic">gas ideal (Z = 1)</text>'; }
+ if(showDome){
+  const vap=DATA.dome.map(d=>[d[1],d[3]]), liq=DATA.dome.map(d=>[d[1],d[2]]);
+  const area=ptsToPath(vap)+' '+liq.slice().reverse().map(p=>'L'+sx(p[0]).toFixed(1)+' '+sy(p[1]).toFixed(1)).join(' ')+' Z';
+  g+='<path d="'+area+'" fill="#1565c0" fill-opacity="0.09"/>';
+  g+='<path d="'+ptsToPath(vap)+'" fill="none" stroke="#1565c0" stroke-width="2.6"/>';
+  g+='<path d="'+ptsToPath(liq)+'" fill="none" stroke="#1565c0" stroke-width="2.6"/>';
+  const cx=sx(DATA.Pc), cy=sy(DATA.Zc);
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="5.5" fill="#b71c1c" stroke="#fff" stroke-width="1.6"/>';
+  g+='<text x="'+(cx+10)+'" y="'+(cy+4)+'" font-size="11.5" fill="#b71c1c" font-weight="600">Punto crítico Zc='+DATA.Zc+'</text>';
+  g+='<text x="'+sx(150)+'" y="'+(sy(0.905)-6)+'" font-size="11.5" fill="#1565c0" font-weight="600">vapor saturado (x=1)</text>';
+  g+='<text x="'+sx(150)+'" y="'+(sy(0.085)+4)+'" font-size="11.5" fill="#1565c0" font-weight="600">líquido saturado (x=0)</text>';
+  g+='<text x="'+sx(120)+'" y="'+sy(0.42)+'" font-size="12" fill="#0d3c75" font-weight="600" text-anchor="middle">bifásico (L+V)</text>';
+ }
+ g+='<text x="'+sx(250)+'" y="'+sy(1.08)+'" font-size="12.5" fill="#37474f" text-anchor="middle">Temperatura (°C)</text>';
+ ISO.forEach(o=>{
+  if(o.T===200 && !show200) return;
+  const a=DATA.iso[String(o.T)];
+  g+='<path d="'+ptsToPath(a)+'" fill="none" stroke="'+o.c+'" stroke-width="2.1" '+(o.dash?'stroke-dasharray="'+o.dash+'"':'')+' stroke-linecap="round" stroke-linejoin="round"/>';
+  const end=a[a.length-1];
+  if(showDome && o.sub){ g+='<circle cx="'+sx(end[0])+'" cy="'+sy(end[1])+'" r="3.4" fill="'+o.c+'"/>'; }
+  let lx=sx(end[0]), ly=sy(end[1]);
+  if(o.T===200){ g+='<text x="'+(lx-6)+'" y="'+(ly-8)+'" font-size="12.5" fill="'+o.c+'" font-weight="700" text-anchor="end">200</text>'; }
+  else if(o.T===280){ g+='<text x="'+(lx-6)+'" y="'+(ly+16)+'" font-size="12.5" fill="'+o.c+'" font-weight="700" text-anchor="middle">280</text>'; }
+  else { g+='<text x="'+(lx+8)+'" y="'+(ly+4)+'" font-size="12.5" fill="'+o.c+'" font-weight="700">'+o.T+'</text>'; }
+ });
+ g+='</svg>';
+ return g;
+}
+function redraw(){document.getElementById('chart').innerHTML=buildSVG(document.getElementById('ckDome').checked);attachHover();}
+function attachHover(){
+ const svg=document.querySelector('#chart svg');if(!svg)return;const tt=document.getElementById('tt');
+ const show200=true;
+ const all=[]; ISO.forEach(o=>{ if(o.T===200&&!show200)return; DATA.iso[String(o.T)].forEach(p=>all.push({P:p[0],Z:p[1],T:o.T})); });
+ svg.addEventListener('mousemove',ev=>{const r=svg.getBoundingClientRect(),kx=VBW/r.width,ky=VBH/r.height;
+  const vx=(ev.clientX-r.left)*kx,vy=(ev.clientY-r.top)*ky;let b=null,bd=1e9;
+  all.forEach(d=>{const dx=sx(d.P)-vx,dy=sy(d.Z)-vy,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;b=d;}});
+  if(b&&bd<400){tt.style.opacity=1;tt.style.left=(ev.clientX+12)+'px';tt.style.top=(ev.clientY-10)+'px';
+   tt.innerHTML=b.T+' °C &middot; P='+b.P+' bar &middot; Z='+b.Z.toFixed(3);}else tt.style.opacity=0;});
+ svg.addEventListener('mouseleave',()=>tt.style.opacity=0);
+}
+redraw();
+
+</script>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Z vs P del Vapor de Agua (saturación)</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Traza el factor de compresibilidad Z frente a la presión para el vapor de agua saturado.</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Desplace el cursor sobre el diagrama para leer las coordenadas del punto.</li><li>Ubique un estado con los controles de entrada o haciendo clic sobre la gráfica.</li><li>Identifique la región del estado: líquido comprimido, mezcla saturada (dentro del domo) o vapor sobrecalentado.</li><li>Abra las secciones «DESPLEGAR / CONTRAER» para consultar el concepto teórico y los datos asociados.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>

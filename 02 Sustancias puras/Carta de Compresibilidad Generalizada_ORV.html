@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>TermoIA - Carta de compresibilidad generalizada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f5f7fa;--surface:#fff;--border:#dde3ec;--text:#1a2233;--muted:#5c6b84;--accent:#1976d2;--accent2:#1565c0;
+--mono:'IBM Plex Mono',Consolas,monospace;--mag:#e0218a;--hdr:linear-gradient(90deg,#1565c0 0%,#1976d2 60%,#1e88e5 100%)}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans','Segoe UI',Roboto,Arial,sans-serif;font-size:15px;
+min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+.topbar{width:100%;background:var(--hdr);display:flex;align-items:center;justify-content:space-between;gap:14px;
+padding:0 28px;height:66px;box-shadow:0 2px 8px rgba(21,101,192,.22);margin-bottom:18px;position:relative;overflow:hidden}
+.topbar-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:1;text-align:center}
+.topbar-text h1{font-size:1rem;font-weight:700;color:#fff;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.topbar-text p{font-size:0.75rem;color:rgba(255,255,255,.82);font-weight:300;margin-top:1px}
+.wrap{width:100%;max-width:1100px;padding:0 20px;display:flex;flex-direction:column}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:#fff;border:1px solid var(--border);
+border-radius:8px 8px 0 0;flex-wrap:wrap}
+.bar .ct{font-size:.93rem;font-weight:600}
+.bar .right{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.chk{display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--muted);cursor:pointer;user-select:none}
+.chk input{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+.card{background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;padding:14px 16px}
+.concepto{background:#eef4fb;border:1px solid #cfe0f5;border-radius:10px;padding:11px 14px;font-size:.86rem;color:#26354f;line-height:1.55;margin-bottom:14px}
+.concepto summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.concepto summary::-webkit-details-marker{display:none}
+.concepto summary h3{margin:0;font-size:.92rem;color:#1565c0;font-weight:700}
+.concepto summary h3::before{content:"\25B8 ";color:#1565c0}
+.concepto[open] summary h3::before{content:"\25BE "}
+.concepto .toggle-hint{margin-left:auto;font-size:0.75rem;color:#5c6b84;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.concepto .cbody{margin-top:8px}
+.concepto b{color:#1565c0}
+.chartbox svg{width:100%;height:auto;display:block}
+.tt{position:fixed;pointer-events:none;background:#1a2233;color:#fff;font-family:var(--mono);font-size:0.75rem;
+padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap}
+/* === Mejoras de accesibilidad (ORV) === */
+:where(a,button,select,input,textarea,canvas,summary,[tabindex]):focus-visible{outline:3px solid var(--accent,#1976d2);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+<span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:1.05rem;letter-spacing:.3px;color:#fff;z-index:2">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b0bec5" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 8 11 13 14 20 6"/><polyline points="17 6 20 6 20 9"/></svg>
+Termo<span style="color:#f97316"> &middot; IA &middot; </span>Din&aacute;mica
+<span style="background:rgba(255,255,255,.18);border-radius:8px;padding:4px 6px;display:flex;align-items:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></span>
+</span>
+<div class="topbar-center"><div class="topbar-text">
+<h1>Carta de compresibilidad generalizada</h1>
+<p>Z = Pv/RT vs presi&oacute;n reducida &middot; principio de estados correspondientes (Nelson-Obert)</p>
+</div></div>
+<span style="visibility:hidden;font-size:1.05rem">Termo IA Dinamica</span>
+</div>
+<div class="wrap">
+<div class="bar">
+<span>&#128202;</span><span class="ct">Z(P_R, T_R) &mdash; curvas medias y datos de 10 sustancias</span>
+<div class="right">
+<label class="chk"><input type="checkbox" id="ckPts" checked onchange="redraw()"> Puntos experimentales</label>
+<label class="chk"><input type="checkbox" id="ckAvg" checked onchange="redraw()"> Curvas medias</label>
+<label class="chk"><input type="checkbox" id="ckGuide" onchange="redraw()"> Gu&iacute;a de ejemplo (P_R=2.5)</label>
+</div>
+</div>
+<div class="card">
+<details class="concepto" open>
+<summary><h3>Acerca de esta carta</h3><span class="toggle-hint">desplegar / contraer</span></summary>
+<div class="cbody">Carta de compresibilidad generalizada (Nelson-Obert). Las <b>curvas medias</b> (magenta) son el promedio de los datos de hidrocarburos (CoolProp); los <b>puntos</b> son Z = Pv/RT con propiedades reales (IAPWS/CoolProp) de 10 sustancias en coordenadas reducidas (T<sub>R</sub>=T/T<sub>c</sub>, P<sub>R</sub>=P/P<sub>c</sub>). Que todas colapsen sobre las mismas curvas confirma el <b>principio de los estados correspondientes</b>. La isoterma cr&iacute;tica <b>T<sub>R</sub>=1.00</b> desciende casi verticalmente hasta un m&iacute;nimo Z&asymp;0.21 cerca de P<sub>R</sub>=1 y luego sube. Clic en la leyenda para aislar sustancias.</div>
+</details>
+<div class="chartbox" id="chart"></div>
+</div>
+</div>
+<div class="tt" id="tt"></div>
+<script>
+const DATA = {"avg": {"1.00": [[0.05, 0.9829], [0.07, 0.9759], [0.09, 0.9688], [0.11, 0.9617], [0.13, 0.9545], [0.15, 0.9472], [0.17, 0.9399], [0.19, 0.9324], [0.21, 0.9249], [0.23, 0.9173], [0.25, 0.9095], [0.27, 0.9017], [0.29, 0.8938], [0.31, 0.8857], [0.33, 0.8776], [0.35, 0.8693], [0.37, 0.8609], [0.39, 0.8523], [0.41, 0.8437], [0.43, 0.8349], [0.45, 0.8259], [0.47, 0.8168], [0.49, 0.8075], [0.51, 0.798], [0.53, 0.7883], [0.55, 0.7785], [0.57, 0.7684], [0.59, 0.7581], [0.61, 0.7475], [0.63, 0.7367], [0.65, 0.7256], [0.67, 0.7142], [0.69, 0.7025], [0.71, 0.6903], [0.73, 0.6778], [0.75, 0.6648], [0.77, 0.6513], [0.79, 0.6372], [0.81, 0.6224], [0.83, 0.6069], [0.85, 0.5904], [0.87, 0.5729], [0.89, 0.5539], [0.91, 0.5332], [0.93, 0.5101], [0.95, 0.4833], [0.97, 0.4506], [0.99, 0.4042], [1.01, 0.2315], [1.03, 0.2146], [1.05, 0.2104], [1.07, 0.2089], [1.09, 0.2087], [1.11, 0.2092], [1.13, 0.2101], [1.15, 0.2114], [1.17, 0.2129], [1.19, 0.2145], [1.21, 0.2163], [1.23, 0.2182], [1.25, 0.2202], [1.27, 0.2222], [1.29, 0.2243], [1.31, 0.2265], [1.33, 0.2287], [1.35, 0.2309], [1.37, 0.2332], [1.39, 0.2355], [1.41, 0.2378], [1.51, 0.2497], [1.61, 0.2618], [1.71, 0.2741], [1.81, 0.2865], [1.91, 0.299], [2.01, 0.3114], [2.11, 0.3238], [2.21, 0.3363], [2.31, 0.3487], [2.41, 0.361], [2.51, 0.3734], [2.61, 0.3857], [2.71, 0.398], [2.81, 0.4102], [2.91, 0.4224], [3.01, 0.4345], [3.26, 0.4648], [3.51, 0.4948], [3.76, 0.5245], [4.01, 0.5541], [4.26, 0.5834], [4.51, 0.6126], [4.76, 0.6415], [5.01, 0.6703], [5.26, 0.6989], [5.51, 0.7273], [5.76, 0.7556], [6.01, 0.7837], [6.26, 0.8117], [6.51, 0.8395], [6.76, 0.8672]], "1.10": [[0.05, 0.9875], [0.07, 0.9824], [0.09, 0.9773], [0.11, 0.9722], [0.13, 0.967], [0.15, 0.9618], [0.17, 0.9566], [0.19, 0.9513], [0.21, 0.946], [0.23, 0.9407], [0.25, 0.9353], [0.27, 0.9299], [0.29, 0.9245], [0.31, 0.919], [0.33, 0.9135], [0.35, 0.9079], [0.37, 0.9023], [0.39, 0.8967], [0.41, 0.891], [0.43, 0.8853], [0.45, 0.8795], [0.47, 0.8737], [0.49, 0.8678], [0.51, 0.8619], [0.53, 0.8559], [0.55, 0.8499], [0.57, 0.8438], [0.59, 0.8377], [0.61, 0.8315], [0.63, 0.8253], [0.65, 0.819], [0.67, 0.8127], [0.69, 0.8063], [0.71, 0.7998], [0.73, 0.7933], [0.75, 0.7867], [0.77, 0.7801], [0.79, 0.7734], [0.81, 0.7666], [0.83, 0.7597], [0.85, 0.7528], [0.87, 0.7458], [0.89, 0.7388], [0.91, 0.7316], [0.93, 0.7244], [0.95, 0.7171], [0.97, 0.7098], [0.99, 0.7023], [1.01, 0.6948], [1.03, 0.6872], [1.05, 0.6795], [1.07, 0.6717], [1.09, 0.6638], [1.11, 0.6559], [1.13, 0.6478], [1.15, 0.6397], [1.17, 0.6315], [1.19, 0.6232], [1.21, 0.6148], [1.23, 0.6063], [1.25, 0.5977], [1.27, 0.5891], [1.29, 0.5804], [1.31, 0.5716], [1.33, 0.5628], [1.35, 0.5539], [1.37, 0.5451], [1.39, 0.5362], [1.41, 0.5274], [1.51, 0.4846], [1.61, 0.448], [1.71, 0.4217], [1.81, 0.4061], [1.91, 0.3987], [2.01, 0.397], [2.11, 0.399], [2.21, 0.4034], [2.31, 0.4094], [2.41, 0.4165], [2.51, 0.4245], [2.61, 0.433], [2.71, 0.442], [2.81, 0.4513], [2.91, 0.4609], [3.01, 0.4707], [3.26, 0.4958], [3.51, 0.5214], [3.76, 0.5474], [4.01, 0.5735], [4.26, 0.5997], [4.51, 0.6259], [4.76, 0.6521], [5.01, 0.6782], [5.26, 0.7042], [5.51, 0.7301], [5.76, 0.756], [6.01, 0.7818], [6.26, 0.8074], [6.51, 0.833], [6.76, 0.8585]], "1.20": [[0.05, 0.9907], [0.07, 0.9869], [0.09, 0.9831], [0.11, 0.9794], [0.13, 0.9756], [0.15, 0.9718], [0.17, 0.968], [0.19, 0.9641], [0.21, 0.9603], [0.23, 0.9564], [0.25, 0.9526], [0.27, 0.9487], [0.29, 0.9448], [0.31, 0.9409], [0.33, 0.9369], [0.35, 0.933], [0.37, 0.9291], [0.39, 0.9251], [0.41, 0.9211], [0.43, 0.9171], [0.45, 0.9131], [0.47, 0.9091], [0.49, 0.9051], [0.51, 0.901], [0.53, 0.897], [0.55, 0.8929], [0.57, 0.8888], [0.59, 0.8847], [0.61, 0.8806], [0.63, 0.8765], [0.65, 0.8723], [0.67, 0.8682], [0.69, 0.864], [0.71, 0.8598], [0.73, 0.8556], [0.75, 0.8514], [0.77, 0.8472], [0.79, 0.8429], [0.81, 0.8387], [0.83, 0.8344], [0.85, 0.8301], [0.87, 0.8259], [0.89, 0.8216], [0.91, 0.8172], [0.93, 0.8129], [0.95, 0.8086], [0.97, 0.8042], [0.99, 0.7999], [1.01, 0.7955], [1.03, 0.7911], [1.05, 0.7868], [1.07, 0.7824], [1.09, 0.778], [1.11, 0.7736], [1.13, 0.7691], [1.15, 0.7647], [1.17, 0.7603], [1.19, 0.7559], [1.21, 0.7514], [1.23, 0.747], [1.25, 0.7426], [1.27, 0.7381], [1.29, 0.7337], [1.31, 0.7293], [1.33, 0.7248], [1.35, 0.7204], [1.37, 0.716], [1.39, 0.7116], [1.41, 0.7072], [1.51, 0.6854], [1.61, 0.6641], [1.71, 0.6436], [1.81, 0.6243], [1.91, 0.6066], [2.01, 0.5909], [2.11, 0.5774], [2.21, 0.5663], [2.31, 0.5577], [2.41, 0.5515], [2.51, 0.5474], [2.61, 0.5454], [2.71, 0.5451], [2.81, 0.5463], [2.91, 0.5487], [3.01, 0.5522], [3.26, 0.5644], [3.51, 0.5802], [3.76, 0.5983], [4.01, 0.6179], [4.26, 0.6386], [4.51, 0.6601], [4.76, 0.682], [5.01, 0.7043], [5.26, 0.7268], [5.51, 0.7495], [5.76, 0.7724], [6.01, 0.7953], [6.26, 0.8182], [6.51, 0.8412], [6.76, 0.8642]], "1.30": [[0.05, 0.993], [0.07, 0.9901], [0.09, 0.9873], [0.11, 0.9845], [0.13, 0.9816], [0.15, 0.9788], [0.17, 0.9759], [0.19, 0.9731], [0.21, 0.9702], [0.23, 0.9674], [0.25, 0.9645], [0.27, 0.9617], [0.29, 0.9588], [0.31, 0.9559], [0.33, 0.9531], [0.35, 0.9502], [0.37, 0.9473], [0.39, 0.9444], [0.41, 0.9416], [0.43, 0.9387], [0.45, 0.9358], [0.47, 0.9329], [0.49, 0.93], [0.51, 0.9271], [0.53, 0.9242], [0.55, 0.9213], [0.57, 0.9184], [0.59, 0.9155], [0.61, 0.9126], [0.63, 0.9097], [0.65, 0.9068], [0.67, 0.9039], [0.69, 0.901], [0.71, 0.8981], [0.73, 0.8952], [0.75, 0.8923], [0.77, 0.8894], [0.79, 0.8865], [0.81, 0.8835], [0.83, 0.8806], [0.85, 0.8777], [0.87, 0.8748], [0.89, 0.8719], [0.91, 0.869], [0.93, 0.8661], [0.95, 0.8632], [0.97, 0.8603], [0.99, 0.8574], [1.01, 0.8545], [1.03, 0.8516], [1.05, 0.8487], [1.07, 0.8458], [1.09, 0.8429], [1.11, 0.84], [1.13, 0.8371], [1.15, 0.8343], [1.17, 0.8314], [1.19, 0.8285], [1.21, 0.8257], [1.23, 0.8228], [1.25, 0.82], [1.27, 0.8171], [1.29, 0.8143], [1.31, 0.8115], [1.33, 0.8087], [1.35, 0.8059], [1.37, 0.8031], [1.39, 0.8003], [1.41, 0.7975], [1.51, 0.7838], [1.61, 0.7705], [1.71, 0.7575], [1.81, 0.7451], [1.91, 0.7332], [2.01, 0.722], [2.11, 0.7115], [2.21, 0.7019], [2.31, 0.6932], [2.41, 0.6855], [2.51, 0.6788], [2.61, 0.6731], [2.71, 0.6684], [2.81, 0.6648], [2.91, 0.6622], [3.01, 0.6606], [3.26, 0.6603], [3.51, 0.6648], [3.76, 0.673], [4.01, 0.6842], [4.26, 0.6975], [4.51, 0.7126], [4.76, 0.729], [5.01, 0.7463], [5.26, 0.7644], [5.51, 0.7831], [5.76, 0.8022], [6.01, 0.8217], [6.26, 0.8415], [6.51, 0.8615], [6.76, 0.8817]], "1.50": [[0.05, 0.9959], [0.07, 0.9943], [0.09, 0.9926], [0.11, 0.991], [0.13, 0.9894], [0.15, 0.9877], [0.17, 0.9861], [0.19, 0.9845], [0.21, 0.9829], [0.23, 0.9812], [0.25, 0.9796], [0.27, 0.978], [0.29, 0.9764], [0.31, 0.9748], [0.33, 0.9732], [0.35, 0.9716], [0.37, 0.97], [0.39, 0.9684], [0.41, 0.9668], [0.43, 0.9653], [0.45, 0.9637], [0.47, 0.9621], [0.49, 0.9605], [0.51, 0.959], [0.53, 0.9574], [0.55, 0.9558], [0.57, 0.9543], [0.59, 0.9527], [0.61, 0.9512], [0.63, 0.9496], [0.65, 0.9481], [0.67, 0.9465], [0.69, 0.945], [0.71, 0.9435], [0.73, 0.942], [0.75, 0.9404], [0.77, 0.9389], [0.79, 0.9374], [0.81, 0.9359], [0.83, 0.9344], [0.85, 0.9329], [0.87, 0.9314], [0.89, 0.9299], [0.91, 0.9285], [0.93, 0.927], [0.95, 0.9255], [0.97, 0.9241], [0.99, 0.9226], [1.01, 0.9212], [1.03, 0.9197], [1.05, 0.9183], [1.07, 0.9168], [1.09, 0.9154], [1.11, 0.914], [1.13, 0.9126], [1.15, 0.9112], [1.17, 0.9098], [1.19, 0.9084], [1.21, 0.907], [1.23, 0.9056], [1.25, 0.9042], [1.27, 0.9028], [1.29, 0.9015], [1.31, 0.9001], [1.33, 0.8988], [1.35, 0.8974], [1.37, 0.8961], [1.39, 0.8948], [1.41, 0.8935], [1.51, 0.887], [1.61, 0.8807], [1.71, 0.8747], [1.81, 0.8689], [1.91, 0.8633], [2.01, 0.8581], [2.11, 0.8531], [2.21, 0.8483], [2.31, 0.8439], [2.41, 0.8398], [2.51, 0.836], [2.61, 0.8326], [2.71, 0.8295], [2.81, 0.8267], [2.91, 0.8243], [3.01, 0.8223], [3.26, 0.8187], [3.51, 0.8173], [3.76, 0.818], [4.01, 0.8207], [4.26, 0.8253], [4.51, 0.8316], [4.76, 0.8394], [5.01, 0.8485], [5.26, 0.8587], [5.51, 0.87], [5.76, 0.8821], [6.01, 0.895], [6.26, 0.9085], [6.51, 0.9226], [6.76, 0.9371]], "2.00": [[0.05, 0.9991], [0.07, 0.9987], [0.09, 0.9983], [0.11, 0.998], [0.13, 0.9976], [0.15, 0.9973], [0.17, 0.9969], [0.19, 0.9966], [0.21, 0.9962], [0.23, 0.9959], [0.25, 0.9955], [0.27, 0.9952], [0.29, 0.9949], [0.31, 0.9946], [0.33, 0.9942], [0.35, 0.9939], [0.37, 0.9936], [0.39, 0.9933], [0.41, 0.993], [0.43, 0.9927], [0.45, 0.9924], [0.47, 0.9921], [0.49, 0.9918], [0.51, 0.9915], [0.53, 0.9912], [0.55, 0.9909], [0.57, 0.9906], [0.59, 0.9903], [0.61, 0.99], [0.63, 0.9898], [0.65, 0.9895], [0.67, 0.9892], [0.69, 0.989], [0.71, 0.9887], [0.73, 0.9885], [0.75, 0.9882], [0.77, 0.9879], [0.79, 0.9877], [0.81, 0.9875], [0.83, 0.9872], [0.85, 0.987], [0.87, 0.9867], [0.89, 0.9865], [0.91, 0.9863], [0.93, 0.9861], [0.95, 0.9858], [0.97, 0.9856], [0.99, 0.9854], [1.01, 0.9852], [1.03, 0.985], [1.05, 0.9848], [1.07, 0.9846], [1.09, 0.9844], [1.11, 0.9842], [1.13, 0.984], [1.15, 0.9838], [1.17, 0.9836], [1.19, 0.9834], [1.21, 0.9833], [1.23, 0.9831], [1.25, 0.9829], [1.27, 0.9828], [1.29, 0.9826], [1.31, 0.9824], [1.33, 0.9823], [1.35, 0.9821], [1.37, 0.982], [1.39, 0.9818], [1.41, 0.9817], [1.51, 0.981], [1.61, 0.9804], [1.71, 0.9799], [1.81, 0.9795], [1.91, 0.9792], [2.01, 0.9789], [2.11, 0.9788], [2.21, 0.9787], [2.31, 0.9787], [2.41, 0.9788], [2.51, 0.979], [2.61, 0.9793], [2.71, 0.9796], [2.81, 0.9801], [2.91, 0.9806], [3.01, 0.9812], [3.26, 0.9831], [3.51, 0.9855], [3.76, 0.9885], [4.01, 0.9919], [4.26, 0.9959], [4.51, 1.0003], [4.76, 1.0052], [5.01, 1.0106], [5.26, 1.0164], [5.51, 1.0227], [5.76, 1.0293], [6.01, 1.0363], [6.26, 1.0437], [6.51, 1.0515], [6.76, 1.0595]]}, "pts": {"Methane": [[0.1, 0.966], [0.3, 0.892], [0.5, 0.806], [0.8, 0.637], [1.0, 0.286], [1.3, 0.234], [1.7, 0.284], [2.2, 0.348], [3.0, 0.449], [4.0, 0.572], [5.0, 0.692], [7.0, 0.922], [0.1, 0.974], [0.3, 0.921], [0.5, 0.863], [0.8, 0.766], [1.0, 0.692], [1.3, 0.559], [1.7, 0.402], [2.2, 0.4], [3.0, 0.475], [4.0, 0.582], [5.0, 0.69], [7.0, 0.9], [0.1, 0.981], [0.3, 0.941], [0.5, 0.899], [0.8, 0.833], [1.0, 0.787], [1.3, 0.715], [1.7, 0.619], [2.2, 0.538], [3.0, 0.537], [4.0, 0.612], [5.0, 0.703], [7.0, 0.892], [0.1, 0.985], [0.3, 0.955], [0.5, 0.924], [0.8, 0.876], [1.0, 0.844], [1.3, 0.796], [1.7, 0.735], [2.2, 0.671], [3.0, 0.63], [4.0, 0.664], [5.0, 0.732], [7.0, 0.895], [0.1, 0.991], [0.3, 0.972], [0.5, 0.954], [0.8, 0.927], [1.0, 0.91], [1.3, 0.885], [1.7, 0.854], [2.2, 0.821], [3.0, 0.787], [4.0, 0.784], [5.0, 0.815], [7.0, 0.926], [0.1, 0.997], [0.3, 0.992], [0.5, 0.987], [0.8, 0.98], [1.0, 0.976], [1.3, 0.97], [1.7, 0.963], [2.2, 0.957], [3.0, 0.953], [4.0, 0.957], [5.0, 0.972], [7.0, 1.026]], "Ethylene": [[0.1, 0.966], [0.3, 0.891], [0.5, 0.805], [0.8, 0.634], [1.0, 0.281], [1.3, 0.229], [1.7, 0.278], [2.2, 0.341], [3.0, 0.44], [4.0, 0.561], [5.0, 0.679], [7.0, 0.905], [0.1, 0.975], [0.3, 0.921], [0.5, 0.864], [0.8, 0.768], [1.0, 0.695], [1.3, 0.568], [1.7, 0.412], [2.2, 0.401], [3.0, 0.472], [4.0, 0.576], [5.0, 0.682], [7.0, 0.889], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.837], [1.0, 0.792], [1.3, 0.723], [1.7, 0.632], [2.2, 0.552], [3.0, 0.544], [4.0, 0.614], [5.0, 0.703], [7.0, 0.887], [0.1, 0.985], [0.3, 0.956], [0.5, 0.926], [0.8, 0.88], [1.0, 0.849], [1.3, 0.804], [1.7, 0.746], [2.2, 0.686], [3.0, 0.645], [4.0, 0.673], [5.0, 0.738], [7.0, 0.896], [0.1, 0.991], [0.3, 0.974], [0.5, 0.957], [0.8, 0.931], [1.0, 0.915], [1.3, 0.892], [1.7, 0.863], [2.2, 0.833], [3.0, 0.803], [4.0, 0.802], [5.0, 0.831], [7.0, 0.937], [0.1, 0.998], [0.3, 0.993], [0.5, 0.989], [0.8, 0.983], [1.0, 0.98], [1.3, 0.975], [1.7, 0.97], [2.2, 0.966], [3.0, 0.965], [4.0, 0.972], [5.0, 0.988], [7.0, 1.043]], "Ethane": [[0.1, 0.965], [0.3, 0.89], [0.5, 0.804], [0.8, 0.634], [1.0, 0.28], [1.3, 0.228], [1.7, 0.277], [2.2, 0.34], [3.0, 0.439], [4.0, 0.56], [5.0, 0.678], [7.0, 0.905], [0.1, 0.975], [0.3, 0.921], [0.5, 0.864], [0.8, 0.769], [1.0, 0.697], [1.3, 0.571], [1.7, 0.416], [2.2, 0.402], [3.0, 0.472], [4.0, 0.576], [5.0, 0.682], [7.0, 0.89], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.838], [1.0, 0.793], [1.3, 0.725], [1.7, 0.636], [2.2, 0.557], [3.0, 0.547], [4.0, 0.616], [5.0, 0.704], [7.0, 0.889], [0.1, 0.985], [0.3, 0.956], [0.5, 0.926], [0.8, 0.881], [1.0, 0.851], [1.3, 0.806], [1.7, 0.749], [2.2, 0.691], [3.0, 0.65], [4.0, 0.678], [5.0, 0.742], [7.0, 0.9], [0.1, 0.991], [0.3, 0.974], [0.5, 0.957], [0.8, 0.933], [1.0, 0.917], [1.3, 0.894], [1.7, 0.866], [2.2, 0.838], [3.0, 0.809], [4.0, 0.808], [5.0, 0.838], [7.0, 0.944], [0.1, 0.998], [0.3, 0.994], [0.5, 0.99], [0.8, 0.984], [1.0, 0.981], [1.3, 0.977], [1.7, 0.973], [2.2, 0.97], [3.0, 0.97], [4.0, 0.978], [5.0, 0.996], [7.0, 1.054]], "Propane": [[0.1, 0.965], [0.3, 0.89], [0.5, 0.803], [0.8, 0.632], [1.0, 0.276], [1.3, 0.225], [1.7, 0.273], [2.2, 0.336], [3.0, 0.434], [4.0, 0.554], [5.0, 0.671], [7.0, 0.897], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.771], [1.0, 0.699], [1.3, 0.577], [1.7, 0.424], [2.2, 0.404], [3.0, 0.471], [4.0, 0.574], [5.0, 0.679], [7.0, 0.886], [0.1, 0.981], [0.3, 0.942], [0.5, 0.902], [0.8, 0.84], [1.0, 0.797], [1.3, 0.731], [1.7, 0.645], [2.2, 0.568], [3.0, 0.554], [4.0, 0.619], [5.0, 0.706], [7.0, 0.889], [0.1, 0.986], [0.3, 0.957], [0.5, 0.928], [0.8, 0.884], [1.0, 0.855], [1.3, 0.811], [1.7, 0.757], [2.2, 0.702], [3.0, 0.662], [4.0, 0.687], [5.0, 0.749], [7.0, 0.905], [0.1, 0.992], [0.3, 0.975], [0.5, 0.959], [0.8, 0.935], [1.0, 0.92], [1.3, 0.899], [1.7, 0.873], [2.2, 0.847], [3.0, 0.821], [4.0, 0.821], [5.0, 0.851], [7.0, 0.956], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.988], [1.0, 0.985], [1.3, 0.982], [1.7, 0.98], [2.2, 0.978], [3.0, 0.981], [4.0, 0.991], [5.0, 1.011], [7.0, 1.069]], "n-Butane": [[0.1, 0.966], [0.3, 0.89], [0.5, 0.802], [0.8, 0.626], [1.0, 0.274], [1.3, 0.221], [1.7, 0.269], [2.2, 0.331], [3.0, 0.429], [4.0, 0.548], [5.0, 0.663], [7.0, 0.887], [0.1, 0.975], [0.3, 0.923], [0.5, 0.867], [0.8, 0.773], [1.0, 0.701], [1.3, 0.58], [1.7, 0.433], [2.2, 0.405], [3.0, 0.469], [4.0, 0.571], [5.0, 0.675], [7.0, 0.879], [0.1, 0.982], [0.3, 0.945], [0.5, 0.906], [0.8, 0.845], [1.0, 0.803], [1.3, 0.737], [1.7, 0.653], [2.2, 0.577], [3.0, 0.56], [4.0, 0.621], [5.0, 0.706], [7.0, 0.887], [0.1, 0.987], [0.3, 0.96], [0.5, 0.932], [0.8, 0.89], [1.0, 0.862], [1.3, 0.82], [1.7, 0.767], [2.2, 0.713], [3.0, 0.673], [4.0, 0.694], [5.0, 0.754], [7.0, 0.906], [0.1, 0.993], [0.3, 0.978], [0.5, 0.964], [0.8, 0.943], [1.0, 0.929], [1.3, 0.909], [1.7, 0.885], [2.2, 0.86], [3.0, 0.836], [4.0, 0.836], [5.0, 0.864], [7.0, 0.966], [0.1, 0.999], [0.3, 0.997], [0.5, 0.995], [0.8, 0.993], [1.0, 0.992], [1.3, 0.991], [1.7, 0.99], [2.2, 0.991], [3.0, 0.996], [4.0, 1.009], [5.0, 1.03], [7.0, 1.09]], "Isopentane": [[0.1, 0.965], [0.3, 0.888], [0.5, 0.8], [0.8, 0.626], [1.0, 0.27], [1.3, 0.22], [1.7, 0.268], [2.2, 0.33], [3.0, 0.428], [4.0, 0.547], [5.0, 0.663], [7.0, 0.886], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.772], [1.0, 0.703], [1.3, 0.587], [1.7, 0.435], [2.2, 0.403], [3.0, 0.469], [4.0, 0.571], [5.0, 0.675], [7.0, 0.88], [0.1, 0.981], [0.3, 0.943], [0.5, 0.904], [0.8, 0.843], [1.0, 0.802], [1.3, 0.74], [1.7, 0.66], [2.2, 0.583], [3.0, 0.559], [4.0, 0.621], [5.0, 0.707], [7.0, 0.889], [0.1, 0.986], [0.3, 0.958], [0.5, 0.93], [0.8, 0.888], [1.0, 0.86], [1.3, 0.82], [1.7, 0.771], [2.2, 0.719], [3.0, 0.676], [4.0, 0.694], [5.0, 0.754], [7.0, 0.909], [0.1, 0.992], [0.3, 0.976], [0.5, 0.961], [0.8, 0.939], [1.0, 0.926], [1.3, 0.907], [1.7, 0.885], [2.2, 0.862], [3.0, 0.84], [4.0, 0.839], [5.0, 0.865], [7.0, 0.967], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.989], [1.0, 0.988], [1.3, 0.986], [1.7, 0.986], [2.2, 0.987], [3.0, 0.994], [4.0, 1.008], [5.0, 1.029], [7.0, 1.089]], "n-Heptane": [[0.1, 0.964], [0.3, 0.885], [0.5, 0.793], [0.8, 0.606], [1.0, 0.275], [1.3, 0.215], [1.7, 0.26], [2.2, 0.318], [3.0, 0.412], [4.0, 0.527], [5.0, 0.638], [7.0, 0.854], [0.1, 0.975], [0.3, 0.922], [0.5, 0.866], [0.8, 0.772], [1.0, 0.703], [1.3, 0.59], [1.7, 0.445], [2.2, 0.404], [3.0, 0.461], [4.0, 0.557], [5.0, 0.657], [7.0, 0.855], [0.1, 0.982], [0.3, 0.945], [0.5, 0.908], [0.8, 0.849], [1.0, 0.81], [1.3, 0.75], [1.7, 0.673], [2.2, 0.596], [3.0, 0.561], [4.0, 0.615], [5.0, 0.695], [7.0, 0.87], [0.1, 0.987], [0.3, 0.961], [0.5, 0.935], [0.8, 0.896], [1.0, 0.87], [1.3, 0.833], [1.7, 0.787], [2.2, 0.737], [3.0, 0.688], [4.0, 0.696], [5.0, 0.749], [7.0, 0.896], [0.1, 0.993], [0.3, 0.979], [0.5, 0.966], [0.8, 0.948], [1.0, 0.936], [1.3, 0.92], [1.7, 0.901], [2.2, 0.882], [3.0, 0.86], [4.0, 0.854], [5.0, 0.873], [7.0, 0.964], [0.1, 0.999], [0.3, 0.997], [0.5, 0.996], [0.8, 0.995], [1.0, 0.995], [1.3, 0.996], [1.7, 0.998], [2.2, 1.002], [3.0, 1.011], [4.0, 1.027], [5.0, 1.047], [7.0, 1.102]], "Nitrogen": [[0.1, 0.966], [0.3, 0.892], [0.5, 0.808], [0.8, 0.639], [1.0, 0.289], [1.3, 0.237], [1.7, 0.287], [2.2, 0.352], [3.0, 0.455], [4.0, 0.58], [5.0, 0.701], [7.0, 0.934], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.769], [1.0, 0.696], [1.3, 0.566], [1.7, 0.411], [2.2, 0.408], [3.0, 0.483], [4.0, 0.591], [5.0, 0.7], [7.0, 0.914], [0.1, 0.981], [0.3, 0.942], [0.5, 0.901], [0.8, 0.836], [1.0, 0.791], [1.3, 0.721], [1.7, 0.628], [2.2, 0.549], [3.0, 0.549], [4.0, 0.624], [5.0, 0.716], [7.0, 0.907], [0.1, 0.985], [0.3, 0.955], [0.5, 0.925], [0.8, 0.879], [1.0, 0.848], [1.3, 0.801], [1.7, 0.742], [2.2, 0.682], [3.0, 0.644], [4.0, 0.678], [5.0, 0.747], [7.0, 0.912], [0.1, 0.991], [0.3, 0.973], [0.5, 0.956], [0.8, 0.93], [1.0, 0.913], [1.3, 0.889], [1.7, 0.86], [2.2, 0.829], [3.0, 0.799], [4.0, 0.8], [5.0, 0.832], [7.0, 0.945], [0.1, 0.997], [0.3, 0.993], [0.5, 0.988], [0.8, 0.982], [1.0, 0.978], [1.3, 0.973], [1.7, 0.968], [2.2, 0.964], [3.0, 0.962], [4.0, 0.969], [5.0, 0.986], [7.0, 1.044]], "CO2": [[0.1, 0.965], [0.3, 0.889], [0.5, 0.802], [0.8, 0.629], [1.0, 0.275], [1.3, 0.222], [1.7, 0.27], [2.2, 0.331], [3.0, 0.428], [4.0, 0.545], [5.0, 0.659], [7.0, 0.88], [0.1, 0.975], [0.3, 0.922], [0.5, 0.865], [0.8, 0.772], [1.0, 0.702], [1.3, 0.584], [1.7, 0.434], [2.2, 0.406], [3.0, 0.469], [4.0, 0.569], [5.0, 0.672], [7.0, 0.873], [0.1, 0.981], [0.3, 0.943], [0.5, 0.904], [0.8, 0.843], [1.0, 0.801], [1.3, 0.737], [1.7, 0.654], [2.2, 0.578], [3.0, 0.56], [4.0, 0.62], [5.0, 0.703], [7.0, 0.881], [0.1, 0.986], [0.3, 0.958], [0.5, 0.93], [0.8, 0.887], [1.0, 0.859], [1.3, 0.817], [1.7, 0.765], [2.2, 0.712], [3.0, 0.672], [4.0, 0.692], [5.0, 0.751], [7.0, 0.901], [0.1, 0.992], [0.3, 0.976], [0.5, 0.961], [0.8, 0.938], [1.0, 0.924], [1.3, 0.904], [1.7, 0.879], [2.2, 0.854], [3.0, 0.83], [4.0, 0.831], [5.0, 0.859], [7.0, 0.959], [0.1, 0.998], [0.3, 0.995], [0.5, 0.992], [0.8, 0.988], [1.0, 0.986], [1.3, 0.984], [1.7, 0.981], [2.2, 0.98], [3.0, 0.983], [4.0, 0.995], [5.0, 1.015], [7.0, 1.075]], "Water": [[0.1, 0.966], [0.3, 0.888], [0.5, 0.796], [0.8, 0.608], [1.0, 0.229], [1.3, 0.174], [1.7, 0.208], [2.2, 0.254], [0.1, 0.976], [0.3, 0.926], [0.5, 0.871], [0.8, 0.778], [1.0, 0.708], [1.3, 0.588], [1.7, 0.417], [2.2, 0.341], [3.0, 0.372], [0.1, 0.983], [0.3, 0.949], [0.5, 0.912], [0.8, 0.854], [1.0, 0.813], [1.3, 0.75], [1.7, 0.663], [2.2, 0.566], [3.0, 0.493], [4.0, 0.509], [0.1, 0.988], [0.3, 0.963], [0.5, 0.938], [0.8, 0.899], [1.0, 0.872], [1.3, 0.831], [1.7, 0.778], [2.2, 0.715], [3.0, 0.642], [4.0, 0.612], [5.0, 0.63], [0.1, 0.994], [0.3, 0.98], [0.5, 0.967], [0.8, 0.947], [1.0, 0.934], [1.3, 0.915], [1.7, 0.89], [2.2, 0.861], [3.0, 0.823], [4.0, 0.794], [5.0, 0.786], [7.0, 0.82], [0.1, 0.999], [0.3, 0.996], [0.5, 0.994], [0.8, 0.991], [1.0, 0.988], [1.3, 0.985], [1.7, 0.982], [2.2, 0.978], [3.0, 0.974], [4.0, 0.973], [5.0, 0.977], [7.0, 0.997]]}, "subs": ["Methane", "Ethylene", "Ethane", "Propane", "n-Butane", "Isopentane", "n-Heptane", "Nitrogen", "CO2", "Water"]};
+
+const SUB={
+ 'Methane':{n:'Metano',m:'x',c:'#00838f'},
+ 'Ethylene':{n:'Etileno',m:'co',c:'#1565c0'},
+ 'Ethane':{n:'Etano',m:'tf',c:'#2e7d32'},
+ 'Propane':{n:'Propano',m:'do',c:'#8e24aa'},
+ 'n-Butane':{n:'n-Butano',m:'so',c:'#ef6c00'},
+ 'Isopentane':{n:'Isopentano',m:'sf',c:'#c62828'},
+ 'n-Heptane':{n:'n-Heptano',m:'tdf',c:'#5d4037'},
+ 'Nitrogen':{n:'Nitrógeno',m:'to',c:'#0277bd'},
+ 'CO2':{n:'CO₂',m:'df',c:'#00897b'},
+ 'Water':{n:'Agua',m:'cf',c:'#111111'}
+};
+const TRS=['2.00','1.50','1.30','1.20','1.10','1.00'];
+const TRLAB={'2.00':[3.4,0.06],'1.50':[3.6,0.05],'1.30':[3.6,0.05],'1.20':[2.0,-0.05],'1.10':[1.45,-0.05],'1.00':[0.78,-0.04]};
+const VBW=1000,VBH=660,L=66,Rm=26,Tm=28,Bm=56,PW=VBW-L-Rm,PH=VBH-Tm-Bm,PMAX=7,ZMIN=0.1,ZMAX=1.1;
+const px=p=>(L+p/PMAX*PW);
+const py=z=>(Tm+(ZMAX-z)/(ZMAX-ZMIN)*PH);
+const visible={}; Object.keys(SUB).forEach(k=>visible[k]=true);
+
+function mark(t,x,y,c){
+ x=+x;y=+y;const s=3.1, S=1.3;
+ if(t==='x') return '<path d="M'+(x-s)+' '+(y-s)+'L'+(x+s)+' '+(y+s)+'M'+(x+s)+' '+(y-s)+'L'+(x-s)+' '+(y+s)+'" stroke="'+c+'" stroke-width="'+S+'"/>';
+ if(t==='co') return '<circle cx="'+x+'" cy="'+y+'" r="'+s+'" fill="none" stroke="'+c+'" stroke-width="'+S+'"/>';
+ if(t==='cf') return '<circle cx="'+x+'" cy="'+y+'" r="'+s+'" fill="'+c+'"/>';
+ if(t==='so') return '<rect x="'+(x-s)+'" y="'+(y-s)+'" width="'+(2*s)+'" height="'+(2*s)+'" fill="none" stroke="'+c+'" stroke-width="'+S+'"/>';
+ if(t==='sf') return '<rect x="'+(x-s)+'" y="'+(y-s)+'" width="'+(2*s)+'" height="'+(2*s)+'" fill="'+c+'"/>';
+ if(t==='tf') return '<path d="M'+x+' '+(y-s)+'L'+(x+s)+' '+(y+s*0.85)+'L'+(x-s)+' '+(y+s*0.85)+'Z" fill="'+c+'"/>';
+ if(t==='to') return '<path d="M'+x+' '+(y-s)+'L'+(x+s)+' '+(y+s*0.85)+'L'+(x-s)+' '+(y+s*0.85)+'Z" fill="none" stroke="'+c+'" stroke-width="'+S+'"/>';
+ if(t==='tdf')return '<path d="M'+x+' '+(y+s)+'L'+(x+s)+' '+(y-s*0.85)+'L'+(x-s)+' '+(y-s*0.85)+'Z" fill="'+c+'"/>';
+ if(t==='do') return '<path d="M'+x+' '+(y-s)+'L'+(x+s)+' '+y+'L'+x+' '+(y+s)+'L'+(x-s)+' '+y+'Z" fill="none" stroke="'+c+'" stroke-width="'+S+'"/>';
+ if(t==='df') return '<path d="M'+x+' '+(y-s)+'L'+(x+s)+' '+y+'L'+x+' '+(y+s)+'L'+(x-s)+' '+y+'Z" fill="'+c+'"/>';
+ return '';
+}
+function zAt(tr,pr){const a=DATA.avg[tr];let best=a[0];for(const p of a){if(Math.abs(p[0]-pr)<Math.abs(best[0]-pr))best=p;}return best[1];}
+
+function legendSVG(){
+ const bx=648,by=430,bw=326,bh=176;
+ let g='<g font-family="IBM Plex Sans,Segoe UI,sans-serif">';
+ g+='<rect x="'+bx+'" y="'+by+'" width="'+bw+'" height="'+bh+'" rx="7" fill="#ffffff" fill-opacity="0.94" stroke="#cfd8e3"/>';
+ g+='<text x="'+(bx+13)+'" y="'+(by+20)+'" font-size="12.5" font-weight="700" fill="#1a2233">Leyenda &mdash; sustancias</text>';
+ const keys=Object.keys(SUB);
+ keys.forEach((k,idx)=>{const col=idx<5?0:1, rrow=idx%5;
+  const cx=bx+16+col*160, ry=by+44+rrow*23, s=SUB[k];
+  g+='<g onclick="toggle(\''+k+'\')" style="cursor:pointer" opacity="'+(visible[k]?1:0.28)+'">';
+  g+='<rect x="'+(cx-9)+'" y="'+(ry-11)+'" width="152" height="20" fill="#fff" fill-opacity="0.01"/>';
+  g+=mark(s.m,cx,ry-3,s.c);
+  g+='<text x="'+(cx+12)+'" y="'+ry+'" font-size="11.5" fill="#26354f">'+s.n+'</text></g>';
+ });
+ const ly=by+44+5*23;
+ g+='<line x1="'+(bx+10)+'" y1="'+(ly-3)+'" x2="'+(bx+32)+'" y2="'+(ly-3)+'" stroke="#e0218a" stroke-width="2.6"/>';
+ g+='<text x="'+(bx+38)+'" y="'+ly+'" font-size="11.5" fill="#26354f">curva media  T_R  (prom. hidrocarburos)</text>';
+ g+='</g>';
+ return g;
+}
+
+function buildSVG(){
+ const showPts=document.getElementById('ckPts').checked;
+ const showAvg=document.getElementById('ckAvg').checked;
+ const showG=document.getElementById('ckGuide').checked;
+ let g='<svg viewBox="0 0 '+VBW+' '+VBH+'" role="img" aria-label="Carta de compresibilidad generalizada Z vs presion reducida">';
+ g+='<rect x="'+L+'" y="'+Tm+'" width="'+PW+'" height="'+PH+'" fill="#fff"/>';
+ for(let p=0;p<=PMAX+1e-9;p+=0.5){const x=px(p);g+='<line x1="'+x+'" y1="'+Tm+'" x2="'+x+'" y2="'+(Tm+PH)+'" stroke="'+(p%1===0?'#dbe2ea':'#eef2f7')+'"/>';
+  if(p%0.5===0)g+='<text x="'+x+'" y="'+(Tm+PH+16)+'" font-size="11" fill="#5c6b84" text-anchor="middle" font-family="monospace">'+p.toFixed(p%1===0?0:1)+'</text>';}
+ for(let z=ZMIN;z<=ZMAX+1e-9;z+=0.1){const y=py(z);g+='<line x1="'+L+'" y1="'+y+'" x2="'+(L+PW)+'" y2="'+y+'" stroke="#dbe2ea"/>';
+  g+='<text x="'+(L-9)+'" y="'+(y+4)+'" font-size="11" fill="#5c6b84" text-anchor="end" font-family="monospace">'+z.toFixed(1)+'</text>';}
+ g+='<line x1="'+L+'" y1="'+Tm+'" x2="'+L+'" y2="'+(Tm+PH)+'" stroke="#9aa7bd" stroke-width="1.2"/>';
+ g+='<line x1="'+L+'" y1="'+(Tm+PH)+'" x2="'+(L+PW)+'" y2="'+(Tm+PH)+'" stroke="#9aa7bd" stroke-width="1.2"/>';
+ g+='<text x="'+(L+PW/2)+'" y="'+(VBH-16)+'" font-size="14" fill="#1a2233" text-anchor="middle" font-weight="600">Presión reducida  P_R</text>';
+ g+='<text x="18" y="'+(Tm+PH/2)+'" font-size="14" fill="#1a2233" text-anchor="middle" font-weight="600" transform="rotate(-90 18 '+(Tm+PH/2)+')">Z = Pv/RT</text>';
+ if(showG){const zc=zAt('1.30',2.5);g+='<line x1="'+px(2.5)+'" y1="'+(Tm+PH)+'" x2="'+px(2.5)+'" y2="'+py(zc)+'" stroke="#d32f2f" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  g+='<line x1="'+L+'" y1="'+py(zc)+'" x2="'+px(2.5)+'" y2="'+py(zc)+'" stroke="#d32f2f" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  g+='<text x="'+(px(2.5)+5)+'" y="'+(py(zc)-5)+'" font-size="10.5" fill="#d32f2f">P_R=2.5, Z≈'+zc.toFixed(2)+'</text>';}
+ if(showAvg){TRS.forEach(tr=>{const a=DATA.avg[tr].filter(p=>p[1]>=ZMIN&&p[1]<=ZMAX);
+  let d=a.map((p,i)=>(i?'L':'M')+px(p[0]).toFixed(1)+' '+py(p[1]).toFixed(1)).join(' ');
+  g+='<path d="'+d+'" fill="none" stroke="#e0218a" stroke-width="2"/>';
+  const lp=TRLAB[tr],z=zAt(tr,lp[0]);g+='<text x="'+px(lp[0])+'" y="'+(py(z)+lp[1]*PH)+'" font-size="12" fill="#c2185b" font-weight="700">T_R = '+tr+'</text>';});}
+ if(showPts){for(const k in SUB){if(!visible[k]||!DATA.pts[k])continue;const c=SUB[k].c,m=SUB[k].m;
+  for(const p of DATA.pts[k]){if(p[1]<ZMIN||p[1]>ZMAX)continue;g+=mark(m,px(p[0]).toFixed(1),py(p[1]).toFixed(1),c);}}}
+ g+=legendSVG();
+ g+='</svg>';return g;
+}
+function toggle(k){visible[k]=!visible[k];redraw();}
+function redraw(){document.getElementById('chart').innerHTML=buildSVG();attachHover();}
+function attachHover(){const svg=document.querySelector('#chart svg');if(!svg)return;const tt=document.getElementById('tt');
+ const all=[];for(const k in SUB){if(!visible[k]||!DATA.pts[k])continue;for(const p of DATA.pts[k])all.push({pr:p[0],z:p[1],n:SUB[k].n});}
+ svg.addEventListener('mousemove',ev=>{const r=svg.getBoundingClientRect(),kx=VBW/r.width,ky=VBH/r.height;
+  const vx=(ev.clientX-r.left)*kx,vy=(ev.clientY-r.top)*ky;let b=null,bd=1e9;
+  all.forEach(d=>{const dx=px(d.pr)-vx,dy=py(d.z)-vy,dd=dx*dx+dy*dy;if(dd<bd){bd=dd;b=d;}});
+  if(b&&bd<120){tt.style.opacity=1;tt.style.left=(ev.clientX+12)+'px';tt.style.top=(ev.clientY-10)+'px';
+   tt.innerHTML=b.n+' &middot; P_R='+b.pr+' &middot; Z='+b.z.toFixed(3);}else tt.style.opacity=0;});
+ svg.addEventListener('mouseleave',()=>tt.style.opacity=0);}
+redraw();
+
+</script>
+
+<style id="orvhelp-css">
+#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
+ background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
+ letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
+#orvhelp-btn:hover{filter:brightness(1.12)}
+#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
+#orvhelp-overlay.open{display:flex}
+#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
+ box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
+#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
+#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
+#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
+ border-radius:8px;width:30px;height:30px;cursor:pointer}
+#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
+#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
+#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
+#orvhelp-body ol li{margin-bottom:6px}
+#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
+</style>
+
+<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
+<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
+  <div id="orvhelp-panel">
+    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Carta de Compresibilidad Generalizada</h2>
+      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
+    <div id="orvhelp-body">
+      <h3>¿Qué es esta aplicación?</h3>
+      <p>Carta de Nelson–Obert: lectura del factor de compresibilidad Z en función de la presión y la temperatura reducidas (principio de estados correspondientes).</p>
+      <h3>Cómo se usa</h3>
+      <ol><li>Calcule la presión y temperatura reducidas (P_R, T_R) del gas de interés.</li><li>Ubique el punto sobre la carta y lea el factor de compresibilidad Z.</li><li>Use Z para corregir el volumen específico del modelo de gas ideal.</li><li>Compare con datos de tablas para evaluar la precisión de la lectura.</li></ol>
+      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
+    </div>
+  </div>
+</div>
+<script id="orvhelp-js">
+(function(){
+ var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
+ function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
+ b.addEventListener('click',open); c.addEventListener('click',close);
+ o.addEventListener('click',function(e){if(e.target===o)close();});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+})();
+</script>
+</body>
+</html>
