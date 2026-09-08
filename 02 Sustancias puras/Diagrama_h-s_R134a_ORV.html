@@ -372,6 +372,27 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
       <div class="ic"><div class="lb">Entropía s</div><div class="vl" id="fr-s" style="color:#e65100">— kJ/(kg·K)</div></div>
       <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
         <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span>Agregar punto por T y P</span>
+          <span class="info-btn" id="info-tp-btn" onclick="toggleInfo('tp')" title="Ayuda" style="border-color:#e65100;color:#e65100">i</span>
+        </div>
+        <div class="info-box" id="info-tp" style="background:#fff8f0;border-color:#ffcc80;color:#6b5a4a">
+          Dado (T, P) se calculan h y s: líquido comprimido (≈ líquido saturado a T) o vapor sobrecalentado (interpolado entre isóbaras). En la campana, ingresa la calidad x (0–1) junto con T o P y usa «Mezcla saturada».
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-T" class="sel" style="flex:1" placeholder="T" step="any"><span id="tp-tU" style="font-size:.72rem;color:#5c6b84;min-width:26px">°C</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-P" class="sel" style="flex:1" placeholder="P" step="any" min="0"><span id="tp-pU" style="font-size:.72rem;color:#5c6b84;min-width:26px">bar</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-x" class="sel" style="flex:1" placeholder="x (0–1) para mezcla saturada" step="any" min="0" max="1"><span style="font-size:.72rem;color:#5c6b84;min-width:26px">x</span>
+        </div>
+        <button class="addbtn" onclick="addFCByTP()" style="width:100%;margin-top:6px">+ Punto (T, P)</button>
+        <button class="addbtn" onclick="addFCByQuality()" style="width:100%;margin-top:4px;background:#8e24aa">+ Mezcla saturada (T o P, x)</button>
+        <div id="tp-msg" style="font-size:.7rem;color:#4a148c;min-height:.9rem;line-height:1.25;margin-top:4px"></div>
+      </div>
+      <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
+        <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
           <span id="fc-mode-lb">Trayectoria</span>
           <span class="info-btn" id="info-fc-btn" onclick="toggleInfo('fc')" title="Ayuda" style="border-color:#e65100;color:#e65100">i</span>
         </div>
@@ -1774,6 +1795,44 @@ function addFCMark(sDisp,hDisp){
   const sSI=units==='SI'?sDisp:sDisp/CS;const hSI=units==='SI'?hDisp:hDisp/CH;
   fcMarks.push({s:sSI,h:hSI});updFCMarksCounter();rebuild();
 }
+
+// ── Agregar punto por (T,P) / mezcla saturada — Cursor libre ─────────
+function addFCByTP(){
+  var msg=document.getElementById('tp-msg');if(!msg)return;
+  var tU=units==='SI'?'°C':'°F',pU=units==='SI'?'bar':'psia',sU=units==='SI'?'kJ/(kg·K)':'BTU/(lb·°R)',hU=units==='SI'?'kJ/kg':'BTU/lb';
+  var T=parseFloat(document.getElementById('tp-T').value);
+  var P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(T)){msg.textContent='Ingresa la temperatura.';return;}
+  if(isNaN(P)||P<=0){msg.textContent='Ingresa una presión positiva.';return;}
+  var st=satAtT(T),Psat=st.P,tol=0.02;
+  if(Math.abs(P-Psat)<=Psat*tol){msg.textContent='Estado saturado (P_sat ≈ '+Psat.toFixed(3)+' '+pU+' a '+T+' '+tU+'): en la campana usa la calidad x (Mezcla saturada).';return;}
+  var h,s,region;
+  if(P>Psat){h=st.hf;s=st.sf;region='Líquido comprimido';}
+  else{var r=interpHSatTP(T,P);if(!r||r.error){msg.textContent='Fuera del rango de tablas de sobrecalentado para esa (T,P).';return;}h=r.h;s=r.s;region=(r.phase==='supercritical'?'Supercrítico':'Vapor sobrecalentado');}
+  addFCMark(s,h);
+  msg.style.color='#2e7d32';
+  msg.textContent=region+' · h = '+h.toFixed(2)+' '+hU+', s = '+s.toFixed(4)+' '+sU+'. Punto agregado.';
+}
+function addFCByQuality(){
+  var msg=document.getElementById('tp-msg');if(!msg)return;
+  var pU=units==='SI'?'bar':'psia',sU=units==='SI'?'kJ/(kg·K)':'BTU/(lb·°R)',hU=units==='SI'?'kJ/kg':'BTU/lb';
+  var x=parseFloat(document.getElementById('tp-x').value);
+  var T=parseFloat(document.getElementById('tp-T').value);
+  var P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(x)||x<0||x>1){msg.textContent='Ingresa una calidad x entre 0 y 1.';return;}
+  var sp=null;
+  if(!isNaN(P)&&P>0)sp=satAtP(P);
+  else if(!isNaN(T))sp=satAtT(T);
+  else{msg.textContent='Ingresa T o P para el estado saturado.';return;}
+  var h=sp.hf+x*(sp.hg-sp.hf),s=sp.sf+x*(sp.sg-sp.sf);
+  addFCMark(s,h);
+  msg.style.color='#2e7d32';
+  msg.textContent='Mezcla saturada x='+x+' · h = '+h.toFixed(2)+' '+hU+', s = '+s.toFixed(4)+' '+sU+'. Punto agregado.';
+}
+(function(){if(typeof updFCLabels==='function'){var _o=updFCLabels;updFCLabels=function(){_o.apply(this,arguments);var tu=document.getElementById('tp-tU'),pu=document.getElementById('tp-pU');if(tu)tu.textContent=units==='SI'?'°C':'°F';if(pu)pu.textContent=units==='SI'?'bar':'psia';};}})();
+
 function undoFCMark(){if(fcMarks.length===0)return;fcMarks.pop();updFCMarksCounter();rebuild();}
 function clearFCMarks(){fcMarks=[];updFCMarksCounter();rebuild();}
 function removeFCMark(idx){if(idx<0||idx>=fcMarks.length)return;fcMarks.splice(idx,1);updFCMarksCounter();rebuild();}

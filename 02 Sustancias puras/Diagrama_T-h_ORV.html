@@ -311,6 +311,27 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
       <div class="ic"><div class="lb">Entalpía h</div><div class="vl" id="fr-h" style="color:#e65100">— kJ/kg</div></div>
       <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
         <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span>Agregar punto por T y P</span>
+          <span class="info-btn" id="info-tp-btn" onclick="toggleInfo('tp')" title="Ayuda" style="border-color:#e65100;color:#e65100">i</span>
+        </div>
+        <div class="info-box" id="info-tp" style="background:#fff8f0;border-color:#ffcc80;color:#6b5a4a">
+          Dado (T, P) se determina la región y se calcula h: líquido comprimido (h≈h<sub>f</sub>) o vapor sobrecalentado (interpolado entre isóbaras tabuladas). En la campana, ingresa la calidad x (0–1) junto con T o P y usa «Mezcla saturada».
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-T" class="sel" style="flex:1" placeholder="T" step="any"><span id="tp-tU" style="font-size:.72rem;color:#5c6b84;min-width:26px">°C</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-P" class="sel" style="flex:1" placeholder="P" step="any" min="0"><span id="tp-pU" style="font-size:.72rem;color:#5c6b84;min-width:26px">bar</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-x" class="sel" style="flex:1" placeholder="x (0–1) para mezcla saturada" step="any" min="0" max="1"><span style="font-size:.72rem;color:#5c6b84;min-width:26px">x</span>
+        </div>
+        <button class="addbtn" onclick="addFCByTP()" style="width:100%;margin-top:6px">+ Punto (T, P)</button>
+        <button class="addbtn" onclick="addFCByQuality()" style="width:100%;margin-top:4px;background:#8e24aa">+ Mezcla saturada (T o P, x)</button>
+        <div id="tp-msg" style="font-size:.7rem;color:#4a148c;min-height:.9rem;line-height:1.25;margin-top:4px"></div>
+      </div>
+      <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
+        <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
           <span id="fc-mode-lb">Trayectoria</span>
           <span class="info-btn" id="info-fc-btn" onclick="toggleInfo('fc')" title="Ayuda"
                 style="border-color:#e65100;color:#e65100">i</span>
@@ -1073,6 +1094,59 @@ function addFCMark(hDisp,TDisp){
   fcMarks.push({h:hSI,T:TSI});
   updFCMarksCounter();rebuild();
 }
+
+// ── Agregar punto por (T,P) / mezcla saturada — Cursor libre ─────────
+function _psatAtT_TP(T){var s=getSat();if(T<=s[0].T)return s[0].P;if(T>=s[s.length-1].T)return s[s.length-1].P;for(var i=0;i<s.length-1;i++){if(s[i].T<=T&&T<=s[i+1].T){var f=(T-s[i].T)/(s[i+1].T-s[i].T);return s[i].P+f*(s[i+1].P-s[i].P);}}return s[s.length-1].P;}
+function _propAtPT_gen(P,T,tabFn){
+  var sh=getSH(),cand=[];
+  sh.forEach(function(iso){var val=tabFn(iso.P,T);if(val!=null)cand.push({P:iso.P,val:val});});
+  if(cand.length===0)return null;
+  cand.sort(function(a,b){return a.P-b.P;});
+  for(var i=0;i<cand.length;i++){if(Math.abs(cand[i].P-P)<Math.max(P,1)*0.002)return cand[i].val;}
+  var lo=null,hi=null;
+  for(var j=0;j<cand.length;j++){if(cand[j].P<=P)lo=cand[j];}
+  for(var k=cand.length-1;k>=0;k--){if(cand[k].P>=P){hi=cand[k];break;}}
+  if(lo&&hi&&lo.P!==hi.P){var f=Math.log(P/lo.P)/Math.log(hi.P/lo.P);return lo.val+f*(hi.val-lo.val);}
+  return null;
+}
+function _tpUnit(){return units==='SI'?'kJ/kg':'BTU/lb';}
+function addFCByTP(){
+  var msg=document.getElementById('tp-msg');if(!msg)return;
+  var tU=units==='SI'?'°C':'°F',pU=units==='SI'?'bar':'psia',qU=_tpUnit();
+  var T=parseFloat(document.getElementById('tp-T').value);
+  var P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(T)){msg.textContent='Ingresa la temperatura.';return;}
+  if(isNaN(P)||P<=0){msg.textContent='Ingresa una presión positiva.';return;}
+  var sat=getSat(),Tc=sat[sat.length-1].T,Psat=(T<Tc)?_psatAtT_TP(T):null,tol=0.02;
+  if(Psat!=null&&Math.abs(P-Psat)<=Psat*tol){msg.textContent='Estado saturado (P_sat ≈ '+Psat.toFixed(3)+' '+pU+' a '+T+' '+tU+'): en la campana usa la calidad x (Mezcla saturada).';return;}
+  var val,region;
+  if(Psat!=null&&P>Psat){var sp=satAtP(Psat);val=sp.hf;region='Líquido comprimido';}
+  else{val=_propAtPT_gen(P,T,hAtPT_tabular);region=(Psat==null?'Supercrítico / sobrecalentado':'Vapor sobrecalentado');}
+  if(val==null){msg.textContent='Fuera del rango de las tablas de sobrecalentado para esa (T,P).';return;}
+  addFCMark(val,T);
+  msg.style.color='#2e7d32';
+  msg.textContent=region+' · h = '+val.toFixed(2)+' '+qU+'. Punto agregado.';
+}
+function addFCByQuality(){
+  var msg=document.getElementById('tp-msg');if(!msg)return;
+  var pU=units==='SI'?'bar':'psia',qU=_tpUnit();
+  var x=parseFloat(document.getElementById('tp-x').value);
+  var T=parseFloat(document.getElementById('tp-T').value);
+  var P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(x)||x<0||x>1){msg.textContent='Ingresa una calidad x entre 0 y 1.';return;}
+  var sp=null,Pd=null;
+  if(!isNaN(P)&&P>0){sp=satAtP(P);Pd=P;}
+  else if(!isNaN(T)){Pd=_psatAtT_TP(T);sp=satAtP(Pd);}
+  else{msg.textContent='Ingresa T o P para el estado saturado.';return;}
+  var val=sp.hf+x*(sp.hg-sp.hf);
+  addFCMark(val,sp.T);
+  msg.style.color='#2e7d32';
+  msg.textContent='Mezcla saturada x='+x+' · h = '+val.toFixed(2)+' '+qU+'. Punto agregado.';
+}
+(function(){if(typeof updFCLabels==='function'){var _o=updFCLabels;updFCLabels=function(){_o.apply(this,arguments);var tu=document.getElementById('tp-tU'),pu=document.getElementById('tp-pU');if(tu)tu.textContent=units==='SI'?'°C':'°F';if(pu)pu.textContent=units==='SI'?'bar':'psia';};}})();
+
 
 function undoFCMark(){
   if(fcMarks.length===0)return;
