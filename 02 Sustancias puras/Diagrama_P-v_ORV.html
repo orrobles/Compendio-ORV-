@@ -320,6 +320,31 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
       <div class="ic"><div class="lb">Volumen v</div><div class="vl" id="fr-v" style="color:#e65100">— m³/kg</div></div>
       <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
         <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <span>Agregar punto por T y P</span>
+          <span class="info-btn" id="info-tp-btn" onclick="toggleInfo('tp')" title="Ayuda"
+                style="border-color:#e65100;color:#e65100">i</span>
+        </div>
+        <div class="info-box" id="info-tp" style="background:#fff8f0;border-color:#ffcc80;color:#6b5a4a">
+          Se determina la región a partir de (T, P) y se calcula v: líquido comprimido (v≈v<sub>f</sub>), vapor sobrecalentado (interpolado entre isóbaras tabuladas; gas ideal como respaldo). En la campana, T y P no son independientes: para un estado saturado ingresa la calidad x (0–1) junto con T o P y usa «Mezcla saturada»; v = v<sub>f</sub> + x·(v<sub>g</sub>−v<sub>f</sub>).
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-T" class="sel" style="flex:1" placeholder="T" step="any">
+          <span id="tp-tU" style="font-size:.72rem;color:#5c6b84;min-width:26px">°C</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-P" class="sel" style="flex:1" placeholder="P" step="any" min="0">
+          <span id="tp-pU" style="font-size:.72rem;color:#5c6b84;min-width:26px">bar</span>
+        </div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <input type="number" id="tp-x" class="sel" style="flex:1" placeholder="x (0–1) para mezcla saturada" step="any" min="0" max="1">
+          <span style="font-size:.72rem;color:#5c6b84;min-width:26px">x</span>
+        </div>
+        <button class="addbtn" onclick="addFCByTP()" style="width:100%;margin-top:6px">+ Punto (T, P)</button>
+        <button class="addbtn" onclick="addFCByQuality()" style="width:100%;margin-top:4px;background:#8e24aa">+ Mezcla saturada (T o P, x)</button>
+        <div id="tp-msg" style="font-size:.7rem;color:#4a148c;min-height:.9rem;line-height:1.25;margin-top:4px"></div>
+      </div>
+      <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
+        <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
           <span id="fc-mode-lb">Trayectoria</span>
           <span class="info-btn" id="info-fc-btn" onclick="toggleInfo('fc')" title="Ayuda"
                 style="border-color:#e65100;color:#e65100">i</span>
@@ -501,7 +526,7 @@ let fcOn=false;         // cursor libre activo
 let fcMode='path';      // 'path' | 'points'
 let fcMarks=[];         // {v,P} siempre en unidades SI
 let fcVSI=null,fcPSI=null;  // coordenada SI del hover actual
-let overTrace=false;    // para suprimir crosshair libre cuando hay hover sobre traza
+// Cursor libre: se marca el punto exacto del clic en cualquier parte del diagrama, sin anclaje.
 let axHandles=[], isDraggingHandle=false;
 
 // ════════════════════════════════════════════════════════════════
@@ -553,6 +578,38 @@ function vAtPT_tabular(P_tab,T){
     }
   }
   return null;
+}
+
+// ── Cálculo de v dado (T,P) para agregar un punto por coordenadas ──────
+function vSuperAtTP(T,P){
+  const sh=getSH();const cand=[];
+  sh.forEach(iso=>{const v=vAtPT_tabular(iso.P,T);if(v!=null)cand.push({P:iso.P,v:v});});
+  if(cand.length===0)return null;
+  cand.sort((a,b)=>a.P-b.P);
+  for(const c of cand){if(Math.abs(c.P-P)<1e-6)return c.v;}
+  let lo=null,hi=null;
+  for(const c of cand){if(c.P<=P)lo=c;}
+  for(let i=cand.length-1;i>=0;i--){if(cand[i].P>=P){hi=cand[i];break;}}
+  if(lo&&hi&&lo.P!==hi.P){
+    const f=(Math.log10(P)-Math.log10(lo.P))/(Math.log10(hi.P)-Math.log10(lo.P));
+    return Math.pow(10,Math.log10(lo.v)+f*(Math.log10(hi.v)-Math.log10(lo.v)));
+  }
+  return null;
+}
+function vIdealGas(T,P){
+  if(units==='SI')return 0.4615*(T+273.15)/(P*100);   // m³/kg (P bar→kPa)
+  return 0.5957*(T+459.67)/P;                          // ft³/lbm (P psia)
+}
+// Devuelve {v (unidades visibles), region} o {v:null, region:'saturado'} en la campana.
+function vAtTP(T,P){
+  const sat=getSat();const Tc=sat[sat.length-1].T;
+  const Psat=(T<Tc)?interpPsatAtT(T):null;
+  const tol=0.02;
+  if(Psat!=null&&Math.abs(P-Psat)<=Psat*tol)return{v:null,region:'saturado',Psat:Psat};
+  if(Psat!=null&&P>Psat){const s=satAtP(Psat);return{v:s.vf,region:'Líquido comprimido'};}
+  let v=vSuperAtTP(T,P);
+  if(v!=null)return{v:v,region:(Psat==null?'Supercrítico / sobrecalentado':'Vapor sobrecalentado')};
+  return{v:vIdealGas(T,P),region:'Vapor sobrecalentado (aprox. gas ideal)'};
 }
 
 function temperatureRange(){
@@ -786,6 +843,8 @@ function updFCLabels(){
   const pU=units==='SI'?'bar':'psia';const vU=units==='SI'?'m³/kg':'ft³/lbm';
   const fp=document.getElementById('fr-P'),fv=document.getElementById('fr-v');
   if(fp)fp.textContent=`— ${pU}`;if(fv)fv.textContent=`— ${vU}`;
+  const tu=document.getElementById('tp-tU'),pu=document.getElementById('tp-pU');
+  if(tu)tu.textContent=units==='SI'?'°C':'°F';if(pu)pu.textContent=pU;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -884,7 +943,7 @@ function rebuild(){
       title:{text:`<b>P  ${pU_}</b>`,
         font:{size:13,color:'#4a148c',family:"'IBM Plex Sans',sans-serif"},standoff:12},
       tickfont:{size:11.5,color:'#4a148c',family:"'IBM Plex Sans',sans-serif"}},
-    dragmode:'pan',showlegend:false,hovermode:'closest',
+    dragmode:'pan',showlegend:false,hovermode:fcOn?false:'closest',
     hoverlabel:{bgcolor:'#fff',bordercolor:'#1976d2',
       font:{family:"'IBM Plex Mono',monospace",size:12,color:'#1a2233'}},
     annotations:fc.annotations||[],shapes:[]
@@ -953,6 +1012,10 @@ function toggleFC(){
   document.getElementById('tog-fc').classList.toggle('active',fcOn);
   document.getElementById('fc-panel').style.display=fcOn?'flex':'none';
   if(!fcOn)hideFCLines();
+  // Cursor libre: desactivar el tooltip nativo de Plotly para que no se
+  // superponga con la lectura del cursor; restaurarlo al salir del modo.
+  moveCH(0,0,false,null,null,'');
+  try{Plotly.relayout('chart',{hovermode:fcOn?false:'closest'});}catch(e){}
 }
 
 // Traza + anotaciones para la trayectoria libre. Los puntos se
@@ -1053,6 +1116,44 @@ function addFCMark(vDisp,PDisp){
   updFCMarksCounter();rebuild();
 }
 
+// Agrega un punto a partir de temperatura y presión (dentro de Cursor libre).
+function addFCByTP(){
+  const msg=document.getElementById('tp-msg');if(!msg)return;
+  const tU=units==='SI'?'°C':'°F',pU=units==='SI'?'bar':'psia',vU=units==='SI'?'m³/kg':'ft³/lbm';
+  const T=parseFloat(document.getElementById('tp-T').value);
+  const P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(T)){msg.textContent='Ingresa la temperatura.';return;}
+  if(isNaN(P)||P<=0){msg.textContent='Ingresa una presión positiva.';return;}
+  const res=vAtTP(T,P);
+  if(res.v==null){
+    msg.textContent=`Estado saturado (P_sat ≈ ${res.Psat.toFixed(3)} ${pU} a ${T} ${tU}): en la campana T y P no son independientes. Usa un P claramente mayor (líquido) o menor (vapor).`;
+    return;
+  }
+  addFCMark(res.v,P);
+  msg.style.color='#2e7d32';
+  msg.textContent=`${res.region} · v = ${res.v.toFixed(5)} ${vU}. Punto agregado.`;
+}
+
+// Agrega un estado de mezcla saturada dada la calidad x y (T o P).
+function addFCByQuality(){
+  const msg=document.getElementById('tp-msg');if(!msg)return;
+  const pU=units==='SI'?'bar':'psia',vU=units==='SI'?'m³/kg':'ft³/lbm';
+  const x=parseFloat(document.getElementById('tp-x').value);
+  const T=parseFloat(document.getElementById('tp-T').value);
+  const P=parseFloat(document.getElementById('tp-P').value);
+  msg.style.color='#e53935';
+  if(isNaN(x)||x<0||x>1){msg.textContent='Ingresa una calidad x entre 0 y 1.';return;}
+  let s=null,Pd=null;
+  if(!isNaN(P)&&P>0){s=satAtP(P);Pd=P;}
+  else if(!isNaN(T)){Pd=interpPsatAtT(T);s=satAtP(Pd);}
+  else{msg.textContent='Ingresa T o P para el estado saturado.';return;}
+  const v=s.vf+x*(s.vg-s.vf);
+  addFCMark(v,Pd);
+  msg.style.color='#2e7d32';
+  msg.textContent=`Mezcla saturada x=${x} · v = ${v.toFixed(5)} ${vU} (P=${Pd.toFixed(3)} ${pU}). Punto agregado.`;
+}
+
 function undoFCMark(){
   if(fcMarks.length===0)return;
   fcMarks.pop();
@@ -1071,7 +1172,7 @@ function removeFCMark(idx){
 }
 
 CD.addEventListener('mousemove',function(e){
-  if(!fcOn||overTrace)return;
+  if(!fcOn)return;
   const la=CD._fullLayout;if(!la)return;
   const rect=CD.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
@@ -1118,7 +1219,8 @@ document.addEventListener('mouseup',function(e){
   const dx=Math.abs(e.clientX-_fcmdX),dy=Math.abs(e.clientY-_fcmdY);
   _fcmdX=null;_fcmdY=null;
   if(dx>3||dy>3)return;
-  if(overTrace)return;
+  // Cursor libre: se fija el punto EXACTO del clic en cualquier parte del
+  // diagrama (incluidas las líneas), sin anclarse al valor más próximo.
   const rect=CD.getBoundingClientRect();
   const mx=e.clientX-rect.left,my=e.clientY-rect.top;
   const la=CD._fullLayout;if(!la)return;
@@ -1263,13 +1365,13 @@ function buildAxHandles(){
   updCustomPH();updFCLabels();updFCMarksCounter();
   rebuild();
 
-  // Hover sobre saturación → crosshair + companion vf↔vg al mismo P
+  // Hover sobre saturación → crosshair educativo + companion vf↔vg al mismo P.
+  // Solo fuera del modo cursor libre; con el cursor libre no se interfiere ni se ancla.
   CD.on('plotly_hover',function(data){
+    if(fcOn)return;
     const pt=data.points[0],meta=pt.data.meta;
     const isSat=meta==='satL'||meta==='satV';
-    const isOverlay=['isotherm','fcmark'].indexOf(meta)>=0;
-    if(fcOn&&(isSat||isOverlay)){overTrace=true;hideFCLines();return;}
-    overTrace=false;if(!isSat)return;
+    if(!isSat)return;
     const sat=getSat();const idx=pt.pointIndex;
     const vH=(meta==='satL')?sat[idx].vf:sat[idx].vg,PH=sat[idx].P;
     const co=data2px(vH,PH);if(!co)return;
@@ -1279,7 +1381,7 @@ function buildAxHandles(){
     else{const r=data2px(sat[idx].vf,PH);if(r){cpx=r.px;cpy=r.py;}ct=`vf=${sat[idx].vf.toFixed(5)} ${vU}`;}
     moveCH(co.px,co.py,true,cpx,cpy,ct);
   });
-  CD.on('plotly_unhover',function(){overTrace=false;moveCH(0,0,false,null,null,'');});
+  CD.on('plotly_unhover',function(){moveCH(0,0,false,null,null,'');});
 
   // Reposicionar handles tras zoom/pan nativo
   CD.on('plotly_relayout',function(){
