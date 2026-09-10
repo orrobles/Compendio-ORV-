@@ -153,6 +153,20 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .addbtn{flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:5px;
   padding:5px 10px;font-size:0.75rem;font-weight:600;cursor:pointer;transition:background .18s;white-space:nowrap}
 .addbtn:hover{background:#1565c0}
+/* Botones de método (jerarquía: primario relleno, resto contorno) */
+.mbtn{display:block;width:100%;margin-top:5px;border-radius:5px;padding:8px 10px;
+  font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;text-align:center}
+.mbtn-primary{background:var(--accent);color:#fff;border:1.5px solid var(--accent)}
+.mbtn-primary:hover{background:#1565c0;border-color:#1565c0}
+.mbtn-sec{background:#fff;color:#1565c0;border:1.5px solid #c7d2e2}
+.mbtn-sec:hover{background:#eef4fc;border-color:var(--accent)}
+.mbtn-sat{background:#fff;color:var(--dome);border:1.5px solid #e1bee7}
+.mbtn-sat:hover{background:#f9f0fc;border-color:var(--dome)}
+/* Etiqueta de campo y unidad en filas de entrada */
+.fld-lbl{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:.75rem;
+  color:var(--muted);min-width:16px;text-align:center}
+.fld-u{font-size:.75rem;color:var(--muted);min-width:30px}
+.fld-hint{font-size:.7rem;color:var(--muted);line-height:1.3;margin-top:4px}
 .sg{display:flex;flex-direction:column;gap:5px}
 .sr{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#f5f8fd;border:1px solid #d9e5f5;border-radius:6px}
 .sl{font-size:0.75rem;color:var(--text);cursor:pointer;user-select:none}
@@ -316,32 +330,43 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
       <div class="sw"></div>
     </div>
     <div id="fc-panel" style="display:none;flex-direction:column;gap:6px">
-      <div class="ic"><div class="lb">Presión P</div><div class="vl" id="fr-P" style="color:#e65100">— bar</div></div>
-      <div class="ic"><div class="lb">Volumen v</div><div class="vl" id="fr-v" style="color:#e65100">— m³/kg</div></div>
+      <div class="ic"><div class="lb">Presión P</div><div class="vl" id="fr-P" style="color:#c94f00">— bar</div></div>
+      <div class="ic"><div class="lb">Volumen v</div><div class="vl" id="fr-v" style="color:#c94f00">— m³/kg</div></div>
       <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
         <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
-          <span>Agregar punto por T y P</span>
+          <span>Agregar punto de estado</span>
           <span class="info-btn" id="info-tp-btn" onclick="toggleInfo('tp')" title="Ayuda"
                 style="border-color:#e65100;color:#e65100">i</span>
         </div>
         <div class="info-box" id="info-tp" style="background:#fff8f0;border-color:#ffcc80;color:#6b5a4a">
-          Se determina la región a partir de (T, P) y se calcula v: líquido comprimido (v≈v<sub>f</sub>), vapor sobrecalentado (interpolado entre isóbaras tabuladas; gas ideal como respaldo). En la campana, T y P no son independientes: para un estado saturado ingresa la calidad x (0–1) junto con T o P y usa «Mezcla saturada»; v = v<sub>f</sub> + x·(v<sub>g</sub>−v<sub>f</sub>).
+          Escribe los valores y pulsa el método correspondiente; cada botón indica las propiedades que utiliza. Se determina la región y se calcula el resto: líquido comprimido (v≈v<sub>f</sub>), vapor sobrecalentado (interpolado entre isóbaras tabuladas; gas ideal como respaldo) o mezcla saturada dentro de la campana, v = v<sub>f</sub> + x·(v<sub>g</sub>−v<sub>f</sub>). En la campana, T y P no son independientes: usa «Mezcla saturada» con x. Con (T, v) en líquido comprimido la presión es indeterminada.
         </div>
         <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
-          <input type="number" id="tp-T" class="sel" style="flex:1" placeholder="T" step="any">
-          <span id="tp-tU" style="font-size:.72rem;color:#5c6b84;min-width:26px">°C</span>
+          <span class="fld-lbl">T</span>
+          <input type="number" id="tp-T" class="sel" style="flex:1" placeholder="Temperatura" step="any">
+          <span class="fld-u" id="tp-tU">°C</span>
         </div>
         <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
-          <input type="number" id="tp-P" class="sel" style="flex:1" placeholder="P" step="any" min="0">
-          <span id="tp-pU" style="font-size:.72rem;color:#5c6b84;min-width:26px">bar</span>
+          <span class="fld-lbl">P</span>
+          <input type="number" id="tp-P" class="sel" style="flex:1" placeholder="Presión" step="any" min="0">
+          <span class="fld-u" id="tp-pU">bar</span>
         </div>
         <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
-          <input type="number" id="tp-x" class="sel" style="flex:1" placeholder="x (0–1) para mezcla saturada" step="any" min="0" max="1">
-          <span style="font-size:.72rem;color:#5c6b84;min-width:26px">x</span>
+          <span class="fld-lbl">x</span>
+          <input type="number" id="tp-x" class="sel" style="flex:1" placeholder="Calidad (0–1)" step="any" min="0" max="1">
+          <span class="fld-u">x</span>
         </div>
-        <button class="addbtn" onclick="addFCByTP()" style="width:100%;margin-top:6px">+ Punto (T, P)</button>
-        <button class="addbtn" onclick="addFCByQuality()" style="width:100%;margin-top:4px;background:#8e24aa">+ Mezcla saturada (T o P, x)</button>
-        <div id="tp-msg" style="font-size:.7rem;color:#4a148c;min-height:.9rem;line-height:1.25;margin-top:4px"></div>
+        <div class="ctrl" style="margin-top:4px;display:flex;gap:4px;align-items:center">
+          <span class="fld-lbl">v</span>
+          <input type="number" id="tp-v" class="sel" style="flex:1" placeholder="Volumen específico" step="any" min="0">
+          <span class="fld-u" id="tp-vU">m³/kg</span>
+        </div>
+        <div class="fld-hint">Elige un método según las propiedades disponibles:</div>
+        <button class="mbtn mbtn-primary" onclick="addFCByTP()">+ Punto (T, P)</button>
+        <button class="mbtn mbtn-sec" onclick="addFCByPv()">+ Punto (P, v)</button>
+        <button class="mbtn mbtn-sec" onclick="addFCByTv()">+ Punto (T, v)</button>
+        <button class="mbtn mbtn-sat" onclick="addFCByQuality()">+ Mezcla saturada (T o P, x)</button>
+        <div id="tp-msg" style="font-size:.72rem;color:#4a148c;min-height:.9rem;line-height:1.25;margin-top:6px"></div>
       </div>
       <div class="ic" style="background:#fff3e0;border-color:#ffb74d">
         <div class="lb" style="color:#bf360c;display:flex;align-items:center;justify-content:space-between;gap:6px">
@@ -845,6 +870,7 @@ function updFCLabels(){
   if(fp)fp.textContent=`— ${pU}`;if(fv)fv.textContent=`— ${vU}`;
   const tu=document.getElementById('tp-tU'),pu=document.getElementById('tp-pU');
   if(tu)tu.textContent=units==='SI'?'°C':'°F';if(pu)pu.textContent=pU;
+  const vu=document.getElementById('tp-vU');if(vu)vu.textContent=vU;
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1152,6 +1178,67 @@ function addFCByQuality(){
   addFCMark(v,Pd);
   msg.style.color='#2e7d32';
   msg.textContent=`Mezcla saturada x=${x} · v = ${v.toFixed(5)} ${vU} (P=${Pd.toFixed(3)} ${pU}). Punto agregado.`;
+}
+
+// Agrega un punto directamente dados la presión P y el volumen específico v.
+function addFCByPv(){
+  const msg=document.getElementById('tp-msg');if(!msg)return;
+  const pU=units==='SI'?'bar':'psia',vU=units==='SI'?'m³/kg':'ft³/lbm';
+  const P=parseFloat(document.getElementById('tp-P').value);
+  const v=parseFloat(document.getElementById('tp-v').value);
+  msg.style.color='#e53935';
+  if(isNaN(P)||P<=0){msg.textContent='Ingresa una presión positiva.';return;}
+  if(isNaN(v)||v<=0){msg.textContent='Ingresa un volumen específico positivo.';return;}
+  addFCMark(v,P);
+  msg.style.color='#2e7d32';
+  msg.textContent=`Punto agregado en P = ${P.toFixed(3)} ${pU} · v = ${v.toFixed(5)} ${vU}.`;
+}
+
+// Agrega un punto dados la temperatura T y el volumen específico v.
+// Determina la región y resuelve la presión P correspondiente.
+function addFCByTv(){
+  const msg=document.getElementById('tp-msg');if(!msg)return;
+  const tU=units==='SI'?'°C':'°F',pU=units==='SI'?'bar':'psia',vU=units==='SI'?'m³/kg':'ft³/lbm';
+  const T=parseFloat(document.getElementById('tp-T').value);
+  const v=parseFloat(document.getElementById('tp-v').value);
+  msg.style.color='#e53935';
+  if(isNaN(T)){msg.textContent='Ingresa la temperatura.';return;}
+  if(isNaN(v)||v<=0){msg.textContent='Ingresa un volumen específico positivo.';return;}
+  const sat=getSat();const Tc=sat[sat.length-1].T;
+  // Región dentro de la campana (mezcla saturada) o líquido comprimido
+  if(T<Tc){
+    const Psat=interpPsatAtT(T);const s=satAtP(Psat);
+    if(v>=s.vf&&v<=s.vg){
+      const x=(v-s.vf)/(s.vg-s.vf);
+      addFCMark(v,Psat);
+      msg.style.color='#2e7d32';
+      msg.textContent=`Mezcla saturada x=${x.toFixed(4)} · P=P_sat=${Psat.toFixed(3)} ${pU} · v=${v.toFixed(5)} ${vU}. Punto agregado.`;
+      return;
+    }
+    if(v<s.vf){
+      msg.textContent=`Líquido comprimido: con (T, v) la presión es indeterminada (v≈v_f, casi independiente de P). Usa «+ Punto (P, v)» o «+ Punto (T, P)».`;
+      return;
+    }
+  }
+  // Sobrecalentado / supercrítico: resolver P tal que v(T,P)=v (v decrece con P)
+  const Pmax=units==='SI'?330:5200;
+  let Plo=units==='SI'?0.01:0.15;
+  let Phi=(T<Tc)?interpPsatAtT(T)*0.999:Pmax;
+  const f=(P)=>{const r=vAtTP(T,P);return (r.v==null)?null:r.v-v;};
+  let flo=f(Plo),fhi=f(Phi);
+  if(flo==null||fhi==null){msg.textContent='No se pudo evaluar el volumen en el rango de presión.';return;}
+  if(flo*fhi>0){
+    const vmax=flo+v,vmin=fhi+v;
+    msg.textContent=`v fuera del rango alcanzable a T=${T} ${tU} (v ≈ ${vmin.toFixed(4)}–${vmax.toFixed(2)} ${vU}). Ajusta v.`;
+    return;
+  }
+  let P=null;
+  for(let i=0;i<80;i++){const Pm=Math.sqrt(Plo*Phi);const fm=f(Pm);if(fm==null)break;if(flo*fm<=0){Phi=Pm;fhi=fm;}else{Plo=Pm;flo=fm;}P=Pm;}
+  if(P==null){msg.textContent='No se pudo resolver P para (T, v).';return;}
+  addFCMark(v,P);
+  msg.style.color='#2e7d32';
+  const reg=(T<Tc)?'Vapor sobrecalentado':'Supercrítico / sobrecalentado';
+  msg.textContent=`${reg} · P=${P.toFixed(3)} ${pU} · v=${v.toFixed(5)} ${vU}. Punto agregado.`;
 }
 
 function undoFCMark(){
