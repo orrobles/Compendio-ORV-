@@ -406,15 +406,20 @@
     </details>
 
     <details class="ex">
-      <summary>Problema 3.17 · Presión variable $p=a+b/V$ <span class="ref">W ≈ 70.0 (unid. del problema)</span></summary>
+      <summary>Problema 3.17 · Presión variable $p=a+b/V$ <span class="ref">W ≈ −42.73 (psi·ft³)</span></summary>
       <div class="body">
-        <p><b>Enunciado.</b> $p=a+30/V$ (p en psi, V en ft³); en el estado 1, $p=7$ psia y $V=3$ ft³; se expande
-           hasta $p_2=50$ psia. Determine el trabajo.</p>
+        <p><b>Enunciado.</b> $p=a+30/V$ (p en psia, V en ft³); en el estado 1, $p=7$ psia y $V_1=3$ ft³; el gas
+           evoluciona hasta $p_2=50$ psia. Determine el trabajo de frontera.</p>
         <div class="steps">
-          <div class="step"><b>Constante a.</b> $7 = a + 30/3 \Rightarrow a=3$.</div>
-          <div class="step"><b>Trabajo.</b> $W=\displaystyle\int_{V_1}^{V_2}\!\Big(a+\tfrac{30}{V}\Big)dV
-             = a(V_2-V_1)+30\ln\!\dfrac{V_2}{V_1}$.</div>
-          <div class="step"><b>Resultado.</b> $W \approx \mathbf{70.0}$ (en las unidades psi·ft³ del problema).</div>
+          <div class="step"><b>Constante a.</b> En el estado 1: $7 = a + \dfrac{30}{3} = a + 10 \Rightarrow \mathbf{a=-3}$,
+             de modo que $p = -3 + \dfrac{30}{V}$.</div>
+          <div class="step"><b>Estado 2.</b> Con $p_2=50$: $\;50 = -3 + \dfrac{30}{V_2} \Rightarrow \dfrac{30}{V_2}=53
+             \Rightarrow V_2 = \dfrac{30}{53} \approx 0.566$ ft³. Como $V_2<V_1$, el proceso es una <b>compresión</b>.</div>
+          <div class="step"><b>Trabajo.</b> $W=\displaystyle\int_{V_1}^{V_2}\!\Big(-3+\tfrac{30}{V}\Big)dV
+             = -3\,(V_2-V_1)+30\ln\!\dfrac{V_2}{V_1}
+             = \displaystyle\int_{3}^{30/53}\!\Big(-3+\tfrac{30}{V}\Big)dV$.</div>
+          <div class="step"><b>Resultado.</b> $W \approx \mathbf{-42.73}$ psi·ft³. El signo negativo indica trabajo
+             realizado <b>sobre</b> el gas, consistente con la compresión.</div>
         </div>
         <div class="tip">Este caso muestra que, con $p(V)$ no elemental, el trabajo sigue siendo el área $\int p\,dV$:
            la parte $30/V$ aporta un término logarítmico, igual que en el proceso isotérmico.</div>
