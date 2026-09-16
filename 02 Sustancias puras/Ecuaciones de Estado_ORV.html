@@ -210,9 +210,14 @@ table.cmp .best td{background:#e8f5e9!important}
     <div>
       <div class="panel">
         <h3>Estado</h3>
+        <div class="rrow" style="display:flex;gap:6px;margin-bottom:8px">
+          <div class="rbtn active" id="m2-mP" onclick="m2Mode('P')">Datos (T, P)</div>
+          <div class="rbtn" id="m2-mV" onclick="m2Mode('v')">Datos (T, v)</div>
+        </div>
         <div class="grid2">
           <div class="field"><label>Temperatura T [<span data-u="T">K</span>]</label><input id="m2_T" type="number" data-q="T" value="175"></div>
-          <div class="field"><label>Presión P [<span data-u="P">kPa</span>]</label><input id="m2_P" type="number" data-q="P" value="10000"></div>
+          <div class="field" id="m2-wrapP"><label>Presión P [<span data-u="P">kPa</span>]</label><input id="m2_P" type="number" data-q="P" value="10000"></div>
+          <div class="field" id="m2-wrapV" style="display:none"><label>Volumen específico v [<span data-u="v">m³/kg</span>]</label><input id="m2_v" type="number" data-q="v" value="0.00375"></div>
         </div>
         <button class="btn" onclick="runM2()">Calcular Z</button>
         <div class="msg" id="m2msg"></div>
@@ -432,6 +437,13 @@ function setUnits(sys){
 /* ════════════════ M1 — GAS IDEAL ════════════════ */
 let M1solve='P';
 function m1Solve(q){ M1solve=q; ['P','v','T'].forEach(x=>document.getElementById('m1-'+x).classList.toggle('active',x===q)); renderM1inputs(); }
+let M2mode='P';
+function m2Mode(m){ M2mode=m;
+  document.getElementById('m2-wrapP').style.display = m==='P'?'':'none';
+  document.getElementById('m2-wrapV').style.display = m==='v'?'':'none';
+  document.getElementById('m2-mP').classList.toggle('active',m==='P');
+  document.getElementById('m2-mV').classList.toggle('active',m==='v');
+}
 function renderM1inputs(){
   const need={P:['T','v'],v:['T','P'],T:['P','v']}[M1solve];
   const lab={T:'Temperatura T',P:'Presión P',v:'Volumen específico v'};
@@ -477,20 +489,32 @@ function runM2(){
   setMsg('m2msg','');
   const s=getSub(), R=s.R;
   const T=toSI('T',parseFloat(document.getElementById('m2_T').value));
-  const P=toSI('P',parseFloat(document.getElementById('m2_P').value));
-  if(!(T>0&&P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
-  const Tr=T/s.Tc, Pr=P/s.Pc, Z=zChart(Tr,Pr);
-  const v=Z*R*T/P, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
+  const fromV=(M2mode==='v');
+  let P,v,Z;
+  if(fromV){
+    v=toSI('v',parseFloat(document.getElementById('m2_v').value));
+    if(!(T>0&&v>0)){ setMsg('m2msg','Introduzca T y v positivas.','bad'); drawM2(null); return; }
+    const a=0.42748*R*R*Math.pow(s.Tc,2.5)/s.Pc, b=0.08664*R*s.Tc/s.Pc;
+    P=R*T/(v-b)-a/(Math.sqrt(T)*v*(v+b));
+    if(!(P>0)){ setMsg('m2msg','El estado (T, v) queda fuera del rango del modelo RK; revise v.','bad'); drawM2(null); return; }
+    Z=P*v/(R*T);
+  } else {
+    P=toSI('P',parseFloat(document.getElementById('m2_P').value));
+    if(!(T>0&&P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
+    Z=zChart(T/s.Tc,P/s.Pc); v=Z*R*T/P;
+  }
+  const Tr=T/s.Tc, Pr=P/s.Pc, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
   let cls,txt;
   if(Math.abs(Z-1)<=0.05){cls='b-green';txt='Gas ideal aceptable (Z ≈ 1)';}
   else if(Math.abs(Z-1)<=0.15){cls='b-amber';txt='Desviación moderada — corrección recomendada';}
   else{cls='b-red';txt='Gas real — use una ecuación de estado';}
   document.getElementById('m2out').innerHTML =
     row('Sustancia',s.n,'')+
+    (fromV? row('Presión real P = ZRT/v',`${fmt(toD('P',P),5)} ${UNL('P')}`,'big') : '')+
     row('T<sub>R</sub> = T/T<sub>c</sub>',fmt(Tr,4),'')+
     row('P<sub>R</sub> = P/P<sub>c</sub>',fmt(Pr,4),'')+
     row('Factor Z',fmt(Z,4),'big')+
-    row('v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
+    row(fromV?'v (dato)':'v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
     row('v ideal = RT/P',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'')+
     row("v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)",fmt(vR,4),'')+
     `<div style="text-align:center"><span class="badge ${cls}">${txt}</span></div>`;
@@ -635,52 +659,6 @@ function drawM4(methods,Pref){
 /* ════════════════ INIT ════════════════ */
 onSubChange(); renderM1inputs(); renderM3eq(); renderM3inputs();
 runM2(); loadN2(); switchTab('m1');
-</script>
-
-<style id="orvhelp-css">
-#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
- background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
- letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
-#orvhelp-btn:hover{filter:brightness(1.12)}
-#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
-#orvhelp-overlay.open{display:flex}
-#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
- box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
-#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
- background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
-#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
-#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
- border-radius:8px;width:30px;height:30px;cursor:pointer}
-#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
-#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
-#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
-#orvhelp-body ol li{margin-bottom:6px}
-#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
-</style>
-
-<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
-<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
-  <div id="orvhelp-panel">
-    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Ecuaciones de Estado</h2>
-      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
-    <div id="orvhelp-body">
-      <h3>¿Qué es esta aplicación?</h3>
-      <p>Calculadora de ecuaciones de estado: gas ideal, factor Z, van der Waals, Redlich–Kwong, SRK, Peng–Robinson y desarrollo virial.</p>
-      <h3>Cómo se usa</h3>
-      <ol><li>Seleccione la sustancia y la ecuación de estado que desea evaluar.</li><li>Ingrese las condiciones (presión, temperatura o volumen) en los campos de entrada.</li><li>Ejecute el cálculo y compare los resultados entre modelos (gas ideal, vdW, RK, SRK, PR, virial).</li><li>Analice las desviaciones respecto de la referencia y las isotermas graficadas.</li></ol>
-      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
-    </div>
-  </div>
-</div>
-<script id="orvhelp-js">
-(function(){
- var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
- function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
- b.addEventListener('click',open); c.addEventListener('click',close);
- o.addEventListener('click',function(e){if(e.target===o)close();});
- document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
-})();
 </script>
 </body>
 </html>

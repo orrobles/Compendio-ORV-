@@ -258,9 +258,14 @@ table.cmp .best td{background:#e8f5e9!important}
     <div>
       <div class=&quot;panel&quot;>
         <h3>Estado</h3>
+        <div class=&quot;rrow&quot; style=&quot;display:flex;gap:6px;margin-bottom:8px&quot;>
+          <div class=&quot;rbtn active&quot; id=&quot;m2-mP&quot; onclick=&quot;m2Mode('P')&quot;>Datos (T, P)</div>
+          <div class=&quot;rbtn&quot; id=&quot;m2-mV&quot; onclick=&quot;m2Mode('v')&quot;>Datos (T, v)</div>
+        </div>
         <div class=&quot;grid2&quot;>
           <div class=&quot;field&quot;><label>Temperatura T [<span data-u=&quot;T&quot;>K</span>]</label><input id=&quot;m2_T&quot; type=&quot;number&quot; data-q=&quot;T&quot; value=&quot;175&quot;></div>
-          <div class=&quot;field&quot;><label>Presión P [<span data-u=&quot;P&quot;>kPa</span>]</label><input id=&quot;m2_P&quot; type=&quot;number&quot; data-q=&quot;P&quot; value=&quot;10000&quot;></div>
+          <div class=&quot;field&quot; id=&quot;m2-wrapP&quot;><label>Presión P [<span data-u=&quot;P&quot;>kPa</span>]</label><input id=&quot;m2_P&quot; type=&quot;number&quot; data-q=&quot;P&quot; value=&quot;10000&quot;></div>
+          <div class=&quot;field&quot; id=&quot;m2-wrapV&quot; style=&quot;display:none&quot;><label>Volumen específico v [<span data-u=&quot;v&quot;>m³/kg</span>]</label><input id=&quot;m2_v&quot; type=&quot;number&quot; data-q=&quot;v&quot; value=&quot;0.00375&quot;></div>
         </div>
         <button class=&quot;btn&quot; onclick=&quot;runM2()&quot;>Calcular Z</button>
         <div class=&quot;msg&quot; id=&quot;m2msg&quot;></div>
@@ -480,6 +485,13 @@ function setUnits(sys){
 /* ════════════════ M1 — GAS IDEAL ════════════════ */
 let M1solve='P';
 function m1Solve(q){ M1solve=q; ['P','v','T'].forEach(x=>document.getElementById('m1-'+x).classList.toggle('active',x===q)); renderM1inputs(); }
+let M2mode='P';
+function m2Mode(m){ M2mode=m;
+  document.getElementById('m2-wrapP').style.display = m==='P'?'':'none';
+  document.getElementById('m2-wrapV').style.display = m==='v'?'':'none';
+  document.getElementById('m2-mP').classList.toggle('active',m==='P');
+  document.getElementById('m2-mV').classList.toggle('active',m==='v');
+}
 function renderM1inputs(){
   const need={P:['T','v'],v:['T','P'],T:['P','v']}[M1solve];
   const lab={T:'Temperatura T',P:'Presión P',v:'Volumen específico v'};
@@ -525,20 +537,32 @@ function runM2(){
   setMsg('m2msg','');
   const s=getSub(), R=s.R;
   const T=toSI('T',parseFloat(document.getElementById('m2_T').value));
-  const P=toSI('P',parseFloat(document.getElementById('m2_P').value));
-  if(!(T>0&amp;&amp;P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
-  const Tr=T/s.Tc, Pr=P/s.Pc, Z=zChart(Tr,Pr);
-  const v=Z*R*T/P, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
+  const fromV=(M2mode==='v');
+  let P,v,Z;
+  if(fromV){
+    v=toSI('v',parseFloat(document.getElementById('m2_v').value));
+    if(!(T>0&amp;&amp;v>0)){ setMsg('m2msg','Introduzca T y v positivas.','bad'); drawM2(null); return; }
+    const a=0.42748*R*R*Math.pow(s.Tc,2.5)/s.Pc, b=0.08664*R*s.Tc/s.Pc;
+    P=R*T/(v-b)-a/(Math.sqrt(T)*v*(v+b));
+    if(!(P>0)){ setMsg('m2msg','El estado (T, v) queda fuera del rango del modelo RK; revise v.','bad'); drawM2(null); return; }
+    Z=P*v/(R*T);
+  } else {
+    P=toSI('P',parseFloat(document.getElementById('m2_P').value));
+    if(!(T>0&amp;&amp;P>0)){ setMsg('m2msg','Introduzca T y P positivas.','bad'); drawM2(null); return; }
+    Z=zChart(T/s.Tc,P/s.Pc); v=Z*R*T/P;
+  }
+  const Tr=T/s.Tc, Pr=P/s.Pc, vid=R*T/P, vR=v/(R*s.Tc/s.Pc);
   let cls,txt;
   if(Math.abs(Z-1)<=0.05){cls='b-green';txt='Gas ideal aceptable (Z ≈ 1)';}
   else if(Math.abs(Z-1)<=0.15){cls='b-amber';txt='Desviación moderada — corrección recomendada';}
   else{cls='b-red';txt='Gas real — use una ecuación de estado';}
   document.getElementById('m2out').innerHTML =
     row('Sustancia',s.n,'')+
+    (fromV? row('Presión real P = ZRT/v',`${fmt(toD('P',P),5)} ${UNL('P')}`,'big') : '')+
     row('T<sub>R</sub> = T/T<sub>c</sub>',fmt(Tr,4),'')+
     row('P<sub>R</sub> = P/P<sub>c</sub>',fmt(Pr,4),'')+
     row('Factor Z',fmt(Z,4),'big')+
-    row('v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
+    row(fromV?'v (dato)':'v real = ZRT/P',`${fmt(toD('v',v),5)} ${UNL('v')}`,'')+
     row('v ideal = RT/P',`${fmt(toD('v',vid),5)} ${UNL('v')}`,'')+
     row(&quot;v′<sub>R</sub> = v/(RT<sub>c</sub>/P<sub>c</sub>)&quot;,fmt(vR,4),'')+
     `<div style=&quot;text-align:center&quot;><span class=&quot;badge ${cls}&quot;>${txt}</span></div>`;
@@ -755,7 +779,7 @@ Termo<span style=&quot;color:#f97316&quot;> &amp;middot; IA &amp;middot; </span>
 </div>
 <div class=&quot;card&quot;>
 <details class=&quot;concepto&quot; open>
-<summary><h3>Acerca de este diagrama</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+<summary><h3>Acerca de este diagrama</h3><span class=&quot;toggle-hint&quot;>desplegar / ocultar</span></summary>
 <div class=&quot;cbody&quot;>Cada isoterma subcr&amp;iacute;tica (200, 280, 360 &amp;deg;C) desciende desde Z = 1 y termina exactamente sobre la l&amp;iacute;nea de <b>vapor saturado</b>. La <b>regi&amp;oacute;n bif&amp;aacute;sica</b> (L+V) queda encerrada entre las curvas de l&amp;iacute;quido y vapor saturado, que convergen en el <b>punto cr&amp;iacute;tico</b> (T<sub>c</sub> = 373.95 &amp;deg;C, P<sub>c</sub> = 220.6 bar, Z<sub>c</sub> = 0.229). Las isotermas supercr&amp;iacute;ticas (440, 500 &amp;deg;C) no cruzan la campana. Use la casilla <b>Regi&amp;oacute;n bif&amp;aacute;sica</b> para mostrarla u ocultarla.</div>
 </details>
 <div class=&quot;chartbox&quot; id=&quot;chart&quot;></div>
@@ -909,7 +933,7 @@ Termo<span style=&quot;color:#f97316&quot;> &amp;middot; IA &amp;middot; </span>
 </div>
 <div class=&quot;card&quot;>
 <details class=&quot;concepto&quot; open>
-<summary><h3>Acerca de esta carta</h3><span class=&quot;toggle-hint&quot;>desplegar / contraer</span></summary>
+<summary><h3>Acerca de esta carta</h3><span class=&quot;toggle-hint&quot;>desplegar / ocultar</span></summary>
 <div class=&quot;cbody&quot;>Carta de compresibilidad generalizada (Nelson-Obert). Las <b>curvas medias</b> (magenta) son el promedio de los datos de hidrocarburos (CoolProp); los <b>puntos</b> son Z = Pv/RT con propiedades reales (IAPWS/CoolProp) de 10 sustancias en coordenadas reducidas (T<sub>R</sub>=T/T<sub>c</sub>, P<sub>R</sub>=P/P<sub>c</sub>). Que todas colapsen sobre las mismas curvas confirma el <b>principio de los estados correspondientes</b>. La isoterma cr&amp;iacute;tica <b>T<sub>R</sub>=1.00</b> desciende casi verticalmente hasta un m&amp;iacute;nimo Z&amp;asymp;0.21 cerca de P<sub>R</sub>=1 y luego sube. Clic en la leyenda para aislar sustancias.</div>
 </details>
 <div class=&quot;chartbox&quot; id=&quot;chart&quot;></div>
@@ -1039,51 +1063,5 @@ window.addEventListener('load',()=>{switchApp(0);});
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 </style>
-
-<style id="orvhelp-css">
-#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
- background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
- letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
-#orvhelp-btn:hover{filter:brightness(1.12)}
-#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
-#orvhelp-overlay.open{display:flex}
-#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
- box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
-#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
- background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
-#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
-#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
- border-radius:8px;width:30px;height:30px;cursor:pointer}
-#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
-#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
-#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
-#orvhelp-body ol li{margin-bottom:6px}
-#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
-</style>
-
-<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
-<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
-  <div id="orvhelp-panel">
-    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Suite de Ecuaciones de Estado</h2>
-      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
-    <div id="orvhelp-body">
-      <h3>¿Qué es esta aplicación?</h3>
-      <p>Comparador ampliado de las ecuaciones de estado con isotermas y región de saturación (datos IAPWS), carta Nelson–Obert y estados correspondientes.</p>
-      <h3>Cómo se usa</h3>
-      <ol><li>Seleccione la sustancia y la ecuación de estado que desea evaluar.</li><li>Ingrese las condiciones (presión, temperatura o volumen) en los campos de entrada.</li><li>Ejecute el cálculo y compare los resultados entre modelos (gas ideal, vdW, RK, SRK, PR, virial).</li><li>Analice las desviaciones respecto de la referencia y las isotermas graficadas.</li></ol>
-      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
-    </div>
-  </div>
-</div>
-<script id="orvhelp-js">
-(function(){
- var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
- function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
- b.addEventListener('click',open); c.addEventListener('click',close);
- o.addEventListener('click',function(e){if(e.target===o)close();});
- document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
-})();
-</script>
 </body>
 </html>
