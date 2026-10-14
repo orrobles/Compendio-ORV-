@@ -68,6 +68,46 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
   white-space:nowrap}
 .pm-btn.act{background:#7b1fa2;color:#fff}
 .pm-label{font-size:.82rem;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0}
+/* ══ Selector «¿Cómo se calcula?» (métodos c_p, c_v) ══ */
+.pm-info{padding:4px 11px;font-size:.82rem;font-weight:700;border:1.5px dashed #e65100;
+  border-radius:5px;cursor:pointer;background:#fff7ed;color:#e65100;white-space:nowrap;transition:all .15s}
+.pm-info:hover{background:#ffedd5;border-style:solid}
+#pmToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
+  background:#4a148c;color:#fff;padding:10px 18px;border-radius:8px;font-size:.84rem;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;z-index:10050;
+  transition:opacity .25s,transform .25s;max-width:min(92vw,720px);text-align:center;line-height:1.4}
+#pmToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@keyframes pmFlash{0%{box-shadow:0 0 0 0 rgba(123,31,162,.55)}100%{box-shadow:0 0 0 14px rgba(123,31,162,0)}}
+.pm-flash{animation:pmFlash .9s ease-out 2;border-radius:6px}
+#pmInfoModal{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.55);
+  align-items:center;justify-content:center;padding:16px}
+#pmInfoModal.open{display:flex}
+.pmi-box{background:#fff;border-radius:12px;width:min(1000px,100%);max-height:92vh;display:flex;
+  flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
+.pmi-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:8px 14px 0;border-bottom:2px solid var(--border);
+  background:#faf5ff;flex-shrink:0}
+.pmi-tab{padding:6px 12px;font-size:.80rem;font-weight:700;border:1.5px solid #d1c4e9;border-bottom:none;
+  border-radius:6px 6px 0 0;background:#fff;color:#7b1fa2;cursor:pointer;white-space:nowrap}
+.pmi-tab.act{background:#7b1fa2;color:#fff;border-color:#7b1fa2}
+.pmi-body{overflow:auto;padding:16px 22px 22px;font-size:.88rem;line-height:1.6;color:var(--text)}
+.pmi-pane{display:none}.pmi-pane.act{display:block}
+.pmi-body h3{font-size:.95rem;color:#4a148c;margin:14px 0 6px}
+.pmi-body h3:first-child{margin-top:0}
+.pmi-body p,.pmi-body li{margin-bottom:6px}
+.pmi-body ul,.pmi-body ol{padding-left:22px;margin-bottom:8px}
+.pmi-eq{font-family:'IBM Plex Mono',monospace;background:#f3e5f5;border-left:4px solid #7b1fa2;
+  padding:8px 12px;border-radius:4px;margin:8px 0;font-size:.86rem;overflow-x:auto;white-space:nowrap}
+.pmi-note{background:#fff7ed;border-left:4px solid #e65100;padding:8px 12px;border-radius:4px;
+  margin:10px 0;font-size:.84rem}
+.pmi-ok{background:#e8f5e9;border-left:4px solid #2e7d32;padding:8px 12px;border-radius:4px;
+  margin:10px 0;font-size:.84rem}
+.pmi-tbl{border-collapse:collapse;width:100%;font-size:.80rem;margin:6px 0 10px}
+.pmi-tbl th,.pmi-tbl td{border:1px solid var(--border);padding:4px 7px;text-align:right;white-space:nowrap}
+.pmi-tbl th{background:#ede7f6;color:#4a148c;text-align:center}
+.pmi-tbl td:first-child{text-align:left}
+.pmi-tbl .actcol{background:#f3e5f5;font-weight:700}
+.pmi-tbl small{color:var(--muted);font-weight:400}
+.pmi-wrap{overflow-x:auto}
 /* Toggles compactos dentro de campos del sidebar */
 .utog-sm{display:flex;border:1.5px solid var(--accent);border-radius:5px;overflow:hidden;flex-shrink:0}
 .ubtn-sm{padding:1px 8px;font-size:0.75rem;font-weight:700;background:#fff;color:var(--accent);
@@ -422,6 +462,7 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
       <button class="pm-btn act" id="pmConstant" onclick="setPropMode('constant')">Cte. T₁</button>
       <button class="pm-btn"     id="pmAvg"      onclick="setPropMode('avg')">T<sub>avg</sub></button>
       <button class="pm-btn"     id="pmInteg"    onclick="setPropMode('integ')">∫c<sub>v</sub>dT</button>
+      <button class="pm-info" id="pmInfoBtn" onclick="openPmInfo()" title="Explicación de los tres métodos de cálculo de c_p y c_v, y comparación con la cadena actual">ⓘ ¿Cómo se calcula?</button>
     </div>
     <div class="subbar-sep"></div>
     <input type="file" id="sessionFileInput" accept=".json" style="display:none" onchange="loadSessionFile(this)">
@@ -665,6 +706,120 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
 </div>
 
 <!-- ══ MODAL DE AMPLIACIÓN ══ -->
+<!-- ════ MODAL: MÉTODOS DE CÁLCULO DE c_p, c_v ════ -->
+<div id="pmInfoModal" onclick="if(event.target===this)closePmInfo()">
+ <div class="pmi-box" role="dialog" aria-modal="true" aria-labelledby="pmiTitle">
+  <div class="modal-hdr"><span id="pmiTitle">Métodos de cálculo de c<sub>p</sub> y c<sub>v</sub> · ¿Cómo se obtiene ΔU?</span>
+   <button class="modal-close" onclick="closePmInfo()" title="Cerrar (Esc)">✕</button></div>
+  <div class="pmi-tabs">
+   <button class="pmi-tab" data-t="cmp"      onclick="pmiTab('cmp')">📊 Comparación en vivo</button>
+   <button class="pmi-tab" data-t="constant" onclick="pmiTab('constant')">① Cte. T₁</button>
+   <button class="pmi-tab" data-t="avg"      onclick="pmiTab('avg')">② T<sub>avg</sub></button>
+   <button class="pmi-tab" data-t="integ"    onclick="pmiTab('integ')">③ ∫c<sub>v</sub>dT</button>
+   <button class="pmi-tab" data-t="lim"      onclick="pmiTab('lim')">⚠ Alcance y límites</button>
+  </div>
+  <div class="pmi-body">
+
+   <div class="pmi-pane" data-p="cmp">
+    <h3>¿Qué cambia al seleccionar un método?</h3>
+    <p>Para un gas ideal, <b>u = u(T)</b> y <b>du = c<sub>v</sub>(T)·dT</b>. Los tres métodos difieren
+    únicamente en <b>cómo se evalúa c<sub>v</sub></b> (y k = c<sub>p</sub>/c<sub>v</sub>) a lo largo del intervalo T₁ → T₂.
+    El trabajo de frontera W = ∫P·dV depende sólo de la trayectoria P–v y, salvo en el proceso adiabático, no se ve afectado.</p>
+    <table class="pmi-tbl"><thead><tr><th>Proceso</th><th>W</th><th>ΔU</th><th>Q</th><th>T₂</th></tr></thead><tbody>
+     <tr><td>Isocórico</td><td>= 0 (no cambia)</td><td>cambia</td><td>= ΔU, cambia</td><td>dato</td></tr>
+     <tr><td>Isobárico</td><td>m·R·ΔT (no cambia)</td><td>cambia</td><td>cambia</td><td>dato</td></tr>
+     <tr><td>Isotérmico</td><td>no cambia</td><td>= 0</td><td>no cambia</td><td>= T₁</td></tr>
+     <tr><td>Politrópico</td><td>(P₂V₂−P₁V₁)/(1−n) (no cambia)</td><td>cambia</td><td>cambia</td><td>calculada (no cambia)</td></tr>
+     <tr><td>Adiabático</td><td>= −ΔU, cambia</td><td>cambia</td><td>= 0</td><td><b>cambia</b> (depende de k)</td></tr>
+    </tbody></table>
+    <div class="pmi-ok"><b>Actualización automática.</b> Al pulsar cualquiera de los tres botones, si ya existe un resultado,
+    la aplicación <b>recalcula de inmediato</b> toda la cadena y muestra un aviso con la variación de ΣΔU. Si la diferencia
+    parece imperceptible es porque, para intervalos moderados de temperatura y gases diatómicos, c<sub>v</sub> varía poco
+    (véase la tabla siguiente).</div>
+    <h3>Comparación con la cadena de procesos actual</h3>
+    <div id="pmiCompare" class="pmi-wrap"></div>
+    <h3>Órdenes de magnitud (Tabla A-20, referencia: integración)</h3>
+    <table class="pmi-tbl"><thead><tr><th>Gas · intervalo</th><th>Δu ∫c<sub>v</sub>dT [kJ/kg]</th><th>Error Cte. T₁</th><th>Error T<sub>avg</sub></th></tr></thead><tbody>
+     <tr><td>Aire · 300 → 400 K</td><td>72.15</td><td>−0.5 %</td><td>−0.07 %</td></tr>
+     <tr><td>Aire · 300 → 600 K</td><td>220.80</td><td>−2.4 %</td><td>−0.41 %</td></tr>
+     <tr><td>Aire · 300 → 1000 K</td><td>545.15</td><td>−7.8 %</td><td>−0.36 %</td></tr>
+     <tr><td>H₂ · 300 → 1000 K</td><td>7344.8</td><td>−3.0 %</td><td>−0.44 %</td></tr>
+     <tr><td>CO₂ · 300 → 1000 K</td><td>624.82</td><td>−26.4 %</td><td>+2.3 %</td></tr>
+    </tbody></table>
+    <p><b>Lectura crítica:</b> el método de T₁ es aceptable para ΔT ≲ 100 K; T<sub>avg</sub> es suficiente para casi
+    todos los problemas de curso con gases diatómicos; la integración es imprescindible para gases poliatómicos (CO₂)
+    o intervalos amplios, donde c<sub>v</sub>(T) presenta curvatura apreciable.</p>
+   </div>
+
+   <div class="pmi-pane" data-p="constant">
+    <h3>① Calores específicos constantes, evaluados en T₁</h3>
+    <p><b>Hipótesis:</b> c<sub>v</sub>, c<sub>p</sub> y k no varían con la temperatura dentro del proceso. Se toman en la
+    temperatura del <b>estado de entrada de cada proceso</b> (en una cadena, T₁ es la del estado previo de ese proceso,
+    no la del estado inicial de la cadena).</p>
+    <div class="pmi-eq">c<sub>v</sub> = c<sub>v</sub>(T₁) &nbsp;(interpolación lineal en Tabla A-20)</div>
+    <div class="pmi-eq">Δu = c<sub>v</sub>(T₁)·(T₂ − T₁) &nbsp;&nbsp;·&nbsp;&nbsp; Δh = c<sub>p</sub>(T₁)·(T₂ − T₁) &nbsp;&nbsp;·&nbsp;&nbsp; ΔU = m·Δu</div>
+    <p><b>Proceso adiabático (Pv<sup>k</sup> = cte):</b> la temperatura final se obtiene de forma explícita con k(T₁):</p>
+    <div class="pmi-eq">T₂ = T₁·(P₂/P₁)<sup>(k−1)/k</sup>, &nbsp; k = k(T₁) &nbsp;&nbsp;→&nbsp;&nbsp; W = −ΔU</div>
+    <p><b>Error:</b> sistemático y creciente con |ΔT|; en calentamiento subestima Δu, porque c<sub>v</sub> aumenta con T.</p>
+   </div>
+
+   <div class="pmi-pane" data-p="avg">
+    <h3>② Calores específicos evaluados en la temperatura media T<sub>avg</sub></h3>
+    <div class="pmi-eq">T̄ = (T₁ + T₂)/2 &nbsp;&nbsp;→&nbsp;&nbsp; c<sub>v</sub> = c<sub>v</sub>(T̄), &nbsp; c<sub>p</sub> = c<sub>v</sub>(T̄) + R, &nbsp; k = c<sub>p</sub>/c<sub>v</sub></div>
+    <div class="pmi-eq">Δu = c<sub>v</sub>(T̄)·(T₂ − T₁)</div>
+    <p><b>Fundamento:</b> equivale a aplicar la regla del punto medio a ∫c<sub>v</sub>dT con un único intervalo; es
+    <b>exacto si c<sub>v</sub> fuera lineal en T</b>. Es la práctica recomendada por Çengel y Moran cuando no se dispone de tablas u(T).</p>
+    <p><b>Proceso adiabático:</b> T₂ es desconocida y aparece dentro de T̄, por lo que se resuelve por <b>iteración de punto fijo</b>:</p>
+    <div class="pmi-eq">T₂<sup>(i+1)</sup> = T₁·(P₂/P₁)<sup>(k̄−1)/k̄</sup>, &nbsp; k̄ = k((T₁+T₂<sup>(i)</sup>)/2)</div>
+    <p>con relajación T₂ ← 0.4·T₂<sup>(i)</sup> + 0.6·T₂<sup>(i+1)</sup>, tolerancia 0.001 K y un máximo de 80 iteraciones.
+    En los demás procesos T₂ es dato (o se calcula sin c<sub>v</sub>) y el cálculo es directo.</p>
+   </div>
+
+   <div class="pmi-pane" data-p="integ">
+    <h3>③ Integración numérica de c<sub>v</sub>(T)</h3>
+    <p>Es la definición rigurosa para un gas ideal:</p>
+    <div class="pmi-eq">Δu = u(T₂) − u(T₁) = ∫<sub>T₁</sub><sup>T₂</sup> c<sub>v</sub>(T)·dT</div>
+    <p><b>1. Fuente de c<sub>v</sub>(T).</b> Tabla A-20 de Moran &amp; Shapiro (7.ª ed.), con nodos en
+    T = 250, 300, 350, …, 800, 900 y 1000 K para Aire, N₂, O₂, CO₂, CO y H₂. Son <b>los mismos valores tabulados</b>
+    que muestra la aplicación <i>cp-cv-k_ORV</i> en su pestaña «📊 Gas, c<sub>p</sub>, c<sub>v</sub>, k»
+    (no se emplea el polinomio de la Tabla A-21 de la pestaña «📐 Ajustes»).</p>
+    <p><b>2. Interpolación entre nodos</b> (lineal por tramos):</p>
+    <div class="pmi-eq">c<sub>v</sub>(T) = c<sub>v,i</sub> + (T − T<sub>i</sub>)/(T<sub>i+1</sub> − T<sub>i</sub>)·(c<sub>v,i+1</sub> − c<sub>v,i</sub>), &nbsp; T<sub>i</sub> ≤ T &lt; T<sub>i+1</sub></div>
+    <p><b>3. Cuadratura:</b> regla del trapecio compuesta con N = 200 subintervalos:</p>
+    <div class="pmi-eq">h = (T₂ − T₁)/200 &nbsp;&nbsp;·&nbsp;&nbsp; Δu ≈ Σ<sub>j=0</sub><sup>199</sup> ½·[c<sub>v</sub>(T<sub>j</sub>) + c<sub>v</sub>(T<sub>j+1</sub>)]·h, &nbsp; T<sub>j</sub> = T₁ + j·h</div>
+    <p>Como c<sub>v</sub>(T) es lineal por tramos, el trapecio es prácticamente exacto: el error de cuadratura es del orden de
+    10<sup>−4</sup> % (sólo en los subintervalos que contienen un nodo). La incertidumbre dominante es la de la propia tabla.</p>
+    <p><b>4. Resultado reportado:</b> ΔU = m·Δu, y en «Paso a paso» se muestra el calor específico medio efectivo
+    c̄<sub>v</sub> = Δu/(T₂ − T₁), que es el valor constante que reproduciría exactamente la integral.</p>
+    <div class="pmi-note"><b>Proceso adiabático.</b> T₂ se determina con el mismo esquema iterativo k(T̄) del método ②
+    (aproximación de Pv<sup>k̄</sup> = cte); después ΔU se integra y W = −ΔU. El tratamiento estrictamente riguroso
+    sería s°(T₂) = s°(T₁) + R·ln(P₂/P₁). La discrepancia en T₂ es pequeña: aire con P₂/P₁ = 6 → 0.01 K;
+    aire con P₂/P₁ = 20 → 0.3 K; CO₂ con P₂/P₁ = 10 → 1.7 K (≈0.35 %).</div>
+   </div>
+
+   <div class="pmi-pane" data-p="lim">
+    <h3>Alcance y límites de validez</h3>
+    <ul>
+     <li><b>Intervalo de la tabla: 250–1000 K.</b> Fuera de él, c<sub>v</sub>, c<sub>p</sub> y k se mantienen constantes
+     en el valor del extremo más cercano (extrapolación plana). En ese caso la integración pierde su ventaja y el resultado
+     debe interpretarse con cautela; la comparación en vivo lo señala.</li>
+     <li><b>Sistema Inglés:</b> todos los cálculos se realizan internamente en SI (K, kPa, kJ) y se convierten sólo al mostrar.</li>
+     <li><b>Propiedades u y h de los estados:</b> se calculan con la misma hipótesis del método activo, de modo que
+     u₂ − u₁ coincide con Δu del proceso.</li>
+     <li><b>Modelo:</b> gas ideal (Pv = RT); c<sub>v</sub> y c<sub>p</sub> dependen sólo de T y c<sub>p</sub> − c<sub>v</sub> = R.</li>
+    </ul>
+    <h3>Referencias</h3>
+    <ul>
+     <li>Moran, M. J.; Shapiro, H. N. <i>Fundamentals of Engineering Thermodynamics</i>, 7.ª ed., Tabla A-20 y §3.13.</li>
+     <li>Çengel, Y. A.; Boles, M. A. <i>Termodinámica</i>, 8.ª ed., §4-4 (energía interna, entalpía y calores específicos de gases ideales).</li>
+    </ul>
+   </div>
+
+  </div>
+ </div>
+</div>
+<div id="pmToast" role="status" aria-live="polite"></div>
+
 <div id="expandModal">
   <div class="modal-box">
     <div class="modal-hdr">
@@ -943,7 +1098,7 @@ function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass) {
         const kused = propMode === 'constant' ? p1at.k : meanK(T1,T2,gasKey);
         info = { constraint:'Q = 0  ·  Pv^k = cte',
           formula_W:'W = −ΔU  (Primera Ley, Q=0)',
-          k_iter: kused, cv_used: meanCv(T1,T2,gasKey),
+          k_iter: kused, cv_used: propMode==='constant' ? p1at.cv : meanCv(T1,T2,gasKey),
           W_alt: (P1*V1-P2*V2)/(kused-1) };
         break;
       }
@@ -1215,7 +1370,7 @@ function buildSummaryTableClean(states, results) {
   html += `<tr style="background:#e8f0fe;font-weight:800">
     <td class="row-lbl" style="color:#0d47a1">ΣTOTAL</td>
     <td colspan="3" style="font-family:'IBM Plex Sans',sans-serif;font-size:.70rem;color:var(--muted)">
-      ${results.length} proceso(s) · modo: ${propMode}</td>
+      ${results.length} proceso(s) · c<sub>v</sub>: ${PM_LABELS[propMode]}</td>
     ${propTotal}
     <td class="${sumQ>=0?'pos':'neg'}">${fd(sumQ)}</td>
     <td class="${sumdU>=0?'pos':'neg'}">${fd(sumdU)}</td>
@@ -1614,7 +1769,10 @@ function buildSteps(states, results, mass, Rg) {
       } else {
         add('note',`c_v constante evaluada en T₁=${f(Td(s1.T),2)} ${eTu}: c_v=${f(cv_used,5)} kJ/(kg·K)`);
       }
-      add('formula',`Δu = c_v·ΔT = ${f(cv_used,5)} × ${f(s2.T-s1.T,4)} = ${f(dU/mass,5)} kJ/kg`);
+      if (propMode==='integ')
+        add('formula',`Δu = c̄_v·ΔT = ${f(dU/(mass*(s2.T-s1.T)||1),5)} × ${f(s2.T-s1.T,4)} = ${f(dU/mass,5)} kJ/kg`);
+      else
+        add('formula',`Δu = c_v·ΔT = ${f(cv_used,5)} × ${f(s2.T-s1.T,4)} = ${f(dU/mass,5)} kJ/kg`);
     }
     add('result',`Δu = ${fds(dU/mass)} ${uEs()}  →  ΔU = m·Δu = ${fd(dU)} ${eu}`);
 
@@ -1929,13 +2087,18 @@ function calcSpecificS(T_K, P_kPa, gasKey) {
 
 // Enriquece cada estado con {u, h, s} absolutas
 // Para propMode='constant': u₂ = u₁ + cv(T₁)·ΔT  (consistente con calcDU)
-// Para 'avg'/'integ': integración completa desde referencia 0 K
+// Para 'avg': u₂ = u₁ + cv(T_avg)·ΔT ; para 'integ': integración completa desde 0 K
 function enrichStates(states, gasKey) {
   const Rg = R_BAR / A20[gasKey].M;
   return states.map((st, i) => {
     let u, h;
-    if (i === 0 || propMode !== 'constant') {
+    if (i === 0 || propMode === 'integ') {
       u = calcSpecificU(st.T, gasKey);
+      h = u + Rg * st.T;
+    } else if (propMode === 'avg') {
+      // T_avg: u₂ = u₁ + cv((T₁+T₂)/2)·ΔT  (consistente con calcDU)
+      const prev = states[i - 1];
+      u = calcSpecificU(prev.T, gasKey) + meanCv(prev.T, st.T, gasKey) * (st.T - prev.T);
       h = u + Rg * st.T;
     } else {
       // propMode='constant': propiedades evaluadas en el estado anterior
@@ -2312,14 +2475,144 @@ function updateUnitLabels() {
   if (elRU)   elRU.textContent    = rUnit;
 }
 
-function setPropMode(mode) {
+const PM_LABELS = { constant:'Constantes en T₁', avg:'Promedio en T_avg', integ:'Integración ∫c_v·dT' };
+
+// Cambia el método de c_p, c_v. Si ya hay resultados, recalcula de inmediato y
+// notifica la variación de ΣΔU (opts.silent=true se usa al cargar sesiones).
+function setPropMode(mode, opts) {
+  opts = opts || {};
+  const prevMode = propMode;
   propMode = mode;
   ['constant','avg','integ'].forEach(m=>{
     const el = document.getElementById(`pm${m.charAt(0).toUpperCase()+m.slice(1)}`);
     if(el) el.classList.toggle('act', m===mode);
   });
-  const labels = { constant:'Constantes en T₁', avg:'Promedio T_avg', integ:'Integración ∫c_v·dT' };
-  document.getElementById('propModeLabel').textContent = labels[mode];
+  const lbl = document.getElementById('propModeLabel');
+  lbl.textContent = PM_LABELS[mode];
+  if (opts.silent) return;
+
+  _pmFlash(lbl);
+  if (lastResults && processChain.length > 0) {
+    const before = lastResults.reduce((a,r)=>a+r.dU,0);
+    const prevRes = lastResults;
+    computeAll();
+    if (lastResults === prevRes) return;            // el recálculo falló (alerta ya mostrada)
+    const after = lastResults.reduce((a,r)=>a+r.dU,0);
+    const d = after - before;
+    const rel = Math.abs(before) > 1e-9 ? d/Math.abs(before)*100 : 0;
+    const f = v => Ed(v).toFixed(3);
+    let msg = `Recalculado con <b>${PM_LABELS[mode]}</b>.`;
+    if (prevMode === mode) msg += ' (Mismo método.)';
+    else if (Math.abs(d) < 1e-9)
+      msg += ` ΣΔU sin cambio: ΔU no depende de c<sub>v</sub> en esta cadena (p. ej., isotérmico).`;
+    else
+      msg += ` ΣΔU: ${f(before)} → ${f(after)} ${uE()} (${rel>=0?'+':''}${rel.toFixed(2)} %).`;
+    _pmToast(msg);
+    _pmFlash(document.getElementById('resultsSection'));
+  } else {
+    _pmToast(`Método: <b>${PM_LABELS[mode]}</b>. Pulse ⚡ CALCULAR para aplicarlo.`);
+  }
+  if (document.getElementById('pmInfoModal').classList.contains('open')) buildPmCompare();
+}
+
+let _pmToastTimer = null;
+function _pmToast(html) {
+  const t = document.getElementById('pmToast');
+  if (!t) return;
+  t.innerHTML = html;
+  t.classList.add('show');
+  clearTimeout(_pmToastTimer);
+  _pmToastTimer = setTimeout(()=>t.classList.remove('show'), 4200);
+}
+function _pmFlash(el) {
+  if (!el) return;
+  el.classList.remove('pm-flash'); void el.offsetWidth; el.classList.add('pm-flash');
+}
+
+// ── Modal explicativo de métodos ──────────────────────────────────
+function openPmInfo() {
+  document.getElementById('pmInfoModal').classList.add('open');
+  pmiTab(propMode);
+  buildPmCompare();
+  document.addEventListener('keydown', _escPmInfo);
+}
+function closePmInfo() {
+  document.getElementById('pmInfoModal').classList.remove('open');
+  document.removeEventListener('keydown', _escPmInfo);
+}
+function _escPmInfo(e) { if (e.key === 'Escape') closePmInfo(); }
+function pmiTab(t) {
+  document.querySelectorAll('#pmInfoModal .pmi-tab').forEach(b=>b.classList.toggle('act', b.dataset.t===t));
+  document.querySelectorAll('#pmInfoModal .pmi-pane').forEach(p=>p.classList.toggle('act', p.dataset.p===t));
+}
+
+// Resuelve la cadena actual con un método dado SIN renderizar (para comparar)
+function runChainForMode(mode) {
+  const T0 = TfromD(parseFloat(document.getElementById('T0').value)||300);
+  const P0 = PfromD(parseFloat(document.getElementById('P0').value)||100);
+  const m  = parseFloat(document.getElementById('mass').value)||1;
+  const Rg = R_BAR / A20[currentGas].M;
+  const saved = propMode;
+  propMode = mode;
+  try {
+    let s = { T:T0, P:P0, v:Rg*T0/P0, V:m*Rg*T0/P0 };
+    const rows = [];
+    for (const pc of processChain) {
+      const r = solveProcess(pc.type, s, pc.inp2a, pc.inp2b, currentGas, m);
+      const dT = r.s2.T - s.T;
+      rows.push({ type:pc.type, T1:s.T, T2:r.s2.T, dU:r.dU, W:r.W, Q:r.Q,
+                  cv: Math.abs(dT)>1e-9 ? r.dU/(m*dT) : NaN });
+      s = r.s2;
+    }
+    return { rows, m };
+  } catch(e) {
+    return { error:String(e) };
+  } finally {
+    propMode = saved;
+  }
+}
+
+function buildPmCompare() {
+  const box = document.getElementById('pmiCompare');
+  if (!box) return;
+  if (!processChain.length) { box.innerHTML = '<p><i>Añada al menos un proceso para ver la comparación.</i></p>'; return; }
+  const modes = ['constant','avg','integ'];
+  const R = {}; for (const md of modes) R[md] = runChainForMode(md);
+  const bad = modes.find(md => R[md].error);
+  if (bad) { box.innerHTML = `<p><i>No fue posible resolver la cadena: ${R[bad].error}</i></p>`; return; }
+  const eu = uE(), f = (v,d=3)=>isFinite(v)?Ed(v).toFixed(d):'—';
+  const cvU = currentUnit==='SI' ? 'kJ/(kg·K)' : 'BTU/(lb·°R)';
+  const cvd_ = v => isFinite(v) ? (currentUnit==='SI'? v : v*0.23885).toFixed(4) : '—';
+  const pct = (a,b)=> Math.abs(b)>1e-9 ? ((a-b)/Math.abs(b)*100) : 0;
+  const ac  = md => md===propMode ? ' class="actcol"' : '';
+  const head = ['Cte. T₁','T<sub>avg</sub>','∫c<sub>v</sub>dT'];
+  let outOfRange = false;
+  let h = `<table class="pmi-tbl"><thead><tr><th>Proceso</th><th>T₁ → T₂ [${uT()}]</th>`
+    + modes.map((md,i)=>`<th${ac(md)}>ΔU ${head[i]} [${eu}]<br><small>c̄<sub>v</sub> [${cvU}]</small></th>`).join('')
+    + `<th>Dif. Cte. T₁</th><th>Dif. T<sub>avg</sub></th></tr></thead><tbody>`;
+  R.integ.rows.forEach((ri,i)=>{
+    const rc = R.constant.rows[i], ra = R.avg.rows[i];
+    [rc,ra,ri].forEach(r=>{ if (Math.min(r.T1,r.T2)<250-1e-6 || Math.max(r.T1,r.T2)>1000+1e-6) outOfRange = true; });
+    const t2 = ri.type==='adiabatic'
+      ? `${Td(ri.T1).toFixed(1)} → ${Td(rc.T2).toFixed(1)} / ${Td(ra.T2).toFixed(1)} / ${Td(ri.T2).toFixed(1)}`
+      : `${Td(ri.T1).toFixed(1)} → ${Td(ri.T2).toFixed(1)}`;
+    h += `<tr><td>${i+1} · ${PROC_NAMES[ri.type]}</td><td>${t2}</td>`
+      + [rc,ra,ri].map((r,k)=>`<td${ac(modes[k])}>${f(r.dU)}<br><small>${cvd_(r.cv)}</small></td>`).join('')
+      + `<td>${pct(rc.dU,ri.dU).toFixed(2)} %</td><td>${pct(ra.dU,ri.dU).toFixed(2)} %</td></tr>`;
+  });
+  h += '</tbody></table>';
+  const tot = md => ['Q','dU','W'].map(k=>R[md].rows.reduce((a,r)=>a+r[k],0));
+  h += `<table class="pmi-tbl"><thead><tr><th>Totales de la cadena [${eu}]</th>`
+    + modes.map((md,i)=>`<th${ac(md)}>${head[i]}</th>`).join('') + `</tr></thead><tbody>`;
+  ['ΣQ','ΣΔU','ΣW'].forEach((lb,j)=>{
+    h += `<tr><td>${lb}</td>` + modes.map(md=>`<td${ac(md)}>${f(tot(md)[j])}</td>`).join('') + '</tr>';
+  });
+  h += '</tbody></table>';
+  h += `<p style="font-size:.78rem;color:var(--muted)">Columna resaltada: método activo. «Dif.» = (ΔU<sub>método</sub> − ΔU<sub>∫</sub>)/|ΔU<sub>∫</sub>|.
+    En procesos adiabáticos se indican las tres T₂ (Cte. T₁ / T<sub>avg</sub> / ∫). c̄<sub>v</sub> = ΔU/(m·ΔT).</p>`;
+  if (outOfRange) h += `<div class="pmi-note">⚠ Alguna temperatura de la cadena está fuera de 250–1000 K: allí c<sub>v</sub> se
+    mantiene constante en el valor extremo de la Tabla A-20 y las diferencias entre métodos se subestiman.</div>`;
+  box.innerHTML = h;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -2334,7 +2627,7 @@ function toggleCard(btn) {
   });
   card.dataset.collapsed = collapsed ? 'false' : 'true';
   btn.textContent = collapsed ? '▼' : '▲';
-  btn.title = collapsed ? 'DESPLEGAR / CONTRAER' : 'DESPLEGAR / CONTRAER';
+  btn.title = collapsed ? 'Contraer' : 'Expandir';
   if (collapsed) {
     const chart = card.querySelector('#pvChart');
     if (chart) setTimeout(() => Plotly.Plots.resize(chart), 60);
@@ -2350,7 +2643,7 @@ function toggleBanner(btn) {
   banner.dataset.collapsed = collapsed ? 'false' : 'true';
   banner.classList.toggle('collapsed', !collapsed);
   btn.textContent = collapsed ? '▼' : '▲';
-  btn.title = collapsed ? 'DESPLEGAR / CONTRAER' : 'DESPLEGAR / CONTRAER';
+  btn.title = collapsed ? 'Ocultar' : 'Desplegar';
   btn.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
 }
 
@@ -2497,7 +2790,7 @@ function _applySession(sess, filename) {
   if (cfg.calcMode) setCalcMode(cfg.calcMode);
 
   // ── 4. Modo propiedades (cp/cv) ────────────────────────────────
-  if (cfg.propMode) setPropMode(cfg.propMode);
+  if (cfg.propMode) setPropMode(cfg.propMode, { silent:true });
 
   // ── 5. Estado inicial ──────────────────────────────────────────
   const s1 = sess.state1 || {};
@@ -2535,52 +2828,6 @@ window.addEventListener('load', ()=>{
   onStateInput();
   setTimeout(() => computeAll(), 200);
 });
-</script>
-
-<style id="orvhelp-css">
-#orvhelp-btn{position:fixed;right:18px;bottom:18px;z-index:99990;display:inline-flex;align-items:center;gap:7px;
- background:#1976d2;color:#fff;border:none;border-radius:999px;padding:10px 18px;font:600 .85rem/1 'Segoe UI',system-ui,sans-serif;
- letter-spacing:.05em;cursor:pointer;box-shadow:0 4px 16px rgba(20,40,80,.28);transition:filter .15s}
-#orvhelp-btn:hover{filter:brightness(1.12)}
-#orvhelp-overlay{position:fixed;inset:0;z-index:99991;background:rgba(15,25,40,.55);display:none;align-items:center;justify-content:center;padding:18px}
-#orvhelp-overlay.open{display:flex}
-#orvhelp-panel{background:#fff;color:#1a2233;max-width:580px;width:100%;max-height:85vh;overflow-y:auto;border-radius:14px;
- box-shadow:0 18px 60px rgba(10,20,40,.35);font-family:'Segoe UI',system-ui,sans-serif}
-#orvhelp-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
- background:linear-gradient(90deg,#1565c0,#1e88e5);color:#fff;padding:14px 20px;border-radius:14px 14px 0 0}
-#orvhelp-head h2{margin:0;font-size:1.02rem;font-weight:600}
-#orvhelp-close{background:rgba(255,255,255,.18);border:none;color:#fff;font-size:1.15rem;line-height:1;
- border-radius:8px;width:30px;height:30px;cursor:pointer}
-#orvhelp-body{padding:16px 22px 20px;font-size:.9rem;line-height:1.55}
-#orvhelp-body h3{margin:14px 0 6px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:#1565c0}
-#orvhelp-body ol{margin:4px 0 0;padding-left:20px}
-#orvhelp-body ol li{margin-bottom:6px}
-#orvhelp-tip{margin-top:14px;background:#e3f0fd;border-left:4px solid #1976d2;border-radius:8px;padding:10px 14px;font-size:.84rem;color:#1a2233}
-</style>
-
-<button id="orvhelp-btn" type="button" aria-haspopup="dialog" aria-controls="orvhelp-overlay">
-<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.4 2.3c-.8.3-1.4 1-1.4 1.9v.3"/><line x1="11.5" y1="17" x2="11.51" y2="17"/></svg>AYUDA</button>
-<div id="orvhelp-overlay" role="dialog" aria-modal="true" aria-labelledby="orvhelp-title">
-  <div id="orvhelp-panel">
-    <div id="orvhelp-head"><h2 id="orvhelp-title">Ayuda · Primera Ley · Sistemas Cerrados</h2>
-      <button id="orvhelp-close" type="button" aria-label="Cerrar ayuda">&#215;</button></div>
-    <div id="orvhelp-body">
-      <h3>¿Qué es esta aplicación?</h3>
-      <p>Balance de energía en sistemas cerrados (Q, W, ΔU) para gas ideal en procesos isócoro, isóbaro, isotermo, adiabático y politrópico.</p>
-      <h3>Cómo se usa</h3>
-      <ol><li>Configure los parámetros de operación con los deslizadores o campos de entrada.</li><li>Ejecute o actualice el cálculo y observe los diagramas e indicadores de desempeño.</li><li>Modifique un parámetro a la vez para realizar análisis de sensibilidad.</li><li>Abra las secciones «DESPLEGAR / CONTRAER» para consultar conceptos y desarrollos paso a paso.</li></ol>
-      <div id="orvhelp-tip"><b>Sugerencia didáctica.</b> Resuelva el enunciado y los ejercicios de esta aplicación disponibles en el índice del Compendio ORV, y verifique sus resultados con la propia herramienta.</div>
-    </div>
-  </div>
-</div>
-<script id="orvhelp-js">
-(function(){
- var b=document.getElementById('orvhelp-btn'),o=document.getElementById('orvhelp-overlay'),c=document.getElementById('orvhelp-close');
- function open(){o.classList.add('open');} function close(){o.classList.remove('open');}
- b.addEventListener('click',open); c.addEventListener('click',close);
- o.addEventListener('click',function(e){if(e.target===o)close();});
- document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
-})();
 </script>
 </body>
 </html>
