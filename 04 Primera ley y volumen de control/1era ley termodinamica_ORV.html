@@ -72,6 +72,12 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .pm-info{padding:4px 11px;font-size:.82rem;font-weight:700;border:1.5px dashed #e65100;
   border-radius:5px;cursor:pointer;background:#fff7ed;color:#e65100;white-space:nowrap;transition:all .15s}
 .pm-info:hover{background:#ffedd5;border-style:solid}
+.adb-opt{display:none;align-items:center;gap:4px;padding:2px 6px 2px 8px;border-left:2px solid #d1c4e9;margin-left:2px}
+.adb-opt.show{display:flex}
+.adb-opt .adb-lbl{font-size:.74rem;font-weight:700;color:#6a1b9a;white-space:nowrap}
+.adb-btn{padding:3px 9px;font-size:.76rem;font-weight:700;border:1.5px solid #ab47bc;border-radius:5px;
+  cursor:pointer;background:#fff;color:#6a1b9a;white-space:nowrap;transition:all .15s}
+.adb-btn.act{background:#ab47bc;color:#fff}
 #pmToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);
   background:#4a148c;color:#fff;padding:10px 18px;border-radius:8px;font-size:.84rem;
   box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;z-index:10050;
@@ -462,6 +468,11 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
       <button class="pm-btn act" id="pmConstant" onclick="setPropMode('constant')">Cte. T₁</button>
       <button class="pm-btn"     id="pmAvg"      onclick="setPropMode('avg')">T<sub>avg</sub></button>
       <button class="pm-btn"     id="pmInteg"    onclick="setPropMode('integ')">∫c<sub>v</sub>dT</button>
+      <span class="adb-opt" id="adbOpt" title="Solo aplica en modo ∫c_v dT: cómo se obtiene T₂ en procesos adiabáticos">
+        <span class="adb-lbl">T₂ adiabático:</span>
+        <button class="adb-btn act" id="adbKavg" onclick="setAdiabMethod('kavg')" title="Pv^k̄ = cte con k evaluada en T̄=(T₁+T₂)/2, por iteración">k̄ iterativo</button>
+        <button class="adb-btn"     id="adbSo"   onclick="setAdiabMethod('so')"   title="Isentrópico riguroso: s°(T₂) = s°(T₁) + R·ln(P₂/P₁)">s° riguroso</button>
+      </span>
       <button class="pm-info" id="pmInfoBtn" onclick="openPmInfo()" title="Explicación de los tres métodos de cálculo de c_p y c_v, y comparación con la cadena actual">ⓘ ¿Cómo se calcula?</button>
     </div>
     <div class="subbar-sep"></div>
@@ -791,10 +802,19 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
     10<sup>−4</sup> % (sólo en los subintervalos que contienen un nodo). La incertidumbre dominante es la de la propia tabla.</p>
     <p><b>4. Resultado reportado:</b> ΔU = m·Δu, y en «Paso a paso» se muestra el calor específico medio efectivo
     c̄<sub>v</sub> = Δu/(T₂ − T₁), que es el valor constante que reproduciría exactamente la integral.</p>
-    <div class="pmi-note"><b>Proceso adiabático.</b> T₂ se determina con el mismo esquema iterativo k(T̄) del método ②
-    (aproximación de Pv<sup>k̄</sup> = cte); después ΔU se integra y W = −ΔU. El tratamiento estrictamente riguroso
-    sería s°(T₂) = s°(T₁) + R·ln(P₂/P₁). La discrepancia en T₂ es pequeña: aire con P₂/P₁ = 6 → 0.01 K;
-    aire con P₂/P₁ = 20 → 0.3 K; CO₂ con P₂/P₁ = 10 → 1.7 K (≈0.35 %).</div>
+    <h3>5. Proceso adiabático: dos opciones para T₂</h3>
+    <p>En el modo ∫c<sub>v</sub>dT aparece junto al selector la opción <b>«T₂ adiabático»</b>. ΔU siempre se integra y W = −ΔU;
+    lo que cambia es cómo se obtiene la temperatura final:</p>
+    <table class="pmi-tbl"><thead><tr><th>Opción</th><th>Ecuación para T₂</th><th>Naturaleza</th></tr></thead><tbody>
+     <tr><td><b>k̄ iterativo</b> (predeterminada)</td><td>T₂ = T₁·(P₂/P₁)<sup>(k̄−1)/k̄</sup>, k̄ = k((T₁+T₂)/2)</td><td>Aproximación: Pv<sup>k̄</sup> = cte con k constante en T̄</td></tr>
+     <tr><td><b>s° riguroso</b></td><td>s°(T₂) = s°(T₁) + R·ln(P₂/P₁)</td><td>Exacta para gas ideal con c<sub>p</sub>(T) variable (s = cte)</td></tr>
+    </tbody></table>
+    <div class="pmi-eq">s°(T) = ∫ c<sub>p</sub>(T)/T · dT &nbsp;(Tabla A-20, trapecio) &nbsp;&nbsp;→&nbsp;&nbsp; raíz por bisección, tolerancia 10<sup>−7</sup> K</div>
+    <p>Con la opción s° la tarjeta del estado final verifica s₂ = s₁, y en «Paso a paso» se reporta el
+    <b>k efectivo</b> = ln(P₂/P₁)/ln(v₁/v₂), exponente que une exactamente ambos estados en el diagrama P–v.
+    La diferencia en T₂ entre ambas opciones es pequeña: aire con P₂/P₁ = 6 → 0.01 K; aire con P₂/P₁ = 20 → 0.3 K;
+    CO₂ con P₂/P₁ = 10 → 1.7 K (≈0.35 %). Es el mismo procedimiento que el uso de la columna s° de las tablas de gas ideal
+    (Çengel A-17; Moran A-22).</p>
    </div>
 
    <div class="pmi-pane" data-p="lim">
@@ -877,6 +897,7 @@ let currentUnit = 'SI';
 let tempSubUnit = 'C';        // 'K' | 'C' (SI)  o  'R' | 'F' (Inglés)
 let pressSubUnit = 'kPa';    // 'kPa' | 'bar' (SI) — ENG siempre psia
 let propMode    = 'constant'; // 'constant' | 'avg' | 'integ'
+let adiabMethod = 'kavg';     // T₂ adiabático en modo 'integ': 'kavg' (k̄ iterativo) | 'so' (s° riguroso)
 let calcMode    = 'process';  // 'process' | 'cycle'
 let processChain = [];        // [{id,type,inp2a,inp2b}]
 let nextId = 0;
@@ -1029,6 +1050,26 @@ function solveAdiabaticT2(T1, P1, P2, gasKey) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// SOLVER ADIABÁTICO RIGUROSO (isentrópico con c_p(T) variable)
+//   s(T₂,P₂) = s(T₁,P₁)  ⇔  s°(T₂) = s°(T₁) + R·ln(P₂/P₁)
+//   s°(T) = ∫c_p(T)/T dT con Tabla A-20 (misma función calcSpecificS de
+//   las tarjetas de estado, de modo que s₂ = s₁ se verifica exactamente).
+//   Raíz por bisección (s° es estrictamente creciente en T).
+// ════════════════════════════════════════════════════════════════════
+function solveAdiabaticT2_s(T1, P1, P2, gasKey) {
+  const s1 = calcSpecificS(T1, P1, gasKey);
+  const g  = T => calcSpecificS(T, P2, gasKey) - s1;
+  let lo = 1, hi = Math.max(T1, 50);
+  while (g(hi) < 0 && hi < 1e5) hi *= 2;
+  for (let i = 0; i < 70; i++) {
+    const mid = 0.5*(lo+hi);
+    if (g(mid) < 0) lo = mid; else hi = mid;
+    if (hi - lo < 1e-7) break;
+  }
+  return 0.5*(lo+hi);
+}
+
+// ════════════════════════════════════════════════════════════════════
 // SOLVER DE PROCESO — siempre trabaja en SI internamente
 // s1 = {T,P,v,V}  (SI)  →  {s2,W,dU,Q,info}
 // ════════════════════════════════════════════════════════════════════
@@ -1088,17 +1129,22 @@ function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass) {
       case 'adiabatic': {
         P2 = PfromD(inp2a);
         if (P2<=0) throw 'P₂ debe ser > 0';
+        const rigorous = (propMode === 'integ' && adiabMethod === 'so');
         T2 = propMode === 'constant'
           ? T1 * Math.pow(P2 / P1, (p1at.k - 1) / p1at.k)
-          : solveAdiabaticT2(T1, P1, P2, gasKey);
+          : rigorous ? solveAdiabaticT2_s(T1, P1, P2, gasKey)
+                     : solveAdiabaticT2(T1, P1, P2, gasKey);
         v2 = Rg*T2/P2; V2 = mass*v2;
         Q  = 0;
         dU = calcDU(T1,T2,gasKey,mass);
         W  = -dU;
-        const kused = propMode === 'constant' ? p1at.k : meanK(T1,T2,gasKey);
+        // k efectivo: exponente que une ambos estados con Pv^k = cte
+        const kused = propMode === 'constant' ? p1at.k
+          : rigorous ? Math.log(P2/P1)/Math.log(v1/v2)
+                     : meanK(T1,T2,gasKey);
         info = { constraint:'Q = 0  ·  Pv^k = cte',
           formula_W:'W = −ΔU  (Primera Ley, Q=0)',
-          k_iter: kused, cv_used: propMode==='constant' ? p1at.cv : meanCv(T1,T2,gasKey),
+          k_iter: kused, rigorous, cv_used: propMode==='constant' ? p1at.cv : meanCv(T1,T2,gasKey),
           W_alt: (P1*V1-P2*V2)/(kused-1) };
         break;
       }
@@ -1702,7 +1748,7 @@ function buildSteps(states, results, mass, Rg) {
       ? `Constantes en T₁ = ${f(Td(s1.T),2)} ${eTu}`
       : propMode==='avg'
         ? `Promedio en T_avg = ${f(Td((s1.T+s2.T)/2),2)} ${eTu}`
-        : `Integración numérica ∫c_v(T)dT`;
+        : `Integración numérica ∫c_v(T)dT` + (adiabMethod==='so' ? ' · T₂ adiabático por s° (riguroso)' : ' · T₂ adiabático por k̄ iterativo');
 
     add('section','1 · Gas y modo de propiedades');
     add('note', `Gas: ${g.label} (${g.formula}) · M = ${g.M} kg/kmol · R = ${R_BAR}/${g.M} = ${Rgas.toFixed(5)} kJ/(kg·K)`);
@@ -1735,12 +1781,26 @@ function buildSteps(states, results, mass, Rg) {
         add('formula',`v₂ = R·T₁/P₂ = ${Rgas.toFixed(5)} × ${f(s1.T,2)} / ${f(s2.P,4)} = ${f(s2.v,6)} m³/kg`);
         break;
       case 'adiabatic':
-        add('section','3 · Proceso adiabático (Q=0, Pv^k = cte) — solver iterativo k(T_avg)');
-        add('note',`k promedio usado: ${f(k_used)}  ·  Relación isentrópica: T₂ = T₁·(P₂/P₁)^((k−1)/k)`);
-        add('formula',`T₂ = ${f(s1.T,2)} × (${f(s2.P,4)}/${f(s1.P,4)})^(${f((k_used-1)/k_used,5)}) = ${f(s2.T,4)} K`);
+        if (info.rigorous) {
+          const Rg_ = Rgas, s1o = calcSpecificS(s1.T,1,currentGas)+Rg_*Math.log(1000), s2o = calcSpecificS(s2.T,1,currentGas)+Rg_*Math.log(1000);
+          add('section','3 · Proceso adiabático reversible (Q=0, s=cte) — solución rigurosa con s°(T)');
+          add('note',`Condición isentrópica con c_p(T) variable: s°(T₂) = s°(T₁) + R·ln(P₂/P₁),  s°(T)=∫c_p(T)/T·dT (Tabla A-20)`);
+          add('formula',`s°(T₁) = ${f(s1o,5)}  ·  R·ln(P₂/P₁) = ${Rg_.toFixed(5)}·ln(${f(s2.P/s1.P,5)}) = ${f(Rg_*Math.log(s2.P/s1.P),5)}  →  s°(T₂) = ${f(s1o+Rg_*Math.log(s2.P/s1.P),5)} kJ/(kg·K)`);
+          add('formula',`Raíz por bisección: T₂ = ${f(s2.T,4)} K  [verificación s°(T₂) = ${f(s2o,5)}]`);
+          add('note',`k efectivo (Pv^k que une ambos estados) = ln(P₂/P₁)/ln(v₁/v₂) = ${f(k_used)}`);
+        } else {
+          add('section', propMode==='constant'
+            ? '3 · Proceso adiabático (Q=0, Pv^k = cte) — k constante evaluada en T₁'
+            : '3 · Proceso adiabático (Q=0, Pv^k = cte) — solver iterativo k(T_avg)');
+          add('note',`k usado: ${f(k_used)}  ·  Relación isentrópica: T₂ = T₁·(P₂/P₁)^((k−1)/k)`);
+          add('formula',`T₂ = ${f(s1.T,2)} × (${f(s2.P,4)}/${f(s1.P,4)})^(${f((k_used-1)/k_used,5)}) = ${f(s2.T,4)} K`);
+        }
         add('formula',`v₂ = R·T₂/P₂ = ${f(s2.v,6)} m³/kg`);
         if (info.W_alt !== undefined) {
-          add('var-prop',`Verificación: W = (P₁V₁−P₂V₂)/(k−1) = (${f(s1.P*s1.V,4)}−${f(s2.P*s2.V,4)})/${f(k_used-1,4)} = ${f(info.W_alt,4)} kJ vs W=−ΔU=${fd(W)} ${eu}`);
+          if (info.rigorous)
+            add('var-prop',`Contraste: W ≈ (P₁V₁−P₂V₂)/(k_ef−1) = (${f(s1.P*s1.V,4)}−${f(s2.P*s2.V,4)})/${f(k_used-1,4)} = ${f(info.W_alt,4)} kJ vs W=−ΔU=${fd(W)} ${eu}  (la diferencia se debe a que k varía a lo largo del proceso; el valor exacto es W=−ΔU)`);
+          else
+            add('var-prop',`Verificación: W = (P₁V₁−P₂V₂)/(k−1) = (${f(s1.P*s1.V,4)}−${f(s2.P*s2.V,4)})/${f(k_used-1,4)} = ${f(info.W_alt,4)} kJ vs W=−ΔU=${fd(W)} ${eu}`);
         }
         break;
       case 'polytropic':
@@ -2488,7 +2548,9 @@ function setPropMode(mode, opts) {
     if(el) el.classList.toggle('act', m===mode);
   });
   const lbl = document.getElementById('propModeLabel');
-  lbl.textContent = PM_LABELS[mode];
+  lbl.textContent = PM_LABELS[mode] + (mode==='integ' && adiabMethod==='so' ? ' · adiabático s°' : '');
+  const ao = document.getElementById('adbOpt');
+  if (ao) ao.classList.toggle('show', mode==='integ');
   if (opts.silent) return;
 
   _pmFlash(lbl);
@@ -2511,6 +2573,33 @@ function setPropMode(mode, opts) {
     _pmFlash(document.getElementById('resultsSection'));
   } else {
     _pmToast(`Método: <b>${PM_LABELS[mode]}</b>. Pulse ⚡ CALCULAR para aplicarlo.`);
+  }
+  if (document.getElementById('pmInfoModal').classList.contains('open')) buildPmCompare();
+}
+
+// Opción del modo ∫c_v dT: cómo obtener T₂ en procesos adiabáticos
+function setAdiabMethod(m, opts) {
+  opts = opts || {};
+  adiabMethod = (m === 'so') ? 'so' : 'kavg';
+  document.getElementById('adbKavg').classList.toggle('act', adiabMethod==='kavg');
+  document.getElementById('adbSo').classList.toggle('act',   adiabMethod==='so');
+  document.getElementById('propModeLabel').textContent =
+    PM_LABELS[propMode] + (propMode==='integ' && adiabMethod==='so' ? ' · adiabático s°' : '');
+  if (opts.silent) return;
+  const name = adiabMethod==='so' ? 's° riguroso' : 'k̄ iterativo';
+  const hasAd = processChain.some(p=>p.type==='adiabatic');
+  if (lastResults && processChain.length > 0) {
+    const prevRes = lastResults;
+    const T2b = lastStates ? lastStates[lastStates.length-1].T : NaN;
+    computeAll();
+    if (lastResults === prevRes) return;
+    const T2a = lastStates[lastStates.length-1].T;
+    _pmToast(hasAd
+      ? `T₂ adiabático por <b>${name}</b>. T final: ${Td(T2b).toFixed(2)} → ${Td(T2a).toFixed(2)} ${uT()}.`
+      : `T₂ adiabático por <b>${name}</b>. (La cadena no contiene procesos adiabáticos: sin efecto.)`);
+    _pmFlash(document.getElementById('resultsSection'));
+  } else {
+    _pmToast(`T₂ adiabático por <b>${name}</b>. Pulse ⚡ CALCULAR para aplicarlo.`);
   }
   if (document.getElementById('pmInfoModal').classList.contains('open')) buildPmCompare();
 }
@@ -2547,13 +2636,14 @@ function pmiTab(t) {
 }
 
 // Resuelve la cadena actual con un método dado SIN renderizar (para comparar)
-function runChainForMode(mode) {
+function runChainForMode(mode, adMethod) {
   const T0 = TfromD(parseFloat(document.getElementById('T0').value)||300);
   const P0 = PfromD(parseFloat(document.getElementById('P0').value)||100);
   const m  = parseFloat(document.getElementById('mass').value)||1;
   const Rg = R_BAR / A20[currentGas].M;
-  const saved = propMode;
+  const saved = propMode, savedAd = adiabMethod;
   propMode = mode;
+  if (adMethod) adiabMethod = adMethod;
   try {
     let s = { T:T0, P:P0, v:Rg*T0/P0, V:m*Rg*T0/P0 };
     const rows = [];
@@ -2568,7 +2658,7 @@ function runChainForMode(mode) {
   } catch(e) {
     return { error:String(e) };
   } finally {
-    propMode = saved;
+    propMode = saved; adiabMethod = savedAd;
   }
 }
 
@@ -2576,40 +2666,51 @@ function buildPmCompare() {
   const box = document.getElementById('pmiCompare');
   if (!box) return;
   if (!processChain.length) { box.innerHTML = '<p><i>Añada al menos un proceso para ver la comparación.</i></p>'; return; }
-  const modes = ['constant','avg','integ'];
-  const R = {}; for (const md of modes) R[md] = runChainForMode(md);
-  const bad = modes.find(md => R[md].error);
-  if (bad) { box.innerHTML = `<p><i>No fue posible resolver la cadena: ${R[bad].error}</i></p>`; return; }
+  const hasAd = processChain.some(p=>p.type==='adiabatic');
+  // Columnas: Cte. T₁, T_avg, ∫ (k̄) y, si hay adiabáticos, ∫ (s°). Referencia: ∫ con la opción activa.
+  const cols = [
+    { key:'constant', mode:'constant', ad:'kavg', hd:'Cte. T₁' },
+    { key:'avg',      mode:'avg',      ad:'kavg', hd:'T<sub>avg</sub>' },
+    { key:'int_k',    mode:'integ',    ad:'kavg', hd: hasAd ? '∫c<sub>v</sub>dT · k̄' : '∫c<sub>v</sub>dT' }
+  ];
+  if (hasAd) cols.push({ key:'int_s', mode:'integ', ad:'so', hd:'∫c<sub>v</sub>dT · s°' });
+  const R = {};
+  for (const c of cols) { R[c.key] = runChainForMode(c.mode, c.ad); if (R[c.key].error) {
+    box.innerHTML = `<p><i>No fue posible resolver la cadena: ${R[c.key].error}</i></p>`; return; } }
+  const refKey = (hasAd && adiabMethod==='so') ? 'int_s' : 'int_k';
+  const isAct = c => c.mode===propMode && (c.mode!=='integ' || !hasAd || c.ad===adiabMethod);
+  const ac = c => isAct(c) ? ' class="actcol"' : '';
   const eu = uE(), f = (v,d=3)=>isFinite(v)?Ed(v).toFixed(d):'—';
   const cvU = currentUnit==='SI' ? 'kJ/(kg·K)' : 'BTU/(lb·°R)';
   const cvd_ = v => isFinite(v) ? (currentUnit==='SI'? v : v*0.23885).toFixed(4) : '—';
   const pct = (a,b)=> Math.abs(b)>1e-9 ? ((a-b)/Math.abs(b)*100) : 0;
-  const ac  = md => md===propMode ? ' class="actcol"' : '';
-  const head = ['Cte. T₁','T<sub>avg</sub>','∫c<sub>v</sub>dT'];
+  const others = cols.filter(c=>c.key!==refKey);
   let outOfRange = false;
-  let h = `<table class="pmi-tbl"><thead><tr><th>Proceso</th><th>T₁ → T₂ [${uT()}]</th>`
-    + modes.map((md,i)=>`<th${ac(md)}>ΔU ${head[i]} [${eu}]<br><small>c̄<sub>v</sub> [${cvU}]</small></th>`).join('')
-    + `<th>Dif. Cte. T₁</th><th>Dif. T<sub>avg</sub></th></tr></thead><tbody>`;
-  R.integ.rows.forEach((ri,i)=>{
-    const rc = R.constant.rows[i], ra = R.avg.rows[i];
-    [rc,ra,ri].forEach(r=>{ if (Math.min(r.T1,r.T2)<250-1e-6 || Math.max(r.T1,r.T2)>1000+1e-6) outOfRange = true; });
-    const t2 = ri.type==='adiabatic'
-      ? `${Td(ri.T1).toFixed(1)} → ${Td(rc.T2).toFixed(1)} / ${Td(ra.T2).toFixed(1)} / ${Td(ri.T2).toFixed(1)}`
-      : `${Td(ri.T1).toFixed(1)} → ${Td(ri.T2).toFixed(1)}`;
-    h += `<tr><td>${i+1} · ${PROC_NAMES[ri.type]}</td><td>${t2}</td>`
-      + [rc,ra,ri].map((r,k)=>`<td${ac(modes[k])}>${f(r.dU)}<br><small>${cvd_(r.cv)}</small></td>`).join('')
-      + `<td>${pct(rc.dU,ri.dU).toFixed(2)} %</td><td>${pct(ra.dU,ri.dU).toFixed(2)} %</td></tr>`;
+  let h = `<table class="pmi-tbl"><thead><tr><th>Proceso</th><th>T₂ [${uT()}]</th>`
+    + cols.map(c=>`<th${ac(c)}>ΔU ${c.hd} [${eu}]<br><small>c̄<sub>v</sub> [${cvU}]</small></th>`).join('')
+    + others.map(c=>`<th>Dif. ${c.hd}</th>`).join('') + `</tr></thead><tbody>`;
+  R[refKey].rows.forEach((rr,i)=>{
+    cols.forEach(c=>{ const r=R[c.key].rows[i];
+      if (Math.min(r.T1,r.T2)<250-1e-6 || Math.max(r.T1,r.T2)>1000+1e-6) outOfRange = true; });
+    const t2 = rr.type==='adiabatic'
+      ? cols.map(c=>`<span title="${c.hd.replace(/<[^>]+>/g,'')}">${Td(R[c.key].rows[i].T2).toFixed(2)}</span>`).join(' / ')
+      : `${Td(rr.T2).toFixed(2)}`;
+    h += `<tr><td>${i+1} · ${PROC_NAMES[rr.type]}<br><small>T₁ = ${Td(rr.T1).toFixed(2)} ${uT()}</small></td><td>${t2}</td>`
+      + cols.map(c=>{ const r=R[c.key].rows[i]; return `<td${ac(c)}>${f(r.dU)}<br><small>${cvd_(r.cv)}</small></td>`; }).join('')
+      + others.map(c=>`<td>${pct(R[c.key].rows[i].dU, rr.dU).toFixed(2)} %</td>`).join('') + '</tr>';
   });
   h += '</tbody></table>';
-  const tot = md => ['Q','dU','W'].map(k=>R[md].rows.reduce((a,r)=>a+r[k],0));
+  const tot = k => ['Q','dU','W'].map(q=>R[k].rows.reduce((a,r)=>a+r[q],0));
   h += `<table class="pmi-tbl"><thead><tr><th>Totales de la cadena [${eu}]</th>`
-    + modes.map((md,i)=>`<th${ac(md)}>${head[i]}</th>`).join('') + `</tr></thead><tbody>`;
+    + cols.map(c=>`<th${ac(c)}>${c.hd}</th>`).join('') + `</tr></thead><tbody>`;
   ['ΣQ','ΣΔU','ΣW'].forEach((lb,j)=>{
-    h += `<tr><td>${lb}</td>` + modes.map(md=>`<td${ac(md)}>${f(tot(md)[j])}</td>`).join('') + '</tr>';
+    h += `<tr><td>${lb}</td>` + cols.map(c=>`<td${ac(c)}>${f(tot(c.key)[j])}</td>`).join('') + '</tr>';
   });
   h += '</tbody></table>';
-  h += `<p style="font-size:.78rem;color:var(--muted)">Columna resaltada: método activo. «Dif.» = (ΔU<sub>método</sub> − ΔU<sub>∫</sub>)/|ΔU<sub>∫</sub>|.
-    En procesos adiabáticos se indican las tres T₂ (Cte. T₁ / T<sub>avg</sub> / ∫). c̄<sub>v</sub> = ΔU/(m·ΔT).</p>`;
+  h += `<p style="font-size:.78rem;color:var(--muted)">Columna resaltada: método activo. Referencia de «Dif.»: integración
+    ${hasAd ? (refKey==='int_s' ? 'con T₂ adiabático por s°' : 'con T₂ adiabático por k̄') : ''};
+    Dif. = (ΔU<sub>método</sub> − ΔU<sub>ref</sub>)/|ΔU<sub>ref</sub>|. En procesos adiabáticos se listan las T₂ de cada columna, en el mismo orden.
+    c̄<sub>v</sub> = ΔU/(m·ΔT).</p>`;
   if (outOfRange) h += `<div class="pmi-note">⚠ Alguna temperatura de la cadena está fuera de 250–1000 K: allí c<sub>v</sub> se
     mantiene constante en el valor extremo de la Tabla A-20 y las diferencias entre métodos se subestiman.</div>`;
   box.innerHTML = h;
@@ -2706,7 +2807,8 @@ function saveSession() {
       pressSubUnit,
       currentGas,
       calcMode,
-      propMode
+      propMode,
+      adiabMethod
     },
     state1: {
       T0:   parseFloat(document.getElementById('T0').value)   || 0,
@@ -2790,6 +2892,7 @@ function _applySession(sess, filename) {
   if (cfg.calcMode) setCalcMode(cfg.calcMode);
 
   // ── 4. Modo propiedades (cp/cv) ────────────────────────────────
+  if (cfg.adiabMethod) setAdiabMethod(cfg.adiabMethod, { silent:true });
   if (cfg.propMode) setPropMode(cfg.propMode, { silent:true });
 
   // ── 5. Estado inicial ──────────────────────────────────────────
