@@ -1269,7 +1269,8 @@ function renderResults(states, results, mass, Rg) {
   // ── Step-by-step ──
   buildSteps(states, results, mass, Rg);
 
-  // update per-card results in sidebar
+  // re-etiquetar tarjetas (el último destino pasa a ser Estado 1 si el ciclo cierra) y resultados por tarjeta
+  renderChainUI();
   updateChainCardResults(results);
 
   // ── State property cards (always visible after compute) ──
@@ -1428,6 +1429,16 @@ function buildSummaryTableClean(states, results) {
 // ════════════════════════════════════════════════════════════════════
 // CICLO
 // ════════════════════════════════════════════════════════════════════
+// ¿La cadena cierra en el Estado 1?  (modo ciclo con ≥2 procesos, o cierre detectado numéricamente)
+function chainClosed() {
+  if (calcMode === 'cycle' && processChain.length >= 2) return true;
+  return !!(lastStates && lastStates.length === processChain.length + 1 && detectCycle(lastStates));
+}
+// Número del estado DESTINO del proceso i (0-based): el último regresa a 1 si el ciclo cierra
+function destStateNum(i, nProc, closed) {
+  return (closed && i === nProc - 1) ? 1 : i + 2;
+}
+
 function detectCycle(states) {
   const s0 = states[0], sN = states[states.length-1];
   const dT  = Math.abs(sN.T - s0.T);
@@ -1730,6 +1741,8 @@ function cvd(v){ return vd(v); }
 function buildSteps(states, results, mass, Rg) {
   const sg = document.getElementById('stepsGroup');
   sg.innerHTML = '';
+  const cycClosed = detectCycle(states);
+  const dN = idx => destStateNum(idx, results.length, cycClosed);
 
   results.forEach((r, idx) => {
     const s1 = states[idx], s2 = r.s2;
@@ -1813,7 +1826,7 @@ function buildSteps(states, results, mass, Rg) {
         }
         break;
     }
-    add('note', `Estado ${idx+2}: T=${f(Td(s2.T),2)} ${eTu}  P=${f(Pd(s2.P),4)} ${ePu}  v=${f(vd(s2.v),6)} ${eVu}   ΔT=${f(Td(s2.T)-Td(s1.T),2)} ${eTu}`);
+    add('note', `Estado ${dN(idx)}${dN(idx)===1 ? ' (cierre del ciclo)' : ''}: T=${f(Td(s2.T),2)} ${eTu}  P=${f(Pd(s2.P),4)} ${ePu}  v=${f(vd(s2.v),6)} ${eVu}   ΔT=${f(Td(s2.T)-Td(s1.T),2)} ${eTu}`);
 
     // ── Sección 4: energía interna ─────────────────────────────────
     // Convención: Δu (específica, minúscula) | ΔU (total sistema, mayúscula)
@@ -1879,7 +1892,7 @@ function buildSteps(states, results, mass, Rg) {
     div.id = `acc-${idx}`;
     div.innerHTML = `
       <div class="step-acc-hdr" onclick="toggleAcc(${idx})">
-        <div class="step-acc-num" style="background:${col}">${idx+1}→${idx+2}</div>
+        <div class="step-acc-num" style="background:${col}">${idx+1}→${dN(idx)}</div>
         <div class="step-acc-name" style="color:${col}">${PROC_NAMES[proc]}</div>
         <div class="step-acc-qwu">
           Q=${fd(Q,2)} · ΔU=${fd(dU,2)} · W=${fd(W,2)} ${eu}
@@ -1902,6 +1915,10 @@ function toggleAcc(idx) {
 function renderChainUI() {
   const cl = document.getElementById('chainList');
   cl.innerHTML = '';
+  const closed = chainClosed();
+  const nProc  = processChain.length;
+  const fresh  = lastStates && lastStates.length === nProc + 1;
+  const reallyClosed = fresh && detectCycle(lastStates);
   processChain.forEach((p, i) => {
     const col = PROC_COLORS[p.type];
     const div = document.createElement('div');
@@ -1911,7 +1928,8 @@ function renderChainUI() {
     div.style.borderLeftWidth = '3px';
 
     const needsT2 = p.type==='isochoric'||p.type==='isobaric';
-    const stateN = i + 2;   // número del estado DESTINO de este proceso
+    const stateN = destStateNum(i, nProc, closed);   // número del estado DESTINO (1 si cierra el ciclo)
+    const isClosing = closed && i === nProc - 1;
     const SUB9 = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
     const sub = stateN < 10 ? SUB9[stateN] : String(stateN);
     const inp2aLabel = needsT2 ? `T${sub} (${uT()})` : `P${sub} (${uP()})`;
@@ -1923,7 +1941,7 @@ function renderChainUI() {
       <div class="pc-header">
         <div class="pc-num" style="background:${col}">${i+1}</div>
         <span class="pc-arrow">→</span>
-        <div class="pc-num" style="background:${STATE_COLORS[Math.min(i+1,STATE_COLORS.length-1)]}">${i+2}</div>
+        <div class="pc-num" style="background:${STATE_COLORS[isClosing ? 0 : Math.min(i+1,STATE_COLORS.length-1)]}" title="${isClosing ? 'Cierre del ciclo: el estado final es el Estado 1' : ''}">${stateN}</div>
         <select class="pc-type-sel" onchange="onProcTypeChange(${p.id},this.value)">
           <option value="isochoric"  ${p.type==='isochoric' ?'selected':''}>Isocórico (v=cte)</option>
           <option value="isobaric"   ${p.type==='isobaric'  ?'selected':''}>Isobárico (P=cte)</option>
@@ -1943,7 +1961,8 @@ function renderChainUI() {
               oninput="onProcInput(${p.id},'inp2a',this.value)">
             <div class="inp-unit" id="unit2a-${p.id}">${needsT2?uT():uP()}</div>
           </div>
-          <div class="field-sub">${needsT2?'Temperatura':'Presión'} destino — <b>Estado ${stateN}</b></div>
+          <div class="field-sub">${needsT2?'Temperatura':'Presión'} destino — <b>Estado ${stateN}</b>${isClosing ? ' (cierre del ciclo)' : ''}</div>
+          ${isClosing && fresh && !reallyClosed ? `<div class="field-sub" style="color:#c62828;font-weight:700">⚠ El estado calculado no coincide aún con el Estado 1 (T=${Td(lastStates[0].T).toFixed(2)} ${uT()}, P=${Pd(lastStates[0].P).toFixed(3)} ${uP()}).</div>` : ''}
         </div>
         ${p.type==='polytropic' ? `
         <div class="field">
@@ -2038,8 +2057,8 @@ function addClosingProcess() {
     } else if (tolV < 0.008) {
       // v_N ≈ v_1 → proceso isocórico de cierre
       procType = 'isochoric';
-      inp2a    = Pd(P1_kPa);
-      detMsg   = `v${lastStates.length}≈v₁ (${(tolV*100).toFixed(3)}%) → Isocórico detectado · P destino: ${Pd(P1_kPa).toFixed(3)} ${uP()}`;
+      inp2a    = Td(T1_K);                 // el isocórico se especifica por T destino
+      detMsg   = `v${lastStates.length}≈v₁ (${(tolV*100).toFixed(3)}%) → Isocórico detectado · T destino: ${Td(T1_K).toFixed(2)} ${uT()}`;
     } else if (tolT < 0.008) {
       // T_N ≈ T_1 → proceso isotérmico de cierre
       procType = 'isothermal';
@@ -2374,6 +2393,7 @@ function setCalcMode(mode) {
     if (closeBtn) closeBtn.style.display = '';
   }
   // Re-render results if already computed
+  if (!(lastStates && lastResults)) renderChainUI();
   if (lastStates && lastResults) {
     renderResults(lastStates, lastResults,
       parseFloat(document.getElementById('mass').value)||1,
