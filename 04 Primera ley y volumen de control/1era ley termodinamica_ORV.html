@@ -591,6 +591,7 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
         <option value="isothermal">Isotérmico (T = cte)</option>
         <option value="adiabatic">Adiabático (Q = 0)</option>
         <option value="polytropic">Politrópico (Pv^n)</option>
+        <option value="general">General (Q o W dado)</option>
       </select>
       <button class="chain-btn add" style="flex-shrink:0;white-space:nowrap"
         onclick="addProcess()">＋ Agregar</button>
@@ -742,6 +743,7 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
      <tr><td>Isotérmico</td><td>no cambia</td><td>= 0</td><td>no cambia</td><td>= T₁</td></tr>
      <tr><td>Politrópico</td><td>(P₂V₂−P₁V₁)/(1−n) (no cambia)</td><td>cambia</td><td>cambia</td><td>calculada (no cambia)</td></tr>
      <tr><td>Adiabático</td><td>= −ΔU, cambia</td><td>cambia</td><td>= 0</td><td><b>cambia</b> (depende de k)</td></tr>
+     <tr><td>General (Q dado)</td><td>= Q − ΔU, cambia</td><td>cambia</td><td>dato</td><td>dato</td></tr>
     </tbody></table>
     <div class="pmi-ok"><b>Actualización automática.</b> Al pulsar cualquiera de los tres botones, si ya existe un resultado,
     la aplicación <b>recalcula de inmediato</b> toda la cadena y muestra un aviso con la variación de ΣΔU. Si la diferencia
@@ -908,11 +910,12 @@ let lastPVLayout = null;
 
 const PROC_COLORS = {
   isochoric:'#d32f2f', isobaric:'#1565c0',
-  isothermal:'#6a1b9a', adiabatic:'#e65100', polytropic:'#2e7d32'
+  isothermal:'#6a1b9a', adiabatic:'#e65100', polytropic:'#2e7d32', general:'#455a64'
 };
 const PROC_NAMES = {
   isochoric:'Isocórico (v=cte)', isobaric:'Isobárico (P=cte)',
-  isothermal:'Isotérmico (T=cte)', adiabatic:'Adiabático (Q=0)', polytropic:'Politrópico (Pv^n=C)'
+  isothermal:'Isotérmico (T=cte)', adiabatic:'Adiabático (Q=0)', polytropic:'Politrópico (Pv^n=C)',
+  general:'General (Q o W dado; trayectoria no especificada)'
 };
 const STATE_COLORS = ['#1565c0','#d32f2f','#7b1fa2','#e65100','#2e7d32','#00838f','#6d4c41','#546e7a'];
 
@@ -958,9 +961,15 @@ function Pd(P) {
   }
   return pressSubUnit==='bar' ? P/100 : P;
 }
-function vd(v){ return currentUnit==='SI' ? v : v*16.018; }
-function Ed(E){ return currentUnit==='SI' ? E : E*0.94782; }
-function Esd(Es){ return currentUnit==='SI' ? Es : Es*0.42992; }
+function vd(v){ return currentUnit==='SI' ? v : v*16.01846; }   // 1 m³/kg = 16.01846 ft³/lbm
+// Masa: el campo se captura en kg (SI) o lb (Inglés); todos los cálculos internos usan kg
+const LB_KG = 0.45359237;
+function massInput(){ return parseFloat(document.getElementById('mass').value)||1; }
+function massKg(){ const m = massInput(); return currentUnit==='ENG' ? m*LB_KG : m; }
+function Md(m_kg){ return currentUnit==='SI' ? m_kg : m_kg/LB_KG; }          // kg → kg | lb
+function Vtd(V_m3){ return currentUnit==='SI' ? V_m3 : V_m3*35.3147; }       // m³ → m³ | ft³
+function Ed(E){ return currentUnit==='SI' ? E : E*0.947817; }   // 1 kJ = 0.947817 BTU
+function Esd(Es){ return currentUnit==='SI' ? Es : Es*0.429923; } // 1 kJ/kg = 0.429923 BTU/lb
 // unidad display → kPa
 function PfromD(Pdisp) {
   if (currentUnit==='ENG') {
@@ -1073,7 +1082,7 @@ function solveAdiabaticT2_s(T1, P1, P2, gasKey) {
 // SOLVER DE PROCESO — siempre trabaja en SI internamente
 // s1 = {T,P,v,V}  (SI)  →  {s2,W,dU,Q,info}
 // ════════════════════════════════════════════════════════════════════
-function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass) {
+function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass, pc) {
   const { T:T1, P:P1, v:v1, V:V1 } = s1;
   const Rg   = R_BAR / A20[gasKey].M;
   const p1at = interpA20(T1, gasKey);
@@ -1173,6 +1182,29 @@ function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass) {
         }
         break;
       }
+      // ── GENERAL: estados extremos conocidos + Q (o W); trayectoria no especificada ──
+      case 'general': {
+        T2 = TfromD(parseFloat(inp2a));
+        P2 = PfromD(parseFloat(inp2b));
+        if (!(T2>0)) throw 'T₂ debe ser > 0';
+        if (!(P2>0)) throw 'P₂ debe ser > 0';
+        v2 = Rg*T2/P2; V2 = mass*v2;
+        dU = calcDU(T1,T2,gasKey,mass);
+        const given = (pc && pc.given==='W') ? 'W' : 'Q';
+        const valD  = parseFloat(pc ? pc.inp2c : NaN);
+        if (!isFinite(valD)) throw `falta el dato ${given} del proceso general`;
+        const valKJ = currentUnit==='ENG' ? valD/0.947817 : valD;   // BTU → kJ
+        if (given==='Q') { Q = valKJ; W = Q - dU; } else { W = valKJ; Q = W + dU; }
+        // Contraste: politrópica que une ambos estados (misma pareja de estados, otra trayectoria)
+        const nEq = Math.log(P2/P1)/Math.log(v1/v2);
+        let Wpoly = NaN;
+        if (isFinite(nEq)) Wpoly = Math.abs(nEq-1)<1e-6 ? mass*Rg*T1*Math.log(v2/v1) : mass*(P2*v2-P1*v1)/(1-nEq);
+        info = { constraint:'Trayectoria no especificada · estados extremos conocidos',
+          formula_W: given==='Q' ? 'W = Q − ΔU = Q − m·(u₂ − u₁)  (balance de energía)' : 'Q = ΔU + W = m·(u₂ − u₁) + W  (balance de energía)',
+          given, nEq, Wpoly, Qpoly: dU + Wpoly,
+          cv_used: propMode==='constant' ? p1at.cv : meanCv(T1,T2,gasKey) };
+        break;
+      }
       default: throw 'Tipo de proceso desconocido: '+proc;
     }
   } catch(e) { throw e; }
@@ -1191,7 +1223,7 @@ function solveProcess(proc, s1, inp2a, inp2b, gasKey, mass) {
 function computeAll() {
   const T0 = TfromD(parseFloat(document.getElementById('T0').value)||300);
   const P0 = PfromD(parseFloat(document.getElementById('P0').value)||100);
-  const m  = parseFloat(document.getElementById('mass').value)||1;
+  const m  = massKg();
   if (T0<=0||P0<=0||m<=0) { alert('Estado inicial inválido.'); return; }
   if (processChain.length===0) { alert('Añade al menos un proceso.'); return; }
 
@@ -1204,7 +1236,7 @@ function computeAll() {
   for (let i=0; i<processChain.length; i++) {
     const { type, inp2a, inp2b } = processChain[i];
     try {
-      const r = solveProcess(type, states[states.length-1], inp2a, inp2b, currentGas, m);
+      const r = solveProcess(type, states[states.length-1], inp2a, inp2b, currentGas, m, processChain[i]);
       states.push(r.s2);
       results.push({ ...r, proc:type, procIdx:i });
     } catch(e) {
@@ -1312,7 +1344,7 @@ function buildSummaryTable(states, results, mass) {
     html += `<tr>
       <td class="row-lbl" style="${cls}">Estado ${i}</td>
       <td>${f(Td(s.T),2)}</td><td>${f(Pd(s.P),3)}</td>
-      <td>${fvd(s.v)}</td><td>${fvd(s.V)}</td>
+      <td>${fvd(s.v)}</td><td>${isFinite(s.V)?f(Vtd(s.V),4):'—'}</td>
       <td>—</td><td>—</td><td>—</td>
     </tr>`;
     if (i < results.length) {
@@ -1560,7 +1592,7 @@ function buildCycleCard(states, results, mass) {
 // PV CHART
 // ════════════════════════════════════════════════════════════════════
 function buildPVChart(states, results, gasKey, Rg, mass) {
-  if (mass === undefined) mass = parseFloat(document.getElementById('mass').value)||1;
+  if (mass === undefined) mass = massKg();
   const traces      = [];
   const annotations = [];
   const N           = 120;
@@ -1599,6 +1631,13 @@ function buildPVChart(states, results, gasKey, Rg, mass) {
           vi = v1 * Math.exp(t * Math.log(ratio));
           Pi = P1 * Math.pow(v1/vi, nPoly); break;
         }
+        case 'general': {   // trayectoria no especificada: curva ilustrativa (Pv^n_eq) punteada
+          const ratio = v2/v1 > 0 ? v2/v1 : 1e-10;
+          const nE = r.info && isFinite(r.info.nEq) ? r.info.nEq : null;
+          if (nE === null) { vi = v1 + t*(v2-v1); Pi = P1 + t*(P2-P1); break; }
+          vi = v1 * Math.exp(t * Math.log(ratio));
+          Pi = P1 * Math.pow(v1/vi, nE); break;
+        }
         default: vi=v1; Pi=P1;
       }
       if (isFinite(vi) && isFinite(Pi) && vi>0 && Pi>0) {
@@ -1611,13 +1650,13 @@ function buildPVChart(states, results, gasKey, Rg, mass) {
     // Work shading (fill to y=0 creates area under curve)
     const xFill = [...xs, cvd(v2), cvd(v1), xs[0]];
     const yFill = [...ys, 0, 0, ys[0]];
-    traces.push({ x:xFill, y:yFill, type:'scatter', mode:'none',
+    if (proc !== 'general') traces.push({ x:xFill, y:yFill, type:'scatter', mode:'none',
       fill:'toself', fillcolor:col+'18', line:{width:0},
       showlegend:false, hoverinfo:'none' });
 
     // Process curve
     traces.push({ x:xs, y:ys, type:'scatter', mode:'lines',
-      line:{ color:col, width:3, shape:'linear' },
+      line:{ color:col, width:3, shape:'linear', dash: proc==='general' ? 'dash' : 'solid' },
       name:`${idx+1}→${(isCycle && idx===results.length-1) ? 1 : idx+2} · ${PROC_NAMES[proc].split('(')[0].trim()}`,
       hovertemplate:`<b>Proceso ${idx+1}→${(isCycle && idx===results.length-1) ? 1 : idx+2}</b><br>v = %{x:.5f} ${uV()}<br>P = %{y:.4f} ${uP()}<extra>${PROC_NAMES[proc]}</extra>`
     });
@@ -1744,6 +1783,28 @@ function buildSteps(states, results, mass, Rg) {
   const cycClosed = detectCycle(states);
   const dN = idx => destStateNum(idx, results.length, cycClosed);
 
+  // ── Conversión coherente: TODA la derivación se presenta en el sistema activo ──
+  // SI: T[K], P[kPa], v[m³/kg], c[kJ/(kg·K)], e[kJ/kg], E[kJ], m[kg]   (kPa·m³ = kJ)
+  // Inglés: T[°R], P[psia], v[ft³/lbm], c[Btu/(lbm·°R)], e[Btu/lbm], E[Btu], m[lbm]
+  //         (1 psia·ft³ = 144/778.169 = 0.18505 Btu)
+  const ENG  = currentUnit === 'ENG';
+  const TA   = T => ENG ? T*1.8 : T;                  // T absoluta
+  const uTA  = ENG ? '°R' : 'K';
+  const PF   = P => ENG ? P*0.145038 : P;             // P absoluta para fórmulas
+  const uPF  = ENG ? 'psia' : 'kPa';
+  const VF   = v => vd(v);                            // v específico
+  const uVF  = uV();
+  const cF   = c => ENG ? c*0.238846 : c;             // c_v, c_p, R, s
+  const uC   = ENG ? 'BTU/(lb·°R)' : 'kJ/(kg·K)';
+  const uRp  = ENG ? 'psia·ft³/(lb·°R)' : 'kPa·m³/(kg·K)';
+  const RpF  = R => ENG ? R*1.290737 : R;             // R en unidades P·v/T
+  const PV2E = ENG ? 0.185050 : 1;                    // (P·v) → energía específica
+  const uEsF = uEs(), uEF = uE(), uMF = uM();
+  const RBAR = ENG ? R_BAR*0.238846 : R_BAR;          // 1.9858 Btu/(lbmol·°R) | 8.314 kJ/(kmol·K)
+  const uRB  = ENG ? 'BTU/(lbmol·°R)' : 'kJ/(kmol·K)';
+  const uMol = ENG ? 'lb/lbmol' : 'kg/kmol';
+  const conv = ENG ? ' × 0.18505 BTU/(psia·ft³)' : '';
+
   results.forEach((r, idx) => {
     const s1 = states[idx], s2 = r.s2;
     const col = PROC_COLORS[r.proc];
@@ -1754,8 +1815,16 @@ function buildSteps(states, results, mass, Rg) {
     const fds=(v,d=3)=>f(Esd(v),d);
     const g = A20[currentGas];
     const steps = [];
-
     const add  = (cls,txt)=> steps.push(`<div class="step ${cls}">${txt}</div>`);
+
+    const mD   = Md(mass);                                    // masa en kg | lbm
+    const T1a = TA(s1.T), T2a = TA(s2.T), dTa = T2a - T1a;    // absolutas
+    const P1f = PF(s1.P), P2f = PF(s2.P);
+    const v1f = VF(s1.v), v2f = VF(s2.v);
+    const Re  = cF(Rgas), Rp = RpF(Rgas);
+    const tAbs = T => (currentUnit==='SI' && tempSubUnit==='K') || (ENG && tempSubUnit==='R')
+                      ? '' : ` (= ${f(TA(T),2)} ${uTA})`;
+    const pAbs = P => (pressSubUnit==='kPa' || pressSubUnit==='psia') ? '' : ` (= ${f(PF(P),4)} ${uPF})`;
 
     const propModeStr = propMode==='constant'
       ? `Constantes en T₁ = ${f(Td(s1.T),2)} ${eTu}`
@@ -1764,120 +1833,137 @@ function buildSteps(states, results, mass, Rg) {
         : `Integración numérica ∫c_v(T)dT` + (adiabMethod==='so' ? ' · T₂ adiabático por s° (riguroso)' : ' · T₂ adiabático por k̄ iterativo');
 
     add('section','1 · Gas y modo de propiedades');
-    add('note', `Gas: ${g.label} (${g.formula}) · M = ${g.M} kg/kmol · R = ${R_BAR}/${g.M} = ${Rgas.toFixed(5)} kJ/(kg·K)`);
+    add('note', `Sistema de unidades de la derivación: <b>${ENG ? 'Inglés (°R, psia, ft³/lb, BTU)' : 'SI (K, kPa, m³/kg, kJ)'}</b> · temperaturas y presiones absolutas`);
+    add('note', `Gas: ${g.label} (${g.formula}) · M = ${g.M} ${uMol} · R = R̄/M = ${f(RBAR,4)}/${g.M} = ${f(Re,5)} ${uC}`
+      + (ENG ? ` = ${f(Rp,5)} ${uRp}` : ''));
     add('note', `Modo propiedades: <b>${propModeStr}</b>`);
 
     const cv_used = info.cv_used || props_at_T1.cv;
     const cp_used = info.cp_used || (cv_used + Rgas);
     const k_used  = info.k_iter  || props_at_T1.k;
-    add('formula', `c_v = ${f(cv_used)}  ·  c_p = ${f(cp_used)}  ·  k = ${f(k_used)}  (kJ/kg·K)`);
+    add('formula', `c_v = ${f(cF(cv_used),5)}  ·  c_p = ${f(cF(cp_used),5)}  ${uC}  ·  k = ${f(k_used)}`);
 
     add('section', '2 · Estados inicial y final');
-    add('note', `Estado ${idx+1}: T=${f(Td(s1.T),2)} ${eTu}  P=${f(Pd(s1.P),4)} ${ePu}  v=${f(vd(s1.v),6)} ${eVu}`);
-    add('formula', `Gas ideal: v = R·T/P = ${Rgas.toFixed(5)} × ${f(s1.T,2)} / ${f(s1.P,4)} = ${f(s1.v,6)} m³/kg`);
+    add('note', `Estado ${idx+1}: T=${f(Td(s1.T),2)} ${eTu}${tAbs(s1.T)}  P=${f(Pd(s1.P),4)} ${ePu}${pAbs(s1.P)}  v=${f(v1f,6)} ${eVu}`);
+    add('formula', `Gas ideal: v₁ = R·T₁/P₁ = ${f(Rp,5)} × ${f(T1a,2)} / ${f(P1f,4)} = ${f(v1f,6)} ${uVF}`);
 
     switch(proc) {
       case 'isochoric':
         add('section','3 · Proceso isocórico (v = const)');
         add('note','Restricción: v₂ = v₁ → el volumen no cambia. P₂ = P₁·(T₂/T₁)');
-        add('formula',`P₂ = ${f(s1.P,4)} × (${f(s2.T,2)}/${f(s1.T,2)}) = ${f(s2.P,4)} kPa  →  ${f(Pd(s2.P),4)} ${ePu}`);
-        add('formula',`v₂ = v₁ = ${f(vd(s1.v),6)} ${eVu}`);
+        add('formula',`P₂ = ${f(P1f,4)} × (${f(T2a,2)}/${f(T1a,2)}) = ${f(P2f,4)} ${uPF}`);
+        add('formula',`v₂ = v₁ = ${f(v1f,6)} ${uVF}`);
         break;
       case 'isobaric':
         add('section','3 · Proceso isobárico (P = const)');
         add('note','Restricción: P₂ = P₁. v₂ = R·T₂/P₂');
-        add('formula',`v₂ = ${Rgas.toFixed(5)} × ${f(s2.T,2)} / ${f(s2.P,4)} = ${f(s2.v,6)} m³/kg  →  ${f(vd(s2.v),6)} ${eVu}`);
+        add('formula',`v₂ = ${f(Rp,5)} × ${f(T2a,2)} / ${f(P2f,4)} = ${f(v2f,6)} ${uVF}`);
         break;
       case 'isothermal':
         add('section','3 · Proceso isotérmico (T = const)');
         add('note','Restricción: T₂ = T₁  → para gas ideal ΔU = 0');
-        add('formula',`v₂ = R·T₁/P₂ = ${Rgas.toFixed(5)} × ${f(s1.T,2)} / ${f(s2.P,4)} = ${f(s2.v,6)} m³/kg`);
+        add('formula',`v₂ = R·T₁/P₂ = ${f(Rp,5)} × ${f(T1a,2)} / ${f(P2f,4)} = ${f(v2f,6)} ${uVF}`);
         break;
       case 'adiabatic':
         if (info.rigorous) {
-          const Rg_ = Rgas, s1o = calcSpecificS(s1.T,1,currentGas)+Rg_*Math.log(1000), s2o = calcSpecificS(s2.T,1,currentGas)+Rg_*Math.log(1000);
+          const kRef = Rgas*Math.log(1000);   // s°(T) = s(T,P) + R·ln(P[Pa])
+          const s1o = calcSpecificS(s1.T,1,currentGas)+kRef, s2o = calcSpecificS(s2.T,1,currentGas)+kRef;
+          const RlnP = Rgas*Math.log(s2.P/s1.P);
           add('section','3 · Proceso adiabático reversible (Q=0, s=cte) — solución rigurosa con s°(T)');
           add('note',`Condición isentrópica con c_p(T) variable: s°(T₂) = s°(T₁) + R·ln(P₂/P₁),  s°(T)=∫c_p(T)/T·dT (Tabla A-20)`);
-          add('formula',`s°(T₁) = ${f(s1o,5)}  ·  R·ln(P₂/P₁) = ${Rg_.toFixed(5)}·ln(${f(s2.P/s1.P,5)}) = ${f(Rg_*Math.log(s2.P/s1.P),5)}  →  s°(T₂) = ${f(s1o+Rg_*Math.log(s2.P/s1.P),5)} kJ/(kg·K)`);
-          add('formula',`Raíz por bisección: T₂ = ${f(s2.T,4)} K  [verificación s°(T₂) = ${f(s2o,5)}]`);
+          add('formula',`s°(T₁) = ${f(cF(s1o),5)}  ·  R·ln(P₂/P₁) = ${f(Re,5)}·ln(${f(P2f/P1f,5)}) = ${f(cF(RlnP),5)}  →  s°(T₂) = ${f(cF(s1o+RlnP),5)} ${uC}`);
+          add('formula',`Raíz por bisección: T₂ = ${f(T2a,4)} ${uTA}  [verificación s°(T₂) = ${f(cF(s2o),5)} ${uC}]`);
           add('note',`k efectivo (Pv^k que une ambos estados) = ln(P₂/P₁)/ln(v₁/v₂) = ${f(k_used)}`);
         } else {
           add('section', propMode==='constant'
             ? '3 · Proceso adiabático (Q=0, Pv^k = cte) — k constante evaluada en T₁'
             : '3 · Proceso adiabático (Q=0, Pv^k = cte) — solver iterativo k(T_avg)');
           add('note',`k usado: ${f(k_used)}  ·  Relación isentrópica: T₂ = T₁·(P₂/P₁)^((k−1)/k)`);
-          add('formula',`T₂ = ${f(s1.T,2)} × (${f(s2.P,4)}/${f(s1.P,4)})^(${f((k_used-1)/k_used,5)}) = ${f(s2.T,4)} K`);
+          add('formula',`T₂ = ${f(T1a,2)} × (${f(P2f,4)}/${f(P1f,4)})^(${f((k_used-1)/k_used,5)}) = ${f(T2a,4)} ${uTA}`);
         }
-        add('formula',`v₂ = R·T₂/P₂ = ${f(s2.v,6)} m³/kg`);
+        add('formula',`v₂ = R·T₂/P₂ = ${f(Rp,5)} × ${f(T2a,2)} / ${f(P2f,4)} = ${f(v2f,6)} ${uVF}`);
         if (info.W_alt !== undefined) {
-          if (info.rigorous)
-            add('var-prop',`Contraste: W ≈ (P₁V₁−P₂V₂)/(k_ef−1) = (${f(s1.P*s1.V,4)}−${f(s2.P*s2.V,4)})/${f(k_used-1,4)} = ${f(info.W_alt,4)} kJ vs W=−ΔU=${fd(W)} ${eu}  (la diferencia se debe a que k varía a lo largo del proceso; el valor exacto es W=−ΔU)`);
-          else
-            add('var-prop',`Verificación: W = (P₁V₁−P₂V₂)/(k−1) = (${f(s1.P*s1.V,4)}−${f(s2.P*s2.V,4)})/${f(k_used-1,4)} = ${f(info.W_alt,4)} kJ vs W=−ΔU=${fd(W)} ${eu}`);
+          const V1 = Vtd(s1.V), V2 = Vtd(s2.V), uVt_ = uVt();
+          const lbl = info.rigorous ? 'Contraste: W ≈ (P₁V₁−P₂V₂)/(k_ef−1)' : 'Verificación: W = (P₁V₁−P₂V₂)/(k−1)';
+          add('var-prop',`${lbl} = (${f(P1f*V1,4)}−${f(P2f*V2,4)})/${f(k_used-1,4)}${conv} = ${fd(info.W_alt)} ${eu}  vs  W = −ΔU = ${fd(W)} ${eu}`
+            + `  [P en ${uPF}, V en ${uVt_}]`
+            + (info.rigorous ? '  (la diferencia se debe a que k varía a lo largo del proceso; el valor exacto es W = −ΔU)' : ''));
         }
+        break;
+      case 'general':
+        add('section','3 · Proceso general (trayectoria no especificada)');
+        add('note',`Se conocen los estados extremos y ${info.given==='W' ? 'el trabajo W' : 'el calor Q'}. Como la trayectoria no está definida, W no puede calcularse como ∫P·dV: se obtiene del balance de energía.`);
+        add('formula',`v₂ = R·T₂/P₂ = ${f(Rp,5)} × ${f(T2a,2)} / ${f(P2f,4)} = ${f(v2f,6)} ${uVF}`);
         break;
       case 'polytropic':
         add('section',`3 · Proceso politrópico (Pv^n = C,  n = ${f(info.n,4)})`);
-        add('formula',`Pv^n = cte → v₂ = v₁·(P₁/P₂)^(1/n) = ${f(s1.v,6)}·(${f(s1.P,4)}/${f(s2.P,4)})^(1/${f(info.n,4)}) = ${f(s2.v,6)} m³/kg`);
-        add('formula',`T₂ = P₂·v₂/R = ${f(s2.P,4)} × ${f(s2.v,6)} / ${Rgas.toFixed(5)} = ${f(s2.T,4)} K`);
+        add('formula',`Pv^n = cte → v₂ = v₁·(P₁/P₂)^(1/n) = ${f(v1f,6)}·(${f(P1f,4)}/${f(P2f,4)})^(1/${f(info.n,4)}) = ${f(v2f,6)} ${uVF}`);
+        add('formula',`T₂ = P₂·v₂/R = ${f(P2f,4)} × ${f(v2f,6)} / ${f(Rp,5)} = ${f(T2a,4)} ${uTA}`);
         if (info.Q_cvn !== undefined) {
-          // q = Q/m (específica, minúscula)  Q = total (mayúscula)
-          add('var-prop',`q = c_v·((n−k)/(n−1))·ΔT = ${fds(info.Q_cvn/mass)} ${uEs()} (aprox.)`);
+          add('var-prop',`q = c_v·((n−k)/(n−1))·ΔT = ${fds(info.Q_cvn/mass)} ${uEsF} (aprox.)`);
         }
         break;
     }
-    add('note', `Estado ${dN(idx)}${dN(idx)===1 ? ' (cierre del ciclo)' : ''}: T=${f(Td(s2.T),2)} ${eTu}  P=${f(Pd(s2.P),4)} ${ePu}  v=${f(vd(s2.v),6)} ${eVu}   ΔT=${f(Td(s2.T)-Td(s1.T),2)} ${eTu}`);
+    add('note', `Estado ${dN(idx)}${dN(idx)===1 ? ' (cierre del ciclo)' : ''}: T=${f(Td(s2.T),2)} ${eTu}${tAbs(s2.T)}  P=${f(Pd(s2.P),4)} ${ePu}${pAbs(s2.P)}  v=${f(v2f,6)} ${eVu}   ΔT=${f(dTa,2)} ${uTA}`);
 
     // ── Sección 4: energía interna ─────────────────────────────────
-    // Convención: Δu (específica, minúscula) | ΔU (total sistema, mayúscula)
     add('section','4 · Energía interna  [Δu específica | ΔU total]');
+    const cvEff = Math.abs(s2.T-s1.T)>1e-12 ? dU/(mass*(s2.T-s1.T)) : cv_used;   // kJ/(kg·K)
     if (proc==='isothermal') {
       add('formula','Gas ideal + T=cte: Δu = 0  →  ΔU = 0 (exacto)');
     } else {
       if (propMode==='integ') {
-        add('var-prop',`ΔU = m·∫c_v(T)dT  [integración trapezoidal N=200 de ${f(s1.T,2)} a ${f(s2.T,2)} K]`);
-        add('var-prop',`c̄_v efectiva = ΔU/(m·ΔT) = ${f(dU/(mass*(s2.T-s1.T)||1),5)} kJ/(kg·K)  (variable con T)`);
-      } else if (propMode==='avg') {
-        add('var-prop',`c_v media en T_avg=(${f(s1.T,2)}+${f(s2.T,2)})/2=${f((s1.T+s2.T)/2,2)} K → c_v=${f(cv_used,5)} kJ/(kg·K)`);
+        add('var-prop',`Δu = ∫c_v(T)dT  [integración trapezoidal N=200 de ${f(T1a,2)} a ${f(T2a,2)} ${uTA}]`);
+        add('var-prop',`c̄_v efectiva = Δu/ΔT = ${f(cF(cvEff),5)} ${uC}  (variable con T)`);
+        add('formula',`Δu = c̄_v·ΔT = ${f(cF(cvEff),5)} × ${f(dTa,4)} = ${fds(dU/mass,5)} ${uEsF}`);
       } else {
-        add('note',`c_v constante evaluada en T₁=${f(Td(s1.T),2)} ${eTu}: c_v=${f(cv_used,5)} kJ/(kg·K)`);
+        if (propMode==='avg')
+          add('var-prop',`c_v media en T_avg = (${f(T1a,2)}+${f(T2a,2)})/2 = ${f((T1a+T2a)/2,2)} ${uTA} → c_v = ${f(cF(cv_used),5)} ${uC}`);
+        else
+          add('note',`c_v constante evaluada en T₁ = ${f(T1a,2)} ${uTA}: c_v = ${f(cF(cv_used),5)} ${uC}`);
+        add('formula',`Δu = c_v·ΔT = ${f(cF(cv_used),5)} × ${f(dTa,4)} = ${fds(dU/mass,5)} ${uEsF}`);
       }
-      if (propMode==='integ')
-        add('formula',`Δu = c̄_v·ΔT = ${f(dU/(mass*(s2.T-s1.T)||1),5)} × ${f(s2.T-s1.T,4)} = ${f(dU/mass,5)} kJ/kg`);
-      else
-        add('formula',`Δu = c_v·ΔT = ${f(cv_used,5)} × ${f(s2.T-s1.T,4)} = ${f(dU/mass,5)} kJ/kg`);
     }
-    add('result',`Δu = ${fds(dU/mass)} ${uEs()}  →  ΔU = m·Δu = ${fd(dU)} ${eu}`);
+    add('result',`Δu = ${fds(dU/mass)} ${uEsF}  →  ΔU = m·Δu = ${f(mD,4)} ${uMF} × ${fds(dU/mass)} = ${fd(dU)} ${eu}`);
 
     // ── Sección 5: trabajo de frontera ─────────────────────────────
-    // Convención: w (específico, minúscula) | W (total sistema, mayúscula)
     add('section','5 · Trabajo de frontera  [w específico | W total]');
     add('formula', info.formula_W || '—');
     if (proc==='isochoric') {
       add('result','w = 0  →  W = 0  (v = cte → dV = 0)');
     } else if (proc==='isobaric') {
-      add('formula',`w = R·ΔT = ${Rgas.toFixed(5)} × ${f(s2.T-s1.T,4)} = ${f(W/mass,5)} kJ/kg`);
-      if (info.Q_cp) add('var-prop',`Verif.: Q ≈ m·c_p·ΔT = ${f(mass,4)} × ${f(cp_used,5)} × ${f(s2.T-s1.T,4)} = ${f(info.Q_cp,4)} kJ`);
-      add('result',`w = ${fds(W/mass)} ${uEs()}  →  W = m·w = ${fd(W)} ${eu}`);
+      add('formula',`w = R·ΔT = ${f(Re,5)} × ${f(dTa,4)} = ${fds(W/mass,5)} ${uEsF}`);
+      if (info.Q_cp) add('var-prop',`Verif.: Q ≈ m·c_p·ΔT = ${f(mD,4)} × ${f(cF(cp_used),5)} × ${f(dTa,4)} = ${fd(info.Q_cp)} ${eu}`);
+      add('result',`w = ${fds(W/mass)} ${uEsF}  →  W = m·w = ${fd(W)} ${eu}`);
     } else if (proc==='isothermal') {
-      add('formula',`w = R·T₁·ln(v₂/v₁) = ${Rgas.toFixed(5)} × ${f(s1.T,2)} × ln(${f(s2.v/s1.v,6)}) = ${f(W/mass,5)} kJ/kg`);
-      add('note',`Alt: w = R·T·ln(P₁/P₂) = ${f(Rgas*s1.T*Math.log(s1.P/s2.P),4)} kJ/kg ✓`);
-      add('result',`w = ${fds(W/mass)} ${uEs()}  →  W = m·w = ${fd(W)} ${eu}`);
+      add('formula',`w = R·T₁·ln(v₂/v₁) = ${f(Re,5)} × ${f(T1a,2)} × ln(${f(v2f/v1f,6)}) = ${fds(W/mass,5)} ${uEsF}`);
+      add('note',`Alt: w = R·T·ln(P₁/P₂) = ${f(Re,5)} × ${f(T1a,2)} × ln(${f(P1f/P2f,6)}) = ${fds(Rgas*s1.T*Math.log(s1.P/s2.P),5)} ${uEsF} ✓`);
+      add('result',`w = ${fds(W/mass)} ${uEsF}  →  W = m·w = ${fd(W)} ${eu}`);
     } else if (proc==='adiabatic') {
       add('formula',`Q=0 → W = −ΔU  (Primera Ley)  →  W = −(${fd(dU)}) = ${fd(W)} ${eu}`);
-      add('result',`w = ${fds(W/mass)} ${uEs()}  →  W = m·w = ${fd(W)} ${eu}`);
+      add('result',`w = ${fds(W/mass)} ${uEsF}  →  W = m·w = ${fd(W)} ${eu}`);
+    } else if (proc==='general') {
+      if (info.given==='W') {
+        add('note',`Dato: W = ${fd(W)} ${eu}`);
+        add('formula',`Q = ΔU + W = (${fd(dU)}) + (${fd(W)}) = ${fd(Q)} ${eu}`);
+      } else {
+        add('note',`Dato: Q = ${fd(Q)} ${eu}`);
+        add('formula',`W = Q − ΔU = Q − m·(u₂ − u₁) = (${fd(Q)}) − (${fd(dU)}) = ${fd(W)} ${eu}`);
+      }
+      add('result',`w = ${fds(W/mass)} ${uEsF}  →  W = ${fd(W)} ${eu}`);
+      if (isFinite(info.nEq) && isFinite(info.Wpoly))
+        add('var-prop',`Contraste: si la trayectoria fuera politrópica entre los mismos estados (n = ln(P₂/P₁)/ln(v₁/v₂) = ${f(info.nEq,4)}), resultaría W = ${fd(info.Wpoly)} ${eu} y Q = ${fd(info.Qpoly)} ${eu}. Con los mismos estados extremos, otra trayectoria da otro W: el trabajo depende del camino.`);
     } else if (proc==='polytropic') {
-      add('formula',`w = (P₂v₂−P₁v₁)/(1−n) = (${f(s2.P*s2.v,4)}−${f(s1.P*s1.v,4)})/(1−${f(info.n,4)}) = ${f(W/mass,5)} kJ/kg`);
-      add('result',`w = ${fds(W/mass)} ${uEs()}  →  W = m·w = ${fd(W)} ${eu}`);
+      add('formula',`w = (P₂v₂−P₁v₁)/(1−n) = (${f(P2f*v2f,4)}−${f(P1f*v1f,4)})/(1−${f(info.n,4)})${conv} = ${fds(W/mass,5)} ${uEsF}`);
+      add('result',`w = ${fds(W/mass)} ${uEsF}  →  W = m·w = ${fd(W)} ${eu}`);
     }
 
     // ── Sección 6: Primera Ley ─────────────────────────────────────
-    // Convención: q, Δu, w (específicos) | Q, ΔU, W (totales)
     add('section','6 · Primera Ley  [minúscula = específico | mayúscula = total]');
-    add('formula',`Específica:  q = Δu + w  →  ${fds(Q/mass)} = ${fds(dU/mass)} + ${fds(W/mass)} ${uEs()}`);
+    add('formula',`Específica:  q = Δu + w  →  ${fds(Q/mass)} = ${fds(dU/mass)} + ${fds(W/mass)} ${uEsF}`);
     add('formula',`Total:       Q = ΔU + W  →  ${fd(Q)} = ${fd(dU)} + ${fd(W)} ${eu}`);
-    add('result',`q = ${fds(Q/mass)} ${uEs()}  →  Q = m·q = ${fd(Q)} ${eu}`);
-    const err2 = Math.abs(Q-dU-W);
+    add('result',`q = ${fds(Q/mass)} ${uEsF}  →  Q = m·q = ${fd(Q)} ${eu}`);
+    const err2 = Math.abs(Ed(Q-dU-W));
     add(err2<0.001?'result':'warn',
       `Verificación: Q − ΔU − W = ${err2.toFixed(7)} ${eu}  ${err2<0.001?'✓':'⚠'}`);
     if (Q>0)  add('note','Q > 0: sistema recibe calor del entorno (proceso endotérmico)');
@@ -1886,7 +1972,6 @@ function buildSteps(states, results, mass, Rg) {
     if (W>0)  add('note','W > 0: sistema se expande, realiza trabajo sobre los alrededores');
     if (W<0)  add('note','W < 0: sistema comprimido, los alrededores realizan trabajo sobre él');
 
-    // Build accordion card
     const div = document.createElement('div');
     div.className = 'step-acc';
     div.id = `acc-${idx}`;
@@ -1927,7 +2012,7 @@ function renderChainUI() {
     div.style.borderLeftColor = col;
     div.style.borderLeftWidth = '3px';
 
-    const needsT2 = p.type==='isochoric'||p.type==='isobaric';
+    const needsT2 = p.type==='isochoric'||p.type==='isobaric'||p.type==='general';
     const stateN = destStateNum(i, nProc, closed);   // número del estado DESTINO (1 si cierra el ciclo)
     const isClosing = closed && i === nProc - 1;
     const SUB9 = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
@@ -1948,6 +2033,7 @@ function renderChainUI() {
           <option value="isothermal" ${p.type==='isothermal'?'selected':''}>Isotérmico (T=cte)</option>
           <option value="adiabatic"  ${p.type==='adiabatic' ?'selected':''}>Adiabático (Q=0)</option>
           <option value="polytropic" ${p.type==='polytropic'?'selected':''}>Politrópico (Pv^n)</option>
+          <option value="general"    ${p.type==='general'   ?'selected':''}>General (Q o W dado)</option>
         </select>
         <button class="pc-del" onclick="removeProcess(${p.id})">✕</button>
       </div>
@@ -1975,6 +2061,32 @@ function renderChainUI() {
           </div>
           <div class="field-sub">0=isob · 1=isot · k=adiab · ∞=isoc</div>
         </div>` : ''}
+        ${p.type==='general' ? `
+        <div class="field">
+          <div class="field-lbl">P${sub} (${uP()})</div>
+          <div class="inp-row">
+            <input type="number" id="inp2b-${p.id}" value="${isFinite(parseFloat(p.inp2b)) ? parseFloat(p.inp2b) : ''}"
+              min="0.001" step="any" oninput="onProcInput(${p.id},'inp2b',this.value)">
+            <div class="inp-unit">${uP()}</div>
+          </div>
+          <div class="field-sub">Presión destino — <b>Estado ${stateN}</b></div>
+        </div>
+        <div class="field">
+          <div class="field-lbl">Dato conocido</div>
+          <select class="pc-type-sel" style="width:100%" onchange="onProcGiven(${p.id},this.value)">
+            <option value="Q" ${p.given!=='W'?'selected':''}>Calor Q → calcula el trabajo W</option>
+            <option value="W" ${p.given==='W'?'selected':''}>Trabajo W → calcula el calor Q</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="field-lbl">${p.given==='W' ? 'Trabajo W' : 'Calor Q'} (${uE()})</div>
+          <div class="inp-row">
+            <input type="number" id="inp2c-${p.id}" value="${isFinite(parseFloat(p.inp2c)) ? parseFloat(p.inp2c) : ''}"
+              step="any" oninput="onProcInput(${p.id},'inp2c',this.value)">
+            <div class="inp-unit">${uE()}</div>
+          </div>
+          <div class="field-sub">Trayectoria no especificada: ${p.given==='W' ? 'Q = ΔU + W' : 'W = Q − ΔU'} (Q &lt; 0 si el sistema cede calor; W &lt; 0 si se hace trabajo sobre él).</div>
+        </div>` : ''}
         <div class="pc-result" id="pres-${p.id}" style="display:none"></div>
       </div>`;
     cl.appendChild(div);
@@ -1984,11 +2096,21 @@ function renderChainUI() {
 function onProcTypeChange(id, newType) {
   const p = processChain.find(p=>p.id===id);
   if (!p) return;
+  const wasGeneral = p.type === 'general';
   p.type = newType;
   // Reset inp2a to sensible defaults per type
-  const needsT2 = newType==='isochoric'||newType==='isobaric';
+  const needsT2 = newType==='isochoric'||newType==='isobaric'||newType==='general';
   if (needsT2) { p.inp2a = Td(600); }
   else { p.inp2a = Pd(200); }
+  if (newType === 'general') { p.inp2b = Pd(600); p.inp2c = 0; p.given = p.given || 'Q'; }
+  else if (wasGeneral) { p.inp2b = 1.3; }          // inp2b vuelve a ser el exponente n
+  renderChainUI();
+}
+
+function onProcGiven(id, g) {
+  const p = processChain.find(p=>p.id===id);
+  if (!p) return;
+  p.given = (g === 'W') ? 'W' : 'Q';
   renderChainUI();
 }
 
@@ -2018,8 +2140,11 @@ function addProcess() {
   const type = document.getElementById('newProcType').value || 'isochoric';
   const needsT = type==='isochoric' || type==='isobaric';
   // Sugerir T₂ = T₁ + 200°C equivalente, o P₂ = P₁ * 2
-  const defaultInp2a = needsT ? Td(T0 + 200) : Pd(P0*2);
-  processChain.push({ id:nextId++, type, inp2a: defaultInp2a, inp2b: 1.3 });
+  const defaultInp2a = (needsT || type==='general') ? Td(T0 + 200) : Pd(P0*2);
+  if (type === 'general')
+    processChain.push({ id:nextId++, type, inp2a: defaultInp2a, inp2b: Pd(P0*4), inp2c: 0, given:'Q' });
+  else
+    processChain.push({ id:nextId++, type, inp2a: defaultInp2a, inp2b: 1.3 });
   renderChainUI();
 }
 
@@ -2215,8 +2340,8 @@ function buildStateHover(s, stateNum, mass) {
     `u = ${f(Esd(s.u),2)} ${uEs()}`,
     `h = ${f(Esd(s.h),2)} ${uEs()}`,
     `s = ${f(Ssd(s.s),4)} ${uSs()}`,
-    `── totales (m=${f(mass,3)} ${uM()}) ──`,
-    `V = ${f(cvd(V),4)} ${uVt()}`,
+    `── totales (m=${f(Md(mass),3)} ${uM()}) ──`,
+    `V = ${f(Vtd(V),4)} ${uVt()}`,
     `U = ${f(Ed(U),2)} ${uE()}`,
     `H = ${f(Ed(H),2)} ${uE()}`,
     `S = ${f(Std(S),4)} ${uSt()}`,
@@ -2260,8 +2385,8 @@ function buildStateCards(states, mass) {
       <div class="spc-row"><span class="spc-sym">u</span><span class="spc-val">${fes(s.u)}</span><span class="spc-unit">${uEs()}</span></div>
       <div class="spc-row"><span class="spc-sym">h</span><span class="spc-val">${fes(s.h)}</span><span class="spc-unit">${uEs()}</span></div>
       <div class="spc-row"><span class="spc-sym">s</span><span class="spc-val">${fss(s.s)}</span><span class="spc-unit">${uSs()}</span></div>
-      <div class="spc-sep">Propiedades totales · m=${f(mass,3)} ${uM()}</div>
-      <div class="spc-row"><span class="spc-sym">V</span><span class="spc-val">${fv(V)}</span><span class="spc-unit">${uVt()}</span></div>
+      <div class="spc-sep">Propiedades totales · m=${f(Md(mass),3)} ${uM()}</div>
+      <div class="spc-row"><span class="spc-sym">V</span><span class="spc-val">${f(Vtd(V),5)}</span><span class="spc-unit">${uVt()}</span></div>
       <div class="spc-row"><span class="spc-sym">U</span><span class="spc-val">${fe(U)}</span><span class="spc-unit">${uE()}</span></div>
       <div class="spc-row"><span class="spc-sym">H</span><span class="spc-val">${fe(H)}</span><span class="spc-unit">${uE()}</span></div>
       <div class="spc-row"><span class="spc-sym">S</span><span class="spc-val">${fst(S)}</span><span class="spc-unit">${uSt()}</span></div>
@@ -2347,7 +2472,7 @@ function onStateInput() {
   const P0    = PfromD(P0d);
   const Rg    = R_BAR / A20[currentGas].M;
   const v0    = Rg*T0/P0;
-  const mass  = parseFloat(document.getElementById('mass').value)||1;
+  const mass  = massKg();
 
   document.getElementById('out-v0').textContent = `${vd(v0).toFixed(5)} ${uV()}`;
 
@@ -2396,7 +2521,7 @@ function setCalcMode(mode) {
   if (!(lastStates && lastResults)) renderChainUI();
   if (lastStates && lastResults) {
     renderResults(lastStates, lastResults,
-      parseFloat(document.getElementById('mass').value)||1,
+      massKg(),
       R_BAR / A20[currentGas].M);
   }
 }
@@ -2502,6 +2627,7 @@ function setUnit(u) {
   updateUnitLabels();
   onStateInput();
   renderChainUI();
+  if (lastResults && processChain.length) computeAll();
 }
 
 // Reconstruye el toggle de presión según sistema y subunidad activa
@@ -2659,7 +2785,7 @@ function pmiTab(t) {
 function runChainForMode(mode, adMethod) {
   const T0 = TfromD(parseFloat(document.getElementById('T0').value)||300);
   const P0 = PfromD(parseFloat(document.getElementById('P0').value)||100);
-  const m  = parseFloat(document.getElementById('mass').value)||1;
+  const m  = massKg();
   const Rg = R_BAR / A20[currentGas].M;
   const saved = propMode, savedAd = adiabMethod;
   propMode = mode;
@@ -2668,7 +2794,7 @@ function runChainForMode(mode, adMethod) {
     let s = { T:T0, P:P0, v:Rg*T0/P0, V:m*Rg*T0/P0 };
     const rows = [];
     for (const pc of processChain) {
-      const r = solveProcess(pc.type, s, pc.inp2a, pc.inp2b, currentGas, m);
+      const r = solveProcess(pc.type, s, pc.inp2a, pc.inp2b, currentGas, m, pc);
       const dT = r.s2.T - s.T;
       rows.push({ type:pc.type, T1:s.T, T2:r.s2.T, dU:r.dU, W:r.W, Q:r.Q,
                   cv: Math.abs(dT)>1e-9 ? r.dU/(m*dT) : NaN });
@@ -2839,7 +2965,8 @@ function saveSession() {
     processes: processChain.map(p => ({
       type:  p.type,
       inp2a: p.inp2a,
-      inp2b: p.inp2b
+      inp2b: p.inp2b,
+      ...(p.type==='general' ? { inp2c: p.inp2c, given: p.given || 'Q' } : {})
     }))
   };
 
@@ -2926,7 +3053,9 @@ function _applySession(sess, filename) {
     id:    nextId++,
     type:  p.type  || 'isochoric',
     inp2a: p.inp2a !== undefined ? p.inp2a : 0,
-    inp2b: p.inp2b !== undefined ? p.inp2b : 1.3
+    inp2b: p.inp2b !== undefined ? p.inp2b : 1.3,
+    inp2c: p.inp2c !== undefined ? p.inp2c : 0,
+    given: p.given === 'W' ? 'W' : 'Q'
   }));
 
   // ── 7. Renderizar y recalcular ─────────────────────────────────
