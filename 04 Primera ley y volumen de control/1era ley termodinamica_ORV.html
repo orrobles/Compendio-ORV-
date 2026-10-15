@@ -50,12 +50,18 @@ body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-ser
 .subbar-row{display:flex;align-items:center;gap:10px;padding:5px 20px;
   flex-wrap:wrap;border-bottom:1px solid #eef0f5}
 .subbar-row:last-child{border-bottom:none}
+.subbar-row{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;gap:8px}
+.subbar-row > *{flex-shrink:0}
 .gas-pills{display:flex;gap:5px;flex-wrap:wrap}
 .gas-pill{padding:4px 13px;font-size:.84rem;font-weight:700;border:1.5px solid var(--border);
   border-radius:20px;cursor:pointer;color:var(--muted);background:#fff;
   transition:all .15s;white-space:nowrap}
 .gas-pill:hover{border-color:var(--accent);color:var(--accent)}
 .gas-pill.act{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gas-sel{padding:4px 28px 4px 10px;font-size:.84rem;font-weight:700;font-family:inherit;color:#fff;
+  background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff'/%3E%3C/svg%3E") no-repeat right 9px center;
+  border:1.5px solid var(--accent);border-radius:16px;cursor:pointer;-webkit-appearance:none;appearance:none;flex-shrink:0}
+.gas-sel option{color:var(--text);background:#fff}
 .subbar-sep{width:1px;height:30px;background:var(--border);flex-shrink:0}
 .utog{display:flex;border:1.5px solid var(--accent);border-radius:6px;overflow:hidden;flex-shrink:0}
 .ubtn{padding:4px 14px;font-size:.84rem;font-weight:700;background:#fff;color:var(--accent);
@@ -227,6 +233,22 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
 .calc-btn:active{transform:none}
 /* ── Sesión ─────────────────────────────────────── */
 .session-bar{display:flex;gap:6px;align-items:center;padding:6px 14px 12px;flex-wrap:wrap}
+.sess-id{display:inline-flex;align-items:center;gap:6px;max-width:340px;white-space:nowrap;
+  font-size:.78rem;color:var(--muted);cursor:pointer}
+.sess-id:empty{display:none}
+.sess-id .sid-badge{background:#4a148c;color:#fff;font-weight:800;font-family:'IBM Plex Mono',monospace;
+  padding:2px 8px;border-radius:5px;letter-spacing:.03em;flex-shrink:0}
+.sess-id .sid-badge.saved{background:#2e7d32}
+.sess-id .sid-txt{overflow:hidden;text-overflow:ellipsis}
+.ex-strip{display:none;background:#f3e5f5;border:1.5px solid #ce93d8;border-left:5px solid #4a148c;border-radius:8px;
+  padding:9px 14px;margin-bottom:12px;font-size:.84rem;line-height:1.45;color:var(--text)}
+.ex-strip.show{display:block}
+.ex-strip .ex-hdr{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ex-strip .ex-id{background:#4a148c;color:#fff;font-weight:800;font-family:'IBM Plex Mono',monospace;padding:2px 9px;border-radius:5px}
+.ex-strip .ex-title{font-weight:700;color:#4a148c}
+.ex-strip .ex-file{font-family:'IBM Plex Mono',monospace;font-size:.74rem;color:var(--muted);word-break:break-all}
+.ex-strip .ex-btn{margin-left:auto;border:none;background:none;cursor:pointer;color:#6a1b9a;font-size:.8rem;font-weight:700}
+.ex-strip .ex-desc{margin-top:6px;color:#37474f}
 .sb-sess-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;
   border-radius:6px;border:1.5px solid var(--border);background:#f8faff;
   color:var(--muted);font-size:.82rem;font-weight:700;cursor:pointer;
@@ -448,14 +470,15 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
 <!-- ════ GAS / UNITS / PROP-MODE BAR ════ -->
 <div class="subbar">
   <div class="subbar-row">
-    <div class="gas-pills" id="gasPills">
-      <div class="gas-pill act" data-gas="air"  onclick="setGas('air',this)">Aire</div>
-      <div class="gas-pill"     data-gas="n2"   onclick="setGas('n2',this)">N₂</div>
-      <div class="gas-pill"     data-gas="o2"   onclick="setGas('o2',this)">O₂</div>
-      <div class="gas-pill"     data-gas="co2"  onclick="setGas('co2',this)">CO₂</div>
-      <div class="gas-pill"     data-gas="co"   onclick="setGas('co',this)">CO</div>
-      <div class="gas-pill"     data-gas="h2"   onclick="setGas('h2',this)">H₂</div>
-    </div>
+    <span class="pm-label">Gas:</span>
+    <select class="gas-sel" id="gasSel" onchange="setGas(this.value)" title="Sustancia (gas ideal, Tabla A-20)">
+      <option value="air" selected title="Aire">Aire</option>
+      <option value="n2"  title="Nitrógeno">N₂</option>
+      <option value="o2"  title="Oxígeno">O₂</option>
+      <option value="co2" title="Dióxido de carbono">CO₂</option>
+      <option value="co"  title="Monóxido de carbono">CO</option>
+      <option value="h2"  title="Hidrógeno">H₂</option>
+    </select>
     <div class="subbar-sep"></div>
     <span class="pm-label">Sistema:</span>
     <div class="utog">
@@ -469,17 +492,17 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
       <button class="pm-btn"     id="pmAvg"      onclick="setPropMode('avg')">T<sub>avg</sub></button>
       <button class="pm-btn"     id="pmInteg"    onclick="setPropMode('integ')">∫c<sub>v</sub>dT</button>
       <span class="adb-opt" id="adbOpt" title="Solo aplica en modo ∫c_v dT: cómo se obtiene T₂ en procesos adiabáticos">
-        <span class="adb-lbl">T₂ adiabático:</span>
+        <span class="adb-lbl" title="T₂ en procesos adiabáticos (solo con ∫cᵥdT)">T₂ adiab.:</span>
         <button class="adb-btn act" id="adbKavg" onclick="setAdiabMethod('kavg')" title="Pv^k̄ = cte con k evaluada en T̄=(T₁+T₂)/2, por iteración">k̄ iterativo</button>
         <button class="adb-btn"     id="adbSo"   onclick="setAdiabMethod('so')"   title="Isentrópico riguroso: s°(T₂) = s°(T₁) + R·ln(P₂/P₁)">s° riguroso</button>
       </span>
-      <button class="pm-info" id="pmInfoBtn" onclick="openPmInfo()" title="Explicación de los tres métodos de cálculo de c_p y c_v, y comparación con la cadena actual">ⓘ ¿Cómo se calcula?</button>
+      <button class="pm-info" id="pmInfoBtn" onclick="openPmInfo()" title="Explicación de los tres métodos de cálculo de c_p y c_v, y comparación con la cadena actual">ⓘ Método</button>
     </div>
     <div class="subbar-sep"></div>
     <input type="file" id="sessionFileInput" accept=".json" style="display:none" onchange="loadSessionFile(this)">
     <button class="sb-sess-btn" onclick="saveSession()" title="Guardar sesión">💾 Guardar</button>
     <button class="sb-sess-btn" onclick="document.getElementById('sessionFileInput').click()" title="Cargar sesión">📂 Cargar</button>
-    <span class="sess-name" id="sessNameLbl" style="font-size:.75rem;color:var(--muted);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis"></span>
+    <span class="sess-id" id="sessNameLbl" onclick="toggleExStrip(true)"></span>
   </div>
 </div>
 
@@ -607,6 +630,18 @@ main{padding:14px 18px;display:flex;flex-direction:column;gap:12px;
 
 <!-- ══════ MAIN CONTENT ══════ -->
 <main>
+
+  <!-- EJERCICIO / SESIÓN CARGADA -->
+  <div class="ex-strip" id="exStrip">
+    <div class="ex-hdr">
+      <span class="ex-id" id="exId"></span>
+      <span class="ex-title" id="exTitle"></span>
+      <button class="ex-btn" id="exToggle" onclick="toggleExDesc()">▲ Ocultar enunciado</button>
+      <button class="ex-btn" style="margin-left:0" onclick="toggleExStrip(false)" title="Cerrar">✕</button>
+    </div>
+    <div class="ex-file" id="exFile"></div>
+    <div class="ex-desc" id="exDesc"></div>
+  </div>
 
   <!-- PRIMERA LEY BANNER -->
   <div class="law-banner" id="lawBanner">
@@ -2526,10 +2561,10 @@ function setCalcMode(mode) {
   }
 }
 
-function setGas(gas, el) {
+function setGas(gas) {
   currentGas = gas;
-  document.querySelectorAll('.gas-pill').forEach(p=>p.classList.remove('act'));
-  el.classList.add('act');
+  const sel = document.getElementById('gasSel');
+  if (sel && sel.value !== gas) sel.value = gas;
   onStateInput(); renderChainUI();
 }
 
@@ -2942,11 +2977,42 @@ function _escCloseModal(e) { if (e.key === 'Escape') closeModal(); }
 // ════════════════════════════════════════════════════════════════════
 // GUARDAR / CARGAR SESIÓN
 // ════════════════════════════════════════════════════════════════════
+// ── Identificador de la sesión / ejercicio cargado ─────────────────
+let sessionMeta = null;   // {id, title, description, source, file}
+function _sessionId(sess, filename) {
+  const src = [(sess && sess.title) || '', filename || ''];
+  for (const t of src) {
+    const m = /^\s*EJ[\s_\-·]*([A-Z0-9]{1,3})(?=[\s_\-·.]|$)/i.exec(t);
+    if (m) return 'EJ-' + m[1].toUpperCase();
+  }
+  const base = (filename || 'Sesión').replace(/\.json$/i, '');
+  return base.length > 14 ? base.slice(0, 13) + '…' : base;
+}
+function _showSessionLabel(kind, id, text, full) {
+  const lbl = document.getElementById('sessNameLbl');
+  if (!lbl) return;
+  lbl.innerHTML = `<span class="sid-badge ${kind==='saved'?'saved':''}">${kind==='saved'?'💾 ':'📄 '}${id}</span>`;
+  lbl.title = full;
+}
+function toggleExStrip(show) {
+  const st = document.getElementById('exStrip');
+  if (!st || !sessionMeta) return;
+  st.classList.toggle('show', !!show);
+  if (show) st.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+function toggleExDesc() {
+  const d = document.getElementById('exDesc'), b = document.getElementById('exToggle');
+  const hide = d.style.display !== 'none';
+  d.style.display = hide ? 'none' : '';
+  b.textContent = hide ? '▼ Ver enunciado' : '▲ Ocultar enunciado';
+}
+
 function saveSession() {
   const session = {
     app:     'TermoIA-PrimeraLey',
     version: '1.1',
     savedAt: new Date().toISOString(),
+    ...(sessionMeta ? { title: sessionMeta.title, description: sessionMeta.description, source: sessionMeta.source } : {}),
     config: {
       currentUnit,
       tempSubUnit,
@@ -2979,8 +3045,8 @@ function saveSession() {
   a.click();
   URL.revokeObjectURL(url);
 
-  const lbl = document.getElementById('sessNameLbl');
-  if (lbl) lbl.textContent = `Guardado: ${fname}`;
+  const sid = sessionMeta ? sessionMeta.id : 'Sesión';
+  _showSessionLabel('saved', sid, `Guardado`, `Guardado como: ${fname}${sessionMeta && sessionMeta.title ? '\n' + sessionMeta.title : ''}`);
 }
 
 function loadSessionFile(input) {
@@ -3031,8 +3097,8 @@ function _applySession(sess, filename) {
   // ── 2. Gas ─────────────────────────────────────────────────────
   if (cfg.currentGas) {
     currentGas = cfg.currentGas;
-    document.querySelectorAll('.gas-pill').forEach(el =>
-      el.classList.toggle('act', el.dataset.gas === currentGas));
+    const gs = document.getElementById('gasSel');
+    if (gs) gs.value = currentGas;
   }
 
   // ── 3. Modo de cálculo ─────────────────────────────────────────
@@ -3065,8 +3131,19 @@ function _applySession(sess, filename) {
     setTimeout(() => computeAll(), 150);
   }
 
-  const lbl = document.getElementById('sessNameLbl');
-  if (lbl) lbl.textContent = `Cargado: ${filename.replace(/\.json$/, '')}`;
+  // ── 8. Identificador visible del archivo / ejercicio cargado ──────
+  const id = _sessionId(sess, filename);
+  sessionMeta = { id, title: sess.title || '', description: sess.description || '', source: sess.source || '', file: filename };
+  _showSessionLabel('loaded', id, 'Cargado', `Archivo: ${filename}${sess.title ? '\n' + sess.title : ''}`);
+  document.getElementById('exId').textContent    = id;
+  document.getElementById('exTitle').textContent = sess.title || filename.replace(/\.json$/i, '');
+  document.getElementById('exFile').textContent  = `📂 ${filename}${sess.source ? '  ·  ' + sess.source : ''}`;
+  const dsc = document.getElementById('exDesc');
+  dsc.textContent = sess.description || '';
+  dsc.style.display = sess.description ? '' : 'none';
+  document.getElementById('exToggle').style.display = sess.description ? '' : 'none';
+  document.getElementById('exToggle').textContent = '▲ Ocultar enunciado';
+  document.getElementById('exStrip').classList.add('show');
 }
 
 // ════════════════════════════════════════════════════════════════════
